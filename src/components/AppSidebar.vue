@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { HouseIcon, SettingsIcon, TerminalIcon } from "@lucide/vue";
+import { GamepadIcon, LibraryIcon, SettingsIcon, TerminalIcon } from "@lucide/vue";
 import AppLogo from "@/components/AppLogo.vue";
 import PlayCard from "@/components/PlayCard.vue";
 
 const { t } = useI18n();
 
 const links = [
-  { to: "/", label: "nav.home", icon: HouseIcon },
+  { to: "/", label: "nav.library", icon: LibraryIcon },
+  { to: "/game", label: "nav.home", icon: GamepadIcon },
   { to: "/console", label: "nav.console", icon: TerminalIcon },
   { to: "/settings", label: "nav.settings", icon: SettingsIcon },
 ];

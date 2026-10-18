@@ -13,7 +13,7 @@
     "windows": [
       {
         "title": "Pelican Mods",
-        "dragDropEnabled": false,
+        "dragDropEnabled": true,
         "width": 1280,
         "height": 800,
         "minWidth": 1024,

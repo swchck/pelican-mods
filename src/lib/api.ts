@@ -75,3 +75,78 @@ export const events = {
   smapiProgress: (cb: (p: SmapiProgress) => void): Promise<UnlistenFn> =>
     listen<SmapiProgress>("smapi:progress", (e) => cb(e.payload)),
 };
+
+export interface Dependency {
+  uniqueId: string;
+  minimumVersion: string | null;
+  isRequired: boolean;
+}
+
+export interface Manifest {
+  name: string;
+  author: string;
+  version: string;
+  description: string;
+  uniqueId: string;
+  entryDll: string | null;
+  contentPackFor: Dependency | null;
+  dependencies: Dependency[];
+  updateKeys: string[];
+  minimumApiVersion: string | null;
+  minimumGameVersion: string | null;
+}
+
+export type Issue =
+  | { kind: "missingDependency"; id: string; min: string | null }
+  | { kind: "disabledDependency"; id: string; package: string }
+  | { kind: "outdatedDependency"; id: string; need: string; have: string }
+  | { kind: "duplicateId"; package: string }
+  | { kind: "needsSmapi"; need: string }
+  | { kind: "needsGame"; need: string };
+
+export interface ModView {
+  relPath: string;
+  manifest: Manifest;
+  source: string | null;
+  issues: Issue[];
+  requiredBy: string[];
+}
+
+export interface PackageView {
+  id: string;
+  path: string;
+  system: boolean;
+  enabled: boolean;
+  mods: ModView[];
+  broken: { relPath: string; error: string }[];
+}
+
+export interface Profile {
+  id: string;
+  name: string | null;
+  enabled: string[];
+}
+
+export interface Profiles {
+  active: string;
+  profiles: Profile[];
+}
+
+export interface LibraryView {
+  packages: PackageView[];
+  profiles: Profiles;
+  importable: string[];
+}
+
+export const library = {
+  get: () => invoke<LibraryView>("library_get"),
+  install: (paths: string[]) => invoke<LibraryView>("library_install", { paths }),
+  import: (names: string[]) => invoke<LibraryView>("library_import", { names }),
+  remove: (id: string) => invoke<LibraryView>("library_remove", { id }),
+  toggle: (id: string, enabled: boolean) => invoke<LibraryView>("library_toggle", { id, enabled }),
+  open: (path: string) => invoke<void>("library_open", { path }),
+  createProfile: (name: string, copyFrom: string | null) => invoke<LibraryView>("profile_create", { name, copyFrom }),
+  renameProfile: (id: string, name: string) => invoke<LibraryView>("profile_rename", { id, name }),
+  deleteProfile: (id: string) => invoke<LibraryView>("profile_delete", { id }),
+  activateProfile: (id: string) => invoke<LibraryView>("profile_activate", { id }),
+};

@@ -4,13 +4,13 @@
 //! (`--no-prompt`), so SMAPI does its own file shuffling: launcher swap, deps.json copy,
 //! bundled mods. Reimplementing that here would drift with every SMAPI release.
 
-use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use tokio::io::AsyncWriteExt;
 
+use crate::archive;
 use crate::error::{AppError, AppResult};
 use crate::game;
 use crate::rosetta;
@@ -102,7 +102,7 @@ pub async fn run(
     progress(Progress::Extract);
     let out = work_dir.join("unpacked");
     let out2 = out.clone();
-    tokio::task::spawn_blocking(move || extract(&archive, &out2))
+    tokio::task::spawn_blocking(move || archive::extract_zip(&archive, &out2))
         .await
         .map_err(|e| AppError::BadArchive(e.to_string()))??;
     let installer = find_installer(&out)?;
@@ -141,36 +141,6 @@ async fn download(
         }
     }
     file.flush().await?;
-    Ok(())
-}
-
-fn extract(archive: &Path, out: &Path) -> AppResult<()> {
-    use std::os::unix::fs::PermissionsExt;
-
-    let mut zip = zip::ZipArchive::new(std::fs::File::open(archive)?)?;
-    for i in 0..zip.len() {
-        let mut entry = zip.by_index(i)?;
-        let Some(rel) = entry.enclosed_name() else {
-            return Err(AppError::BadArchive(format!(
-                "unsafe path {}",
-                entry.name_raw().escape_ascii()
-            )));
-        };
-        let dest = out.join(rel);
-        if entry.is_dir() {
-            std::fs::create_dir_all(&dest)?;
-            continue;
-        }
-        if let Some(parent) = dest.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        let mut buf = Vec::with_capacity(entry.size() as usize);
-        entry.read_to_end(&mut buf)?;
-        std::fs::write(&dest, buf)?;
-        if let Some(mode) = entry.unix_mode() {
-            std::fs::set_permissions(&dest, std::fs::Permissions::from_mode(mode & 0o777))?;
-        }
-    }
     Ok(())
 }
 
@@ -263,22 +233,10 @@ mod tests {
         w.finish().unwrap();
 
         let out = dir.path().join("out");
-        extract(&archive, &out).unwrap();
+        crate::archive::extract_zip(&archive, &out).unwrap();
         let inst = find_installer(&out).unwrap();
         let mode = std::fs::metadata(&inst).unwrap().permissions().mode();
         assert_eq!(mode & 0o111, 0o111);
-    }
-
-    #[test]
-    fn rejects_path_traversal() {
-        let dir = tempfile::tempdir().unwrap();
-        let archive = dir.path().join("a.zip");
-        let mut w = zip::ZipWriter::new(std::fs::File::create(&archive).unwrap());
-        w.start_file("../evil", zip::write::SimpleFileOptions::default())
-            .unwrap();
-        w.write_all(b"x").unwrap();
-        w.finish().unwrap();
-        assert!(extract(&archive, &dir.path().join("out")).is_err());
     }
 
     // touches the network and a real game folder, so it only runs on request:

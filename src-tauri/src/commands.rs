@@ -1,6 +1,7 @@
 //! Tauri commands: the webview's whole view of the backend.
 
 use std::path::PathBuf;
+use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use serde::Deserialize;
@@ -9,7 +10,8 @@ use tauri_plugin_opener::OpenerExt;
 
 use crate::error::{AppError, AppResult};
 use crate::game::{self, GameInstall};
-use crate::launcher::{Launcher, LogLine, RunState, Sink, SmapiLog};
+use crate::launcher::{Launcher, LogLine, RunState, Sink, SmapiRun};
+use crate::profiles::ProfilesStore;
 use crate::settings::{Settings, SettingsStore};
 use crate::smapi::{self, Release};
 
@@ -20,11 +22,18 @@ pub struct AppState {
     http: reqwest::Client,
     work_dir: PathBuf,
     installing: AtomicBool,
+    /// Installed mod packages, one folder each.
+    pub(crate) store_root: PathBuf,
+    /// Per-profile symlink folders handed to SMAPI.
+    pub(crate) deploy_root: PathBuf,
+    pub(crate) profiles: ProfilesStore,
+    /// Serializes store and profile changes; installs run on blocking threads in parallel.
+    pub(crate) library_lock: Mutex<()>,
 }
 
 impl AppState {
-    /// Builds state rooted at the app's config and cache folders.
-    pub fn new(config_dir: PathBuf, cache_dir: PathBuf) -> Self {
+    /// Builds state rooted at the app's config, data and cache folders.
+    pub fn new(config_dir: PathBuf, data_dir: PathBuf, cache_dir: PathBuf) -> Self {
         let http = reqwest::Client::builder()
             .user_agent(concat!("PelicanMods/", env!("CARGO_PKG_VERSION")))
             .build()
@@ -35,10 +44,14 @@ impl AppState {
             http,
             work_dir: cache_dir.join("smapi-installer"),
             installing: AtomicBool::new(false),
+            store_root: data_dir.join("mods"),
+            deploy_root: data_dir.join("profiles"),
+            profiles: ProfilesStore::load(config_dir.join("profiles.json")),
+            library_lock: Mutex::new(()),
         }
     }
 
-    fn game_dir(&self) -> AppResult<PathBuf> {
+    pub(crate) fn game_dir(&self) -> AppResult<PathBuf> {
         self.settings
             .get()
             .game_path
@@ -155,8 +168,9 @@ pub async fn game_launch(
         return Err(AppError::Busy);
     }
     let smapi = if modded {
-        Some(SmapiLog {
-            path: game_data_dir(&app)?.join("ErrorLogs/SMAPI-latest.txt"),
+        Some(SmapiRun {
+            log: game_data_dir(&app)?.join("ErrorLogs/SMAPI-latest.txt"),
+            mods_path: Some(crate::mods_commands::deploy_active(&state)?),
         })
     } else {
         None

@@ -1,0 +1,138 @@
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { EllipsisIcon, PencilIcon, PlusIcon, Trash2Icon } from "@lucide/vue";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import type { Profile } from "@/lib/api";
+import { useLibrary } from "@/stores/library";
+import { useGame } from "@/stores/game";
+
+const { t } = useI18n();
+const lib = useLibrary();
+const game = useGame();
+
+const dialog = ref<"create" | "rename" | "delete" | null>(null);
+const name = ref("");
+const copy = ref(true);
+
+const nameOf = (p: Profile) => p.name ?? t("profiles.default");
+const active = computed({
+  get: () => lib.profiles?.active ?? "",
+  set: (id: string) => void lib.activateProfile(id),
+});
+const canDelete = computed(() => (lib.profiles?.profiles.length ?? 0) > 1);
+
+function open(kind: "create" | "rename" | "delete") {
+  name.value = kind === "rename" && lib.activeProfile ? nameOf(lib.activeProfile) : "";
+  copy.value = true;
+  dialog.value = kind;
+}
+
+async function submit() {
+  const id = lib.activeProfile?.id;
+  const ok =
+    dialog.value === "create"
+      ? await lib.createProfile(name.value, copy.value ? (id ?? null) : null)
+      : dialog.value === "rename" && id
+        ? await lib.renameProfile(id, name.value)
+        : dialog.value === "delete" && id
+          ? await lib.deleteProfile(id)
+          : false;
+  if (ok) dialog.value = null;
+}
+</script>
+
+<template>
+  <div class="flex items-center gap-1">
+    <Select v-model="active" :disabled="game.running || lib.working">
+      <SelectTrigger
+        :aria-label="t('profiles.label')"
+        class="bg-card border-input h-9 min-w-40 border-2 font-extrabold"
+      >
+        <span class="text-muted-foreground text-xs font-bold">{{ t("profiles.label") }}</span>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem v-for="p in lib.profiles?.profiles ?? []" :key="p.id" :value="p.id">{{ nameOf(p) }}</SelectItem>
+      </SelectContent>
+    </Select>
+    <DropdownMenu>
+      <DropdownMenuTrigger as-child>
+        <Button variant="ghost" size="icon" :aria-label="t('profiles.label')" :disabled="game.running">
+          <EllipsisIcon />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuItem @select="open('create')"><PlusIcon />{{ t("profiles.create") }}</DropdownMenuItem>
+        <DropdownMenuItem @select="open('rename')"><PencilIcon />{{ t("profiles.rename") }}</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem :disabled="!canDelete" class="text-destructive" @select="open('delete')">
+          <Trash2Icon />{{ t("profiles.delete") }}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+
+    <Dialog :open="dialog !== null" @update:open="(v: boolean) => !v && (dialog = null)">
+      <DialogContent>
+        <form class="flex flex-col gap-4" @submit.prevent="submit">
+          <DialogHeader>
+            <DialogTitle class="font-pixel text-xl">
+              {{
+                dialog === "create"
+                  ? t("profiles.createTitle")
+                  : dialog === "rename"
+                    ? t("profiles.renameTitle")
+                    : t("profiles.delete")
+              }}
+            </DialogTitle>
+            <DialogDescription v-if="dialog === 'delete' && lib.activeProfile">
+              {{ t("profiles.deleteConfirm", { name: nameOf(lib.activeProfile) }) }}
+            </DialogDescription>
+          </DialogHeader>
+          <template v-if="dialog !== 'delete'">
+            <div class="flex flex-col gap-1.5">
+              <Label for="profile-name" class="font-bold">{{ t("profiles.name") }}</Label>
+              <Input id="profile-name" v-model="name" class="bg-parchment border-input border-2" autofocus />
+            </div>
+            <div v-if="dialog === 'create'" class="flex items-center gap-2">
+              <Switch id="profile-copy" v-model="copy" />
+              <Label for="profile-copy" class="font-semibold">{{ t("profiles.copy") }}</Label>
+            </div>
+          </template>
+          <DialogFooter>
+            <DialogClose as-child>
+              <Button type="button" variant="outline">{{ t("common.cancel") }}</Button>
+            </DialogClose>
+            <Button
+              type="submit"
+              :variant="dialog === 'delete' ? 'destructive' : 'default'"
+              :disabled="lib.working || (dialog !== 'delete' && !name.trim())"
+            >
+              {{ dialog === "delete" ? t("profiles.delete") : t("profiles.save") }}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  </div>
+</template>

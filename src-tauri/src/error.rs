@@ -23,6 +23,16 @@ pub enum AppError {
     BadArchive(String),
     #[error("SMAPI installer failed: {0}")]
     InstallerFailed(String),
+    #[error("invalid manifest.json: {0}")]
+    BadManifest(String),
+    #[error("no mods found in the archive")]
+    NoMods,
+    #[error("not found: {0}")]
+    NotFound(String),
+    #[error("profile name is empty or taken: {0}")]
+    BadProfileName(String),
+    #[error("the last profile can't be deleted")]
+    LastProfile,
     #[error("Rosetta 2 is required to run the game")]
     RosettaMissing,
     #[error("cancelled by the user")]
@@ -43,6 +53,11 @@ impl AppError {
             Self::Network(_) => "network",
             Self::BadArchive(_) => "bad_archive",
             Self::InstallerFailed(_) => "installer_failed",
+            Self::BadManifest(_) => "bad_manifest",
+            Self::NoMods => "no_mods",
+            Self::NotFound(_) => "not_found",
+            Self::BadProfileName(_) => "bad_profile_name",
+            Self::LastProfile => "last_profile",
             Self::RosettaMissing => "rosetta_missing",
             Self::Cancelled => "cancelled",
             Self::Io(_) => "io",
@@ -54,7 +69,10 @@ impl AppError {
             Self::GameNotFound(s)
             | Self::Network(s)
             | Self::BadArchive(s)
-            | Self::InstallerFailed(s) => Some(s.clone()),
+            | Self::InstallerFailed(s)
+            | Self::BadManifest(s)
+            | Self::NotFound(s)
+            | Self::BadProfileName(s) => Some(s.clone()),
             Self::Io(e) => Some(e.to_string()),
             _ => None,
         }

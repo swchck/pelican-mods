@@ -73,9 +73,11 @@ pub enum RunState {
     Exited { code: Option<i32> },
 }
 
-/// Where a modded run's console comes from.
-pub struct SmapiLog {
-    pub path: PathBuf,
+/// How to run SMAPI: where its log is and which folder to load mods from.
+pub struct SmapiRun {
+    pub log: PathBuf,
+    /// Passed as `--mods-path`; `None` keeps SMAPI's default `Mods` in the game folder.
+    pub mods_path: Option<PathBuf>,
 }
 
 #[derive(Default)]
@@ -147,7 +149,7 @@ impl Launcher {
     pub fn launch(
         &self,
         game_dir: &Path,
-        smapi: Option<SmapiLog>,
+        smapi: Option<SmapiRun>,
         sink: impl Sink,
     ) -> AppResult<RunState> {
         let mut inner = self.inner.lock().unwrap();
@@ -164,7 +166,11 @@ impl Launcher {
             game::VANILLA_EXE
         };
         let started = SystemTime::now();
-        let mut child = Command::new(game_dir.join(exe))
+        let mut cmd = Command::new(game_dir.join(exe));
+        if let Some(mods) = smapi.as_ref().and_then(|s| s.mods_path.as_ref()) {
+            cmd.arg("--mods-path").arg(mods);
+        }
+        let mut child = cmd
             .current_dir(game_dir)
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
@@ -200,8 +206,8 @@ impl Launcher {
         .into_iter()
         .flatten()
         .collect();
-        if let Some(log) = smapi {
-            readers.push(self.tail(log.path, started, exited_rx, sink.clone()));
+        if let Some(run) = smapi {
+            readers.push(self.tail(run.log, started, exited_rx, sink.clone()));
         }
         self.wait(child, kill_rx, exited_tx, readers, sink);
         Ok(state)
@@ -519,7 +525,7 @@ mod tests {
         .unwrap();
         std::fs::write(dir.path().join("StardewModdingAPI.dll"), b"").unwrap();
         let body = format!(
-            "echo '[SMAPI] short form, skipped'\necho 'AL lib: kept'\nsleep 0.3\n\
+            "echo \"args: $*\"\necho '[SMAPI] short form, skipped'\necho 'AL lib: kept'\nsleep 0.3\n\
              printf '[00:00:01 WARN  SMAPI] careful\\n   at continuation\\n[00:00:02 INFO  SMAPI] fine' > '{}'\nsleep 0.4\n",
             log.display()
         );
@@ -530,7 +536,14 @@ mod tests {
             tokio::time::sleep(Duration::from_millis(20)).await;
             let launcher = Launcher::default();
             launcher
-                .launch(dir.path(), Some(SmapiLog { path: log.clone() }), Collect)
+                .launch(
+                    dir.path(),
+                    Some(SmapiRun {
+                        log: log.clone(),
+                        mods_path: Some("/profiles/p1/Mods".into()),
+                    }),
+                    Collect,
+                )
                 .unwrap();
             wait_exit(&launcher).await;
             let lines: Vec<(Level, String)> = launcher
@@ -541,6 +554,10 @@ mod tests {
             assert_eq!(
                 lines,
                 [
+                    (
+                        Level::Info,
+                        "args: --mods-path /profiles/p1/Mods".to_owned()
+                    ),
                     (Level::Info, "AL lib: kept".to_owned()),
                     (Level::Warn, "[00:00:01 WARN  SMAPI] careful".to_owned()),
                     (Level::Warn, "   at continuation".to_owned()),
@@ -555,8 +572,9 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let res = Launcher::default().launch(
             dir.path(),
-            Some(SmapiLog {
-                path: dir.path().join("log"),
+            Some(SmapiRun {
+                log: dir.path().join("log"),
+                mods_path: None,
             }),
             Collect,
         );
@@ -574,7 +592,14 @@ mod tests {
         tauri::async_runtime::block_on(async {
             let launcher = Launcher::default();
             launcher
-                .launch(&game_dir, Some(SmapiLog { path }), Collect)
+                .launch(
+                    &game_dir,
+                    Some(SmapiRun {
+                        log: path,
+                        mods_path: None,
+                    }),
+                    Collect,
+                )
                 .unwrap();
             let ready = |l: &LogLine| l.text.contains("Mods loaded and ready");
             for _ in 0..150 {
@@ -589,6 +614,86 @@ mod tests {
             assert!(log.iter().any(ready), "SMAPI never reported ready");
             assert!(log.iter().any(|l| l.level == Level::Trace));
             assert!(log.iter().any(|l| l.level == Level::Debug));
+        });
+    }
+
+    // full path through the store with a real game: zip install, profile, symlinks,
+    // SMAPI --mods-path. Needs SMAPI in the game folder; run with
+    // PELICAN_TEST_GAME_DIR=<Contents/MacOS> cargo test -- --ignored
+    #[test]
+    #[ignore]
+    fn real_game_loads_mod_from_profile() {
+        use crate::profiles::{self, Profile};
+        use std::io::Write;
+
+        let game_dir = PathBuf::from(std::env::var("PELICAN_TEST_GAME_DIR").unwrap());
+        let home = PathBuf::from(std::env::var("HOME").unwrap());
+        let tmp = tempfile::tempdir().unwrap();
+
+        // SaveBackup with a new UniqueID stands in for a downloaded mod
+        let src = game_dir.join("Mods/SaveBackup");
+        let zip_path = tmp.path().join("Backup Copy.zip");
+        let mut w = zip::ZipWriter::new(std::fs::File::create(&zip_path).unwrap());
+        for e in std::fs::read_dir(&src).unwrap().flatten() {
+            let name = e.file_name().to_string_lossy().into_owned();
+            let mut body = std::fs::read(e.path()).unwrap();
+            if name == "manifest.json" {
+                body = String::from_utf8(body)
+                    .unwrap()
+                    .replace("\"SMAPI.SaveBackup\"", "\"Test.BackupCopy\"")
+                    .replace("\"Save Backup\"", "\"Backup Copy\"")
+                    .into_bytes();
+            }
+            w.start_file(
+                format!("Backup Copy/{name}"),
+                zip::write::SimpleFileOptions::default(),
+            )
+            .unwrap();
+            w.write_all(&body).unwrap();
+        }
+        w.finish().unwrap();
+
+        let store = tmp.path().join("store");
+        let installed = crate::library::install_zip(&store, &zip_path).unwrap();
+        let profile = Profile {
+            id: "test".into(),
+            name: None,
+            enabled: vec![installed[0].id.clone()],
+        };
+        let bundled = [(
+            "ConsoleCommands".to_owned(),
+            game_dir.join("Mods/ConsoleCommands"),
+        )];
+        let mods =
+            profiles::deploy(&profile, &store, &bundled, &tmp.path().join("deploy")).unwrap();
+
+        tauri::async_runtime::block_on(async {
+            let launcher = Launcher::default();
+            launcher
+                .launch(
+                    &game_dir,
+                    Some(SmapiRun {
+                        log: home.join(".config/StardewValley/ErrorLogs/SMAPI-latest.txt"),
+                        mods_path: Some(mods),
+                    }),
+                    Collect,
+                )
+                .unwrap();
+            let ready = |l: &LogLine| l.text.contains("Mods loaded and ready");
+            for _ in 0..150 {
+                if launcher.log().iter().any(ready) {
+                    break;
+                }
+                tokio::time::sleep(Duration::from_millis(200)).await;
+            }
+            launcher.stop().unwrap();
+            wait_exit(&launcher).await;
+            let log = launcher.log();
+            assert!(
+                log.iter().any(|l| l.text.contains("Loaded 2 mods")),
+                "{log:#?}"
+            );
+            assert!(log.iter().any(|l| l.text.contains("Backup Copy")));
         });
     }
 }

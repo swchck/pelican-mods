@@ -1,10 +1,17 @@
+mod archive;
 mod commands;
+mod deps;
 mod error;
 mod game;
 mod launcher;
+mod library;
+mod manifest;
+mod mods_commands;
+mod profiles;
 mod rosetta;
 mod settings;
 mod smapi;
+mod version;
 
 use tauri::Manager;
 
@@ -15,8 +22,9 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let config_dir = app.path().app_config_dir()?;
+            let data_dir = app.path().app_data_dir()?;
             let cache_dir = app.path().app_cache_dir()?;
-            app.manage(commands::AppState::new(config_dir, cache_dir));
+            app.manage(commands::AppState::new(config_dir, data_dir, cache_dir));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -34,6 +42,16 @@ pub fn run() {
             commands::game_console,
             commands::open_place,
             commands::rosetta_install,
+            mods_commands::library_get,
+            mods_commands::library_install,
+            mods_commands::library_import,
+            mods_commands::library_remove,
+            mods_commands::library_toggle,
+            mods_commands::library_open,
+            mods_commands::profile_create,
+            mods_commands::profile_rename,
+            mods_commands::profile_delete,
+            mods_commands::profile_activate,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
