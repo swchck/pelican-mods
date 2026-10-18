@@ -375,7 +375,7 @@ mod tests {
                 .await
                 .unwrap();
             let installed =
-                crate::library::install_zip(&store, &dir.path().join("backups"), &zip).unwrap();
+                crate::library::install_archive(&store, &dir.path().join("backups"), &zip).unwrap();
             assert_eq!(installed[0].replaced, ["FarmTypeManager"]);
             let pkg = &crate::library::scan(&store)[0];
             assert_eq!(pkg.mods[0].manifest.version, version);

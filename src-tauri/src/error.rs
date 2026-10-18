@@ -35,6 +35,16 @@ pub enum AppError {
     BadProfileName(String),
     #[error("the last profile can't be deleted")]
     LastProfile,
+    #[error("Nexus rejected the API key")]
+    NexusKeyRejected,
+    #[error("Nexus needs a Premium account or a Mod Manager Download link for this file")]
+    NexusNeedsPremium,
+    #[error("no Nexus API key is set")]
+    NexusNoKey,
+    #[error("not a Stardew Valley nxm link: {0}")]
+    BadNxm(String),
+    #[error("Keychain error: {0}")]
+    Keychain(String),
     #[error("Rosetta 2 is required to run the game")]
     RosettaMissing,
     #[error("cancelled by the user")]
@@ -61,6 +71,11 @@ impl AppError {
             Self::NotFound(_) => "not_found",
             Self::BadProfileName(_) => "bad_profile_name",
             Self::LastProfile => "last_profile",
+            Self::NexusKeyRejected => "nexus_key_rejected",
+            Self::NexusNeedsPremium => "nexus_needs_premium",
+            Self::NexusNoKey => "nexus_no_key",
+            Self::BadNxm(_) => "bad_nxm",
+            Self::Keychain(_) => "keychain",
             Self::RosettaMissing => "rosetta_missing",
             Self::Cancelled => "cancelled",
             Self::Io(_) => "io",
@@ -76,6 +91,8 @@ impl AppError {
             | Self::BadManifest(s)
             | Self::NotFound(s)
             | Self::NoDownload(s)
+            | Self::BadNxm(s)
+            | Self::Keychain(s)
             | Self::BadProfileName(s) => Some(s.clone()),
             Self::Io(e) => Some(e.to_string()),
             _ => None,

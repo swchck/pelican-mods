@@ -1,9 +1,111 @@
 //! Unpacking downloaded archives without letting them write outside the target folder.
+//!
+//! Mod pages ship zip, 7z and rar about equally, often with the wrong extension, so
+//! [`extract`] picks the format from the file's magic bytes.
 
 use std::io::Read;
-use std::path::Path;
+use std::path::{Component, Path, PathBuf};
 
 use crate::error::{AppError, AppResult};
+
+/// Archive formats mods are distributed in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Format {
+    Zip,
+    SevenZip,
+    Rar,
+}
+
+/// Detects the archive format from the first bytes of `path`.
+pub fn sniff(path: &Path) -> AppResult<Format> {
+    let mut head = [0u8; 8];
+    let n = std::fs::File::open(path)?.read(&mut head)?;
+    let head = &head[..n];
+    if head.starts_with(b"PK\x03\x04") || head.starts_with(b"PK\x05\x06") {
+        Ok(Format::Zip)
+    } else if head.starts_with(b"7z\xbc\xaf\x27\x1c") {
+        Ok(Format::SevenZip)
+    } else if head.starts_with(b"Rar!\x1a\x07") {
+        Ok(Format::Rar)
+    } else {
+        Err(AppError::BadArchive(format!(
+            "{} is not a zip, 7z or rar archive",
+            path.display()
+        )))
+    }
+}
+
+/// Extracts any supported archive at `archive` into `out`.
+pub fn extract(archive: &Path, out: &Path) -> AppResult<()> {
+    match sniff(archive)? {
+        Format::Zip => extract_zip(archive, out),
+        Format::SevenZip => extract_7z(archive, out),
+        Format::Rar => extract_rar(archive, out),
+    }
+}
+
+// the relative path an entry may be written to, or None when it would escape `out`
+fn safe_relative(name: &Path) -> Option<PathBuf> {
+    let mut rel = PathBuf::new();
+    for c in name.components() {
+        match c {
+            Component::Normal(part) => rel.push(part),
+            Component::CurDir => {}
+            _ => return None,
+        }
+    }
+    (!rel.as_os_str().is_empty()).then_some(rel)
+}
+
+fn skipped(rel: &Path) -> bool {
+    rel.starts_with("__MACOSX")
+}
+
+fn extract_7z(archive: &Path, out: &Path) -> AppResult<()> {
+    std::fs::create_dir_all(out)?;
+    let mut unsafe_name = None;
+    sevenz_rust2::decompress_file_with_extract_fn(archive, out, |entry, reader, _| {
+        // 7z stores Windows separators; normalize before judging the path
+        let name = entry.name().replace('\\', "/");
+        let Some(rel) = safe_relative(Path::new(&name)) else {
+            unsafe_name = Some(name);
+            return Ok(false);
+        };
+        if skipped(&rel) {
+            std::io::copy(reader, &mut std::io::sink())?;
+            return Ok(true);
+        }
+        sevenz_rust2::default_entry_extract_fn(entry, reader, &out.join(rel))
+    })
+    .map_err(|e| AppError::BadArchive(e.to_string()))?;
+    match unsafe_name {
+        Some(name) => Err(AppError::BadArchive(format!("unsafe path {name}"))),
+        None => Ok(()),
+    }
+}
+
+fn extract_rar(archive: &Path, out: &Path) -> AppResult<()> {
+    std::fs::create_dir_all(out)?;
+    let bad = |e: unrar::error::UnrarError| AppError::BadArchive(e.to_string());
+    let mut cursor = unrar::Archive::new(archive)
+        .open_for_processing()
+        .map_err(bad)?;
+    while let Some(entry) = cursor.read_header().map_err(bad)? {
+        let name = entry.entry().filename.clone();
+        let Some(rel) = safe_relative(&name) else {
+            return Err(AppError::BadArchive(format!(
+                "unsafe path {}",
+                name.display()
+            )));
+        };
+        cursor = if skipped(&rel) || entry.entry().is_directory() {
+            entry.skip().map_err(bad)?
+        } else {
+            entry.extract_with_base(out).map_err(bad)?
+        };
+    }
+    Ok(())
+}
 
 /// Extracts the zip at `archive` into `out`, keeping unix permission bits.
 ///
@@ -83,5 +185,53 @@ pub(crate) mod tests {
         extract_zip(&archive, &out).unwrap();
         assert!(out.join("Mod/manifest.json").is_file());
         assert!(!out.join("__MACOSX").exists());
+    }
+
+    fn fixture(name: &str) -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures")
+            .join(name)
+    }
+
+    #[test]
+    fn sniffs_formats_by_content() {
+        let dir = tempfile::tempdir().unwrap();
+        let zip = dir.path().join("mislabeled.7z");
+        make_zip(&zip, &[("a", "b")]);
+        assert_eq!(sniff(&zip).unwrap(), Format::Zip);
+        assert_eq!(sniff(&fixture("mod.7z")).unwrap(), Format::SevenZip);
+        assert_eq!(sniff(&fixture("solid.rar")).unwrap(), Format::Rar);
+        let txt = dir.path().join("readme.zip");
+        std::fs::write(&txt, "hello").unwrap();
+        assert!(sniff(&txt).is_err());
+    }
+
+    #[test]
+    fn extracts_7z_and_rejects_traversal() {
+        let dir = tempfile::tempdir().unwrap();
+        let out = dir.path().join("out");
+        extract(&fixture("mod.7z"), &out).unwrap();
+        assert!(out.join("Mod7z/manifest.json").is_file());
+        assert!(extract(&fixture("evil.7z"), &dir.path().join("evil")).is_err());
+        assert!(!dir.path().join("x").exists());
+    }
+
+    #[test]
+    fn extracts_rar() {
+        let dir = tempfile::tempdir().unwrap();
+        let out = dir.path().join("out");
+        extract(&fixture("solid.rar"), &out).unwrap();
+        assert!(out.join(".gitignore").is_file());
+    }
+
+    #[test]
+    fn judges_entry_paths() {
+        assert_eq!(
+            safe_relative(Path::new("./a/b")),
+            Some(PathBuf::from("a/b"))
+        );
+        assert_eq!(safe_relative(Path::new("../a")), None);
+        assert_eq!(safe_relative(Path::new("/etc/passwd")), None);
+        assert_eq!(safe_relative(Path::new("")), None);
     }
 }

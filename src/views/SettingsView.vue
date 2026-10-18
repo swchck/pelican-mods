@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import SmapiProgress from "@/components/SmapiProgress.vue";
+import NexusAccountCard from "@/components/NexusAccountCard.vue";
 import { api } from "@/lib/api";
 import { errorText, setLocale } from "@/i18n";
 import { useGame } from "@/stores/game";
@@ -94,6 +95,8 @@ async function uninstall() {
         </Button>
       </div>
     </section>
+
+    <NexusAccountCard />
 
     <section class="wood-panel flex items-center gap-3 p-5">
       <h2 class="font-pixel text-wood-dark flex-1 text-xl font-bold">{{ t("settings.language") }}</h2>

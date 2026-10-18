@@ -90,11 +90,11 @@ pub fn scan(root: &Path) -> Vec<Package> {
     out
 }
 
-/// Installs every package in the zip at `archive` into `root`; packages it replaces
+/// Installs every package in the archive at `archive` into `root`; packages it replaces
 /// move to `backups`.
-pub fn install_zip(root: &Path, backups: &Path, archive: &Path) -> AppResult<Vec<Installed>> {
+pub fn install_archive(root: &Path, backups: &Path, archive: &Path) -> AppResult<Vec<Installed>> {
     let staging = Staging::new(root)?;
-    archive::extract_zip(archive, &staging.path)?;
+    archive::extract(archive, &staging.path)?;
     let fallback = archive
         .file_stem()
         .map(|s| s.to_string_lossy().into_owned())
@@ -352,7 +352,7 @@ mod tests {
                 &manifest("Lookup Anything", "P.Lookup", "1.49.0"),
             )],
         );
-        let res = install_zip(&root, &dir.path().join("backups"), &zip).unwrap();
+        let res = install_archive(&root, &dir.path().join("backups"), &zip).unwrap();
         assert_eq!(res[0].id, "LookupAnything");
         let pkgs = scan(&root);
         assert_eq!(pkgs.len(), 1);
@@ -378,7 +378,7 @@ mod tests {
             )],
         );
         assert_eq!(
-            install_zip(&root, &dir.path().join("backups"), &zip).unwrap()[0].id,
+            install_archive(&root, &dir.path().join("backups"), &zip).unwrap()[0].id,
             "Pretty_ Paths"
         );
     }
@@ -401,7 +401,7 @@ mod tests {
                 ),
             ],
         );
-        let res = install_zip(&root, &dir.path().join("backups"), &zip).unwrap();
+        let res = install_archive(&root, &dir.path().join("backups"), &zip).unwrap();
         assert_eq!(res.len(), 1);
         let pkg = &scan(&root)[0];
         assert_eq!(pkg.id, "Stardew Valley Expanded");
@@ -420,7 +420,7 @@ mod tests {
                 &manifest("Lookup", "P.Lookup", "1.0.0"),
             )],
         );
-        install_zip(&root, &dir.path().join("backups"), &v1).unwrap();
+        install_archive(&root, &dir.path().join("backups"), &v1).unwrap();
         std::fs::write(root.join("Lookup/config.json"), r#"{"Key":"F2"}"#).unwrap();
 
         let v2 = dir.path().join("v2.zip");
@@ -431,7 +431,7 @@ mod tests {
                 &manifest("Lookup", "P.Lookup", "1.1.0"),
             )],
         );
-        let res = install_zip(&root, &dir.path().join("backups"), &v2).unwrap();
+        let res = install_archive(&root, &dir.path().join("backups"), &v2).unwrap();
         assert_eq!(res[0].id, "Lookup Anything");
         assert_eq!(res[0].replaced, ["Lookup"]);
         let pkgs = scan(&root);
@@ -450,13 +450,13 @@ mod tests {
         let root = dir.path().join("store");
         let zip = dir.path().join("bad.zip");
         make_zip(&zip, &[("Bad/manifest.json", "{ nope")]);
-        install_zip(&root, &dir.path().join("backups"), &zip).unwrap();
+        install_archive(&root, &dir.path().join("backups"), &zip).unwrap();
         assert_eq!(scan(&root)[0].broken.len(), 1);
 
         let empty = dir.path().join("empty.zip");
         make_zip(&empty, &[("readme.txt", "hi")]);
         assert!(matches!(
-            install_zip(&root, &dir.path().join("backups"), &empty),
+            install_archive(&root, &dir.path().join("backups"), &empty),
             Err(AppError::NoMods)
         ));
     }
@@ -468,7 +468,7 @@ mod tests {
         for (i, id) in ["a.One", "a.Two"].iter().enumerate() {
             let zip = dir.path().join(format!("{i}.zip"));
             make_zip(&zip, &[("Mod/manifest.json", &manifest("Mod", id, "1.0"))]);
-            install_zip(&root, &dir.path().join("backups"), &zip).unwrap();
+            install_archive(&root, &dir.path().join("backups"), &zip).unwrap();
         }
         let ids: Vec<String> = scan(&root).into_iter().map(|p| p.id).collect();
         assert_eq!(ids, ["Mod", "Mod (2)"]);

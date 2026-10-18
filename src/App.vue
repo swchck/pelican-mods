@@ -6,11 +6,18 @@ import "vue-sonner/style.css";
 import AppSidebar from "@/components/AppSidebar.vue";
 import SetupView from "@/views/SetupView.vue";
 import SmapiPrompt from "@/components/SmapiPrompt.vue";
+import NexusKeyDialog from "@/components/NexusKeyDialog.vue";
 import { useGame } from "@/stores/game";
+import { useNexus } from "@/stores/nexus";
 
 const game = useGame();
 
-onMounted(() => void game.init());
+const nexus = useNexus();
+
+onMounted(() => {
+  void game.init();
+  void nexus.init();
+});
 </script>
 
 <template>
@@ -25,5 +32,6 @@ onMounted(() => void game.init());
     </main>
   </div>
   <SmapiPrompt />
+  <NexusKeyDialog />
   <Toaster position="bottom-right" rich-colors />
 </template>

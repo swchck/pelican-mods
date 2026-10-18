@@ -32,6 +32,9 @@ pub struct AppState {
     /// Last smapi.io answer, also kept on disk between runs.
     pub(crate) updates: Mutex<UpdateReport>,
     pub(crate) updates_file: PathBuf,
+    pub(crate) downloads: crate::downloads::Downloads,
+    /// Account of the stored Nexus key, once validated this session.
+    pub(crate) nexus_account: Mutex<Option<crate::nexus::Account>>,
     pub(crate) profiles: ProfilesStore,
     /// Serializes store and profile changes; installs run on blocking threads in parallel.
     pub(crate) library_lock: Mutex<()>,
@@ -55,6 +58,8 @@ impl AppState {
             backup_root: data_dir.join("backups"),
             updates: Mutex::new(crate::updates::load_cache(&cache_dir.join("updates.json"))),
             updates_file: cache_dir.join("updates.json"),
+            downloads: Default::default(),
+            nexus_account: Mutex::new(None),
             profiles: ProfilesStore::load(config_dir.join("profiles.json")),
             library_lock: Mutex::new(()),
         }

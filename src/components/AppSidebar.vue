@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { GamepadIcon, LibraryIcon, SettingsIcon, TerminalIcon } from "@lucide/vue";
+import { GamepadIcon, LibraryIcon, SearchIcon, SettingsIcon, TerminalIcon } from "@lucide/vue";
+import DownloadsCard from "@/components/DownloadsCard.vue";
 import AppLogo from "@/components/AppLogo.vue";
 import PlayCard from "@/components/PlayCard.vue";
 import { onMounted } from "vue";
@@ -16,6 +17,7 @@ onMounted(() => {
 
 const links = [
   { to: "/", label: "nav.library", icon: LibraryIcon },
+  { to: "/browse", label: "nav.browse", icon: SearchIcon },
   { to: "/game", label: "nav.home", icon: GamepadIcon },
   { to: "/console", label: "nav.console", icon: TerminalIcon },
   { to: "/settings", label: "nav.settings", icon: SettingsIcon },
@@ -47,6 +49,7 @@ const links = [
       </span>
     </RouterLink>
     <div class="flex-1" data-tauri-drag-region />
+    <DownloadsCard />
     <PlayCard />
   </nav>
 </template>

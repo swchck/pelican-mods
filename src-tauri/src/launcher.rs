@@ -655,7 +655,8 @@ mod tests {
 
         let store = tmp.path().join("store");
         let installed =
-            crate::library::install_zip(&store, &tmp.path().join("backups"), &zip_path).unwrap();
+            crate::library::install_archive(&store, &tmp.path().join("backups"), &zip_path)
+                .unwrap();
         let profile = Profile {
             id: "test".into(),
             name: None,

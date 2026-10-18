@@ -25,6 +25,12 @@ tokio = { version = "1.53.2", features = ["time", "sync", "process", "io-util", 
 futures-util = { version = "0.3", default-features = false, features = ["std"] }
 zip = { version = "9", default-features = false, features = ["deflate"] }
 json5 = "1"
+keyring = { version = "3", features = ["apple-native"] }
+tauri-plugin-deep-link = "2"
+tauri-plugin-clipboard-manager = "2"
+sevenz-rust2 = "0.24"
+unrar = "0.5"
+url = "2"
 
 [dev-dependencies]
 tempfile = "3.27.0"

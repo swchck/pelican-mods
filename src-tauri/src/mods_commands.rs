@@ -158,7 +158,7 @@ pub fn deploy_active(state: &AppState) -> AppResult<PathBuf> {
 }
 
 // store changes touch disk and may unpack hundreds of megabytes; keep them off the main thread
-async fn blocking<T: Send + 'static>(
+pub(crate) async fn blocking<T: Send + 'static>(
     app: AppHandle,
     f: impl FnOnce(&AppState) -> AppResult<T> + Send + 'static,
 ) -> AppResult<T> {
@@ -189,19 +189,25 @@ pub async fn library_get(app: AppHandle) -> AppResult<LibraryView> {
 #[tauri::command]
 pub async fn library_install(app: AppHandle, paths: Vec<PathBuf>) -> AppResult<LibraryView> {
     blocking(app, move |s| {
-        let _guard = s.library_lock.lock().unwrap();
-        for path in &paths {
-            let installed = if path.is_dir() {
-                library::install_dir(&s.store_root, &s.backup_root, path)?
-            } else {
-                library::install_zip(&s.store_root, &s.backup_root, path)?
-            };
-            record_installs(s, &installed)?;
-        }
-        drop(_guard);
+        install_paths(s, &paths)?;
         Ok(build_view(s))
     })
     .await
+}
+
+/// Installs archives or mod folders into the store and enables new packages in the
+/// active profile. Blocking; call from a blocking thread.
+pub fn install_paths(s: &AppState, paths: &[PathBuf]) -> AppResult<()> {
+    let _guard = s.library_lock.lock().unwrap();
+    for path in paths {
+        let installed = if path.is_dir() {
+            library::install_dir(&s.store_root, &s.backup_root, path)?
+        } else {
+            library::install_archive(&s.store_root, &s.backup_root, path)?
+        };
+        record_installs(s, &installed)?;
+    }
+    Ok(())
 }
 
 /// Copies folders from the game's `Mods` into the store, leaving the originals.
@@ -370,7 +376,7 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<LibraryView> {
     let file = updates::download_github(&state.http, &repo, &name, &version, &dir).await?;
     let view = blocking(app, move |s| {
         let _guard = s.library_lock.lock().unwrap();
-        let installed = library::install_zip(&s.store_root, &s.backup_root, &file);
+        let installed = library::install_archive(&s.store_root, &s.backup_root, &file);
         let _ = std::fs::remove_file(&file);
         record_installs(s, &installed?)?;
         drop(_guard);

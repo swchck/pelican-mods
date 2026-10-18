@@ -2,12 +2,15 @@ mod archive;
 mod backups;
 mod commands;
 mod deps;
+mod downloads;
 mod error;
 mod game;
 mod launcher;
 mod library;
 mod manifest;
 mod mods_commands;
+mod nexus;
+mod nexus_commands;
 mod profiles;
 mod rosetta;
 mod settings;
@@ -16,17 +19,35 @@ mod updates;
 mod version;
 
 use tauri::Manager;
+use tauri_plugin_deep_link::DeepLinkExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
             let config_dir = app.path().app_config_dir()?;
             let data_dir = app.path().app_data_dir()?;
             let cache_dir = app.path().app_cache_dir()?;
             app.manage(commands::AppState::new(config_dir, data_dir, cache_dir));
+
+            // Nexus' "Mod Manager Download" button opens nxm:// links; macOS hands them
+            // to the running app, or launches it with the link
+            let handle = app.handle().clone();
+            let open = move |urls: Vec<url::Url>| {
+                for u in urls {
+                    if let Err(e) = nexus_commands::handle_nxm(&handle, u.as_str()) {
+                        let _ = tauri::Emitter::emit(&handle, "nxm:error", &e);
+                    }
+                }
+            };
+            if let Ok(Some(urls)) = app.deep_link().get_current() {
+                open(urls);
+            }
+            app.deep_link().on_open_url(move |event| open(event.urls()));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -57,6 +78,16 @@ pub fn run() {
             mods_commands::updates_check,
             mods_commands::mod_update,
             mods_commands::mod_rollback,
+            nexus_commands::nexus_search,
+            nexus_commands::nexus_mod,
+            nexus_commands::nexus_account,
+            nexus_commands::nexus_set_key,
+            nexus_commands::nexus_clear_key,
+            nexus_commands::nexus_download,
+            nexus_commands::nexus_file_page,
+            nexus_commands::nxm_open,
+            nexus_commands::downloads_list,
+            nexus_commands::downloads_clear,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

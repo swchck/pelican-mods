@@ -170,3 +170,94 @@ export const library = {
   update: (id: string) => invoke<LibraryView>("mod_update", { id }),
   rollback: (uniqueId: string) => invoke<LibraryView>("mod_rollback", { uniqueId }),
 };
+
+export type NexusSort = "endorsements" | "downloads" | "updated" | "created";
+
+export interface NexusCard {
+  modId: number;
+  name: string;
+  summary: string | null;
+  author: string | null;
+  version: string | null;
+  thumbnailUrl: string | null;
+  endorsements: number;
+  downloads: number;
+  updatedAt: string | null;
+  category: string | null;
+}
+
+export interface NexusPage {
+  total: number;
+  items: NexusCard[];
+}
+
+export interface NexusFile {
+  fileId: number;
+  name: string;
+  version: string | null;
+  category: string | null;
+  sizeInBytes: number | null;
+  /** Unix seconds. */
+  date: number;
+  description: string | null;
+}
+
+export interface NexusRequirement {
+  modId: number | null;
+  modName: string | null;
+  url: string | null;
+  notes: string | null;
+  externalRequirement: boolean;
+}
+
+export interface NexusMod {
+  modId: number;
+  name: string;
+  summary: string | null;
+  description: string | null;
+  author: string | null;
+  version: string | null;
+  pictureUrl: string | null;
+  endorsements: number;
+  downloads: number;
+  updatedAt: string | null;
+  category: string | null;
+  requirements: NexusRequirement[];
+  files: NexusFile[];
+}
+
+export interface NexusAccount {
+  name: string;
+  isPremium: boolean;
+  profileUrl: string | null;
+}
+
+export type DownloadState =
+  | { state: "resolving" }
+  | { state: "downloading"; received: number; total: number }
+  | { state: "installing" }
+  | { state: "done" }
+  | { state: "failed"; error: AppError };
+
+export type Download = { id: number; name: string; nexusModId: number | null } & DownloadState;
+
+export const nexus = {
+  search: (query: string, sort: NexusSort, offset: number) =>
+    invoke<NexusPage>("nexus_search", { query, sort, offset }),
+  mod: (modId: number) => invoke<NexusMod>("nexus_mod", { modId }),
+  account: () => invoke<NexusAccount | null>("nexus_account"),
+  setKey: (key: string) => invoke<NexusAccount>("nexus_set_key", { key }),
+  clearKey: () => invoke<void>("nexus_clear_key"),
+  download: (modId: number, fileId: number) => invoke<void>("nexus_download", { modId, fileId }),
+  filePage: (modId: number, fileId: number) => invoke<string>("nexus_file_page", { modId, fileId }),
+  openNxm: (url: string) => invoke<void>("nxm_open", { url }),
+  downloads: () => invoke<Download[]>("downloads_list"),
+  clearDownloads: () => invoke<Download[]>("downloads_clear"),
+};
+
+export const nexusEvents = {
+  downloads: (cb: (d: Download[]) => void): Promise<UnlistenFn> =>
+    listen<Download[]>("downloads:changed", (e) => cb(e.payload)),
+  libraryChanged: (cb: () => void): Promise<UnlistenFn> => listen("library:changed", () => cb()),
+  nxmError: (cb: (e: AppError) => void): Promise<UnlistenFn> => listen<AppError>("nxm:error", (e) => cb(e.payload)),
+};
