@@ -1,0 +1,13 @@
+import { createRouter, createWebHashHistory } from "vue-router";
+import HomeView from "@/views/HomeView.vue";
+import ConsoleView from "@/views/ConsoleView.vue";
+import SettingsView from "@/views/SettingsView.vue";
+
+export const router = createRouter({
+  history: createWebHashHistory(),
+  routes: [
+    { path: "/", component: HomeView },
+    { path: "/console", component: ConsoleView },
+    { path: "/settings", component: SettingsView },
+  ],
+});

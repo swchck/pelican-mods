@@ -1,0 +1,154 @@
+import { computed, ref } from "vue";
+import { defineStore } from "pinia";
+import { toast } from "vue-sonner";
+import {
+  api,
+  events,
+  isAppError,
+  type GameInstall,
+  type LogLine,
+  type RunState,
+  type SmapiProgress,
+  type SmapiRelease,
+} from "@/lib/api";
+import { compareVersions } from "@/lib/version";
+import { errorText, i18n } from "@/i18n";
+
+const LOG_LIMIT = 2000;
+
+export const useGame = defineStore("game", () => {
+  const phase = ref<"loading" | "setup" | "ready">("loading");
+  const install = ref<GameInstall | null>(null);
+  const detected = ref<GameInstall[]>([]);
+  const latest = ref<SmapiRelease | null>(null);
+  const progress = ref<SmapiProgress | null>(null);
+  const run = ref<RunState>({ state: "idle" });
+  const log = ref<LogLine[]>([]);
+
+  const running = computed(() => run.value.state === "running");
+  const busy = computed(() => progress.value !== null);
+  const promptDismissed = ref(false);
+  /** What to offer in the startup dialog: SMAPI missing, outdated, or nothing. */
+  const smapiPrompt = computed<"install" | "update" | null>(() => {
+    const g = install.value;
+    if (phase.value !== "ready" || !g || g.needsRosetta || promptDismissed.value || busy.value || running.value)
+      return null;
+    if (!g.smapiVersion) return "install";
+    return smapiUpdate.value ? "update" : null;
+  });
+  const smapiUpdate = computed(() => {
+    const cur = install.value?.smapiVersion;
+    const next = latest.value?.version;
+    return cur && next && compareVersions(next, cur) > 0 ? next : null;
+  });
+
+  async function init() {
+    await Promise.all([
+      events.log((l) => {
+        log.value.push(l);
+        if (log.value.length > LOG_LIMIT) log.value.splice(0, log.value.length - LOG_LIMIT);
+      }),
+      events.state((s) => {
+        run.value = s;
+        if (s.state === "exited") void refresh();
+      }),
+      events.smapiProgress((p) => (progress.value = p)),
+    ]);
+    [install.value, run.value, log.value] = await Promise.all([api.currentGame(), api.runState(), api.log()]);
+    // nothing saved yet, or the saved folder is gone: one install found means no question to ask
+    if (!install.value) {
+      detected.value = await api.detectGames();
+      if (detected.value.length === 1) await choose(detected.value[0].path);
+    }
+    phase.value = install.value ? "ready" : "setup";
+    await checkSmapi();
+  }
+
+  async function refresh() {
+    install.value = await api.currentGame();
+  }
+
+  async function choose(path: string) {
+    try {
+      install.value = await api.setGamePath(path);
+      phase.value = "ready";
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  }
+
+  async function checkSmapi() {
+    try {
+      latest.value = await api.smapiLatest();
+    } catch {
+      // offline is normal for a launcher; the install button retries on click
+      latest.value = null;
+    }
+  }
+
+  async function smapi(action: "install" | "uninstall") {
+    const { t } = i18n.global;
+    promptDismissed.value = true;
+    progress.value = { stage: "download", received: 0, total: 0 };
+    try {
+      install.value = await api.smapiRun(action);
+      toast.success(
+        action === "install" ? t("smapi.installed", { version: install.value.smapiVersion ?? "" }) : t("smapi.removed"),
+      );
+    } catch (e) {
+      toast.error(errorText(e), { duration: 15000 });
+    } finally {
+      progress.value = null;
+    }
+  }
+
+  async function installRosetta() {
+    try {
+      await api.installRosetta();
+      await refresh();
+      toast.success(i18n.global.t("rosetta.done"));
+    } catch (e) {
+      if (!(isAppError(e) && e.kind === "cancelled")) toast.error(errorText(e), { duration: 15000 });
+    }
+  }
+
+  async function launch(modded: boolean) {
+    try {
+      log.value = [];
+      run.value = await api.launch(modded);
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  }
+
+  async function stop() {
+    try {
+      await api.stop();
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  }
+
+  return {
+    phase,
+    install,
+    detected,
+    latest,
+    progress,
+    run,
+    log,
+    running,
+    busy,
+    smapiUpdate,
+    smapiPrompt,
+    promptDismissed,
+    init,
+    refresh,
+    choose,
+    checkSmapi,
+    smapi,
+    installRosetta,
+    launch,
+    stop,
+  };
+});

@@ -1,0 +1,145 @@
+@import "@fontsource-variable/nunito";
+@import "@fontsource-variable/pixelify-sans";
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+@custom-variant traffic-lights (&:is(.traffic-lights *));
+
+/* the nova registry style targets Base UI attributes (data-checked, data-open…), while
+   reka-ui marks state as data-state="…" and data-orientation="…"; map one onto the other */
+@custom-variant data-checked (&[data-state="checked"]);
+@custom-variant data-unchecked (&[data-state="unchecked"]);
+@custom-variant data-open (&[data-state="open"]);
+@custom-variant data-closed (&[data-state="closed"]);
+@custom-variant data-active (&[data-state="active"]);
+@custom-variant data-horizontal (&[data-orientation="horizontal"]);
+@custom-variant data-vertical (&[data-orientation="vertical"]);
+
+@theme inline {
+  --font-sans: "Nunito Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-pixel: "Pixelify Sans Variable", ui-sans-serif, sans-serif;
+  --font-heading: var(--font-pixel);
+  --color-wood: var(--wood);
+  --color-wood-dark: var(--wood-dark);
+  --color-wood-light: var(--wood-light);
+  --color-paper: var(--paper);
+  --color-parchment: var(--parchment);
+  --color-gold: var(--gold);
+  --color-gold-shade: var(--gold-shade);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-shade: var(--success-shade);
+  --color-success-soft: var(--success-soft);
+  --color-warning-soft: var(--warning-soft);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.5rem;
+  --wood: #8a5530;
+  --wood-dark: #4e2c14;
+  --wood-light: #c9a06a;
+  --paper: #fff6e2;
+  --parchment: #fbefd4;
+  --gold: #f2c14e;
+  --gold-shade: #d99a2b;
+  --success: #3f7f2a;
+  --success-foreground: #ffffff;
+  --success-shade: #2e6320;
+  --success-soft: #e6f0d8;
+  --warning-soft: #f8d9cf;
+
+  --background: #f3e4c3;
+  --foreground: #3b2414;
+  --card: var(--paper);
+  --card-foreground: var(--foreground);
+  --popover: var(--paper);
+  --popover-foreground: var(--foreground);
+  --primary: var(--gold);
+  --primary-foreground: #3b2414;
+  --secondary: var(--parchment);
+  --secondary-foreground: #3b2414;
+  --muted: #ebd3a8;
+  --muted-foreground: #6b4a2e;
+  --accent: #fbe3a8;
+  --accent-foreground: #3b2414;
+  --destructive: #8e2f1f;
+  --border: #5b3a1e;
+  --border-soft: #d8b47c;
+  --input: #a0703f;
+  --ring: #b57f17;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body,
+  #app {
+    @apply h-full;
+  }
+  /* a desktop window, not a page: WebKit's rubber-band scroll dragged the whole layout */
+  html,
+  body {
+    @apply overflow-hidden overscroll-none;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased select-none;
+  }
+  input,
+  textarea,
+  [contenteditable] {
+    @apply select-text;
+  }
+}
+
+@layer components {
+  /* the game's menu frame: dark wood edge, light inner bevel, a drop shadow that reads as thickness */
+  .wood-panel {
+    @apply bg-card text-card-foreground rounded-[10px] border-[3px] border-[var(--border)];
+    box-shadow:
+      inset 0 0 0 3px #e8c48a,
+      0 4px 0 var(--wood-light);
+  }
+  /* vertical grain only: horizontal plank seams cut through the nav items at every rhythm we tried */
+  .wood-planks {
+    background-color: #8a5530;
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgb(0 0 0 / 0) 0px,
+      rgb(0 0 0 / 0.04) 9px,
+      rgb(0 0 0 / 0) 18px,
+      rgb(255 255 255 / 0.03) 31px,
+      rgb(0 0 0 / 0) 44px
+    );
+  }
+  .grass-strip {
+    background: repeating-linear-gradient(90deg, #6fb04a 0px, #6fb04a 16px, #5e9e3e 16px, #5e9e3e 32px);
+  }
+}
