@@ -119,6 +119,23 @@ export interface PackageView {
   enabled: boolean;
   mods: ModView[];
   broken: { relPath: string; error: string }[];
+  backupVersion: string | null;
+}
+
+export interface UpdateInfo {
+  version: string | null;
+  url: string | null;
+  compatStatus: string | null;
+  compatSummary: string | null;
+  nexusId: number | null;
+  errors: string[];
+}
+
+export interface UpdateReport {
+  /** Unix seconds; 0 means never checked. */
+  checkedAt: number;
+  /** Keyed by lowercased UniqueID. */
+  mods: Record<string, UpdateInfo>;
 }
 
 export interface Profile {
@@ -149,4 +166,7 @@ export const library = {
   renameProfile: (id: string, name: string) => invoke<LibraryView>("profile_rename", { id, name }),
   deleteProfile: (id: string) => invoke<LibraryView>("profile_delete", { id }),
   activateProfile: (id: string) => invoke<LibraryView>("profile_activate", { id }),
+  checkUpdates: (force: boolean) => invoke<UpdateReport>("updates_check", { force }),
+  update: (id: string) => invoke<LibraryView>("mod_update", { id }),
+  rollback: (uniqueId: string) => invoke<LibraryView>("mod_rollback", { uniqueId }),
 };

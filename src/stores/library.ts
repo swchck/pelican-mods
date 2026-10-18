@@ -1,14 +1,19 @@
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import { toast } from "vue-sonner";
-import { library as api, type LibraryView } from "@/lib/api";
-import { errorText } from "@/i18n";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { library as api, type LibraryView, type PackageView, type UpdateReport } from "@/lib/api";
+import { packageUpdate } from "@/lib/packages";
+import { errorText, i18n } from "@/i18n";
 
 export const useLibrary = defineStore("library", () => {
   const view = ref<LibraryView | null>(null);
   const selectedId = ref<string | null>(null);
   const filter = ref("");
   const working = ref(false);
+  const report = ref<UpdateReport | null>(null);
+  const checking = ref(false);
+  const updating = ref(new Set<string>());
 
   const packages = computed(() => view.value?.packages ?? []);
   const selected = computed(() => packages.value.find((p) => p.id === selectedId.value) ?? null);
@@ -30,8 +35,63 @@ export const useLibrary = defineStore("library", () => {
     }
   }
 
+  const updatable = computed(() => packages.value.filter((p) => packageUpdate(p, report.value)));
+  const directUpdates = computed(() => updatable.value.filter((p) => packageUpdate(p, report.value)?.direct));
+
+  async function checkUpdates(force: boolean) {
+    checking.value = true;
+    try {
+      report.value = await api.checkUpdates(force);
+    } catch (e) {
+      // the automatic check runs at startup, often offline; only a manual one reports
+      if (force) toast.error(errorText(e));
+    } finally {
+      checking.value = false;
+    }
+  }
+
+  async function load() {
+    const ok = await run(api.get);
+    if (ok) void checkUpdates(false);
+    return ok;
+  }
+
+  /** Updates in place from GitHub, or opens the mod page where only a browser can download. */
+  async function update(p: PackageView) {
+    const u = packageUpdate(p, report.value);
+    if (!u) return;
+    if (!u.direct) {
+      await openUrl(u.url);
+      return;
+    }
+    updating.value = new Set(updating.value).add(p.id);
+    try {
+      view.value = await api.update(p.id);
+      toast.success(i18n.global.t("updates.done", { name: p.id, version: u.version }));
+    } catch (e) {
+      toast.error(errorText(e), { duration: 10000 });
+    } finally {
+      const next = new Set(updating.value);
+      next.delete(p.id);
+      updating.value = next;
+    }
+  }
+
+  async function updateAll() {
+    for (const p of directUpdates.value) await update(p);
+  }
+
   return {
     view,
+    report,
+    checking,
+    updating,
+    updatable,
+    directUpdates,
+    checkUpdates,
+    update,
+    updateAll,
+    rollback: (uniqueId: string) => run(() => api.rollback(uniqueId)),
     selectedId,
     filter,
     working,
@@ -39,7 +99,7 @@ export const useLibrary = defineStore("library", () => {
     selected,
     profiles,
     activeProfile,
-    load: () => run(api.get),
+    load,
     install: (paths: string[]) => run(() => api.install(paths)),
     importGameMods: (names: string[]) => run(() => api.import(names)),
     remove: (id: string) => run(() => api.remove(id)),

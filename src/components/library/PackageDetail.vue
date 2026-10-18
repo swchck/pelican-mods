@@ -2,7 +2,15 @@
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "vue-sonner";
-import { CircleAlertIcon, FolderIcon, Trash2Icon } from "@lucide/vue";
+import {
+  ArrowUpCircleIcon,
+  CircleAlertIcon,
+  ExternalLinkIcon,
+  FolderIcon,
+  Loader2Icon,
+  Trash2Icon,
+  Undo2Icon,
+} from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,7 +22,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { library, type Issue, type PackageView } from "@/lib/api";
-import { packageAuthor, packageIssues, packageTitle, packageVersion } from "@/lib/packages";
+import {
+  packageAuthor,
+  packageCompat,
+  packageIssues,
+  packageTitle,
+  packageUpdate,
+  packageVersion,
+} from "@/lib/packages";
 import { errorText } from "@/i18n";
 import { useLibrary } from "@/stores/library";
 
@@ -25,6 +40,9 @@ const confirmRemove = ref(false);
 
 const single = computed(() => (props.pkg.mods.length === 1 ? props.pkg.mods[0] : null));
 const description = computed(() => single.value?.manifest.description ?? "");
+const update = computed(() => packageUpdate(props.pkg, lib.report));
+const compat = computed(() => packageCompat(props.pkg, lib.report));
+const busy = computed(() => lib.updating.has(props.pkg.id));
 const requiredBy = computed(() => [...new Set(props.pkg.mods.flatMap((m) => m.requiredBy))]);
 
 const tags = computed(() => {
@@ -92,6 +110,27 @@ async function remove() {
       </span>
     </div>
 
+    <div
+      v-if="update"
+      class="border-border-soft bg-parchment flex flex-col gap-2 rounded-md border-2 border-dashed p-2.5 text-[13px]"
+    >
+      <span class="font-extrabold">{{ t("updates.available", { version: update.version }) }}</span>
+      <span v-if="!update.direct" class="text-muted-foreground text-xs font-semibold">{{ t("updates.manual") }}</span>
+      <Button size="sm" class="self-start" :disabled="busy" @click="lib.update(pkg)">
+        <Loader2Icon v-if="busy" class="animate-spin" />
+        <ArrowUpCircleIcon v-else-if="update.direct" />
+        <ExternalLinkIcon v-else />
+        {{ update.direct ? t("updates.update") : t("updates.openPage") }}
+      </Button>
+    </div>
+
+    <p
+      v-if="compat"
+      class="bg-warning-soft text-destructive rounded-md border-2 border-[#d98b76] p-2.5 text-[13px] font-semibold"
+    >
+      {{ t(`updates.compat.${compat.status}`) }}<template v-if="compat.summary">: {{ compat.summary }}</template>
+    </p>
+
     <ul
       v-if="pkg.enabled && packageIssues(pkg).length"
       class="bg-warning-soft flex flex-col gap-1.5 rounded-md border-2 border-[#d98b76] p-2.5 text-[13px] font-semibold"
@@ -130,6 +169,14 @@ async function remove() {
     </p>
 
     <div class="flex-1" />
+    <Button
+      v-if="pkg.backupVersion && pkg.mods[0]"
+      variant="outline"
+      :disabled="lib.working"
+      @click="lib.rollback(pkg.mods[0].manifest.uniqueId)"
+    >
+      <Undo2Icon />{{ t("updates.rollback", { version: pkg.backupVersion }) }}
+    </Button>
     <div class="grid grid-cols-2 gap-2">
       <Button variant="outline" @click="openFolder"><FolderIcon />{{ t("library.openFolder") }}</Button>
       <Button v-if="!pkg.system" variant="destructive" :disabled="lib.working" @click="confirmRemove = true">

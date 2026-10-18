@@ -10,6 +10,9 @@
       "identifier": "opener:allow-open-url",
       "allow": [
         { "url": "https://github.com/*" },
+        { "url": "https://www.nexusmods.com/*" },
+        { "url": "https://www.moddrop.com/*" },
+        { "url": "https://www.curseforge.com/*" },
         { "url": "https://smapi.io/*" },
         { "url": "https://stardewvalleywiki.com/*" }
       ]

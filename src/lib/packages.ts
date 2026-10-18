@@ -1,6 +1,17 @@
-import type { Issue, PackageView } from "./api";
+import type { Issue, PackageView, UpdateReport } from "./api";
+import { compareVersions } from "./version";
 
-export type PackageStatus = "ok" | "off" | "issue" | "broken";
+export type PackageStatus = "ok" | "off" | "issue" | "broken" | "update";
+
+export interface PackageUpdate {
+  version: string;
+  url: string;
+  /** The launcher can download it itself (GitHub releases); otherwise the page opens. */
+  direct: boolean;
+}
+
+/** Compatibility verdicts worth a warning; "Ok" and "Optional" are fine. */
+const WARN_COMPAT = new Set(["Workaround", "Unofficial", "Broken", "Obsolete", "Abandoned"]);
 
 /** Display name: the mod's own name, or the folder name for multi-mod packages. */
 export function packageTitle(p: PackageView): string {
@@ -24,10 +35,35 @@ export function packageIssues(p: PackageView): Issue[] {
   return p.mods.flatMap((m) => m.issues);
 }
 
-export function packageStatus(p: PackageView): PackageStatus {
+/** The newest suggested update among the package's mods, if smapi.io reported one. */
+export function packageUpdate(p: PackageView, report: UpdateReport | null): PackageUpdate | null {
+  if (p.system || !report) return null;
+  for (const m of p.mods) {
+    const info = report.mods[m.manifest.uniqueId.toLowerCase()];
+    // the report outlives the install it was made for; an update already applied drops out here
+    if (info?.version && info.url && compareVersions(info.version, m.manifest.version) > 0) {
+      return { version: info.version, url: info.url, direct: info.url.startsWith("https://github.com/") };
+    }
+  }
+  return null;
+}
+
+export function packageCompat(p: PackageView, report: UpdateReport | null): { status: string; summary: string } | null {
+  if (!report) return null;
+  for (const m of p.mods) {
+    const info = report.mods[m.manifest.uniqueId.toLowerCase()];
+    if (info?.compatStatus && WARN_COMPAT.has(info.compatStatus)) {
+      return { status: info.compatStatus, summary: info.compatSummary ?? "" };
+    }
+  }
+  return null;
+}
+
+export function packageStatus(p: PackageView, report: UpdateReport | null = null): PackageStatus {
   if (p.broken.length) return "broken";
-  if (!p.enabled) return "off";
-  return packageIssues(p).length ? "issue" : "ok";
+  if (p.enabled && packageIssues(p).length) return "issue";
+  if (packageUpdate(p, report)) return "update";
+  return p.enabled ? "ok" : "off";
 }
 
 /** Case-insensitive match on names, authors, folder name and UniqueIDs. */

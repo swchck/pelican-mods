@@ -9,6 +9,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_opener::OpenerExt;
 
+use crate::backups;
 use crate::commands::AppState;
 use crate::deps::{self, Issue};
 use crate::error::{AppError, AppResult};
@@ -16,6 +17,7 @@ use crate::game;
 use crate::library::{self, BrokenMod, Package};
 use crate::manifest::{self, Manifest};
 use crate::profiles::{self, Profiles};
+use crate::updates::{self, UpdateReport};
 
 /// Everything the library screen shows.
 #[derive(Debug, Serialize)]
@@ -37,6 +39,8 @@ pub struct PackageView {
     pub enabled: bool,
     pub mods: Vec<ModView>,
     pub broken: Vec<BrokenMod>,
+    /// Version of the newest backup, when the package can be rolled back.
+    pub backup_version: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -94,7 +98,15 @@ fn build_view(state: &AppState) -> LibraryView {
         .map(|p| p.id.clone())
         .collect();
 
+    let backup_of = |p: &Package| {
+        let uid = &p.mods.first()?.manifest.unique_id;
+        backups::list(&state.backup_root, uid)
+            .into_iter()
+            .next()
+            .map(|b| b.version)
+    };
     let view = |p: Package, system: bool| PackageView {
+        backup_version: if system { None } else { backup_of(&p) },
         enabled: system || enabled.contains(&p.id),
         mods: p
             .mods
@@ -180,9 +192,9 @@ pub async fn library_install(app: AppHandle, paths: Vec<PathBuf>) -> AppResult<L
         let _guard = s.library_lock.lock().unwrap();
         for path in &paths {
             let installed = if path.is_dir() {
-                library::install_dir(&s.store_root, path)?
+                library::install_dir(&s.store_root, &s.backup_root, path)?
             } else {
-                library::install_zip(&s.store_root, path)?
+                library::install_zip(&s.store_root, &s.backup_root, path)?
             };
             record_installs(s, &installed)?;
         }
@@ -200,7 +212,7 @@ pub async fn library_import(app: AppHandle, names: Vec<String>) -> AppResult<Lib
         let _guard = s.library_lock.lock().unwrap();
         for name in &names {
             let src = library::package_path(&mods_dir, name)?;
-            let installed = library::install_dir(&s.store_root, &src)?;
+            let installed = library::install_dir(&s.store_root, &s.backup_root, &src)?;
             record_installs(s, &installed)?;
         }
         drop(_guard);
@@ -295,6 +307,92 @@ pub async fn profile_delete(app: AppHandle, id: String) -> AppResult<LibraryView
 pub async fn profile_activate(app: AppHandle, id: String) -> AppResult<LibraryView> {
     blocking(app, move |s| {
         s.profiles.update(|p| p.activate(&id))?;
+        Ok(build_view(s))
+    })
+    .await
+}
+
+fn versions(state: &AppState) -> (String, String) {
+    let install = state.game_dir().ok().and_then(|d| game::inspect(&d).ok());
+    let smapi = install
+        .as_ref()
+        .and_then(|g| g.smapi_version.clone())
+        .unwrap_or_else(|| "4.0.0".into());
+    let game = install
+        .and_then(|g| g.version)
+        .unwrap_or_else(|| "1.6.0".into());
+    (smapi, game)
+}
+
+/// Returns update info for the library, asking smapi.io when `force` is set or the
+/// cached answer is stale or misses an installed mod.
+#[tauri::command]
+pub async fn updates_check(app: AppHandle, force: bool) -> AppResult<UpdateReport> {
+    let (packages, cached, (smapi, game)) = blocking(app.clone(), |s| {
+        Ok((
+            library::scan(&s.store_root),
+            s.updates.lock().unwrap().clone(),
+            versions(s),
+        ))
+    })
+    .await?;
+    let covered = packages
+        .iter()
+        .flat_map(|p| p.unique_ids())
+        .all(|id| cached.mods.contains_key(&id.to_lowercase()));
+    if !force && cached.fresh() && covered {
+        return Ok(cached);
+    }
+    let state = app.state::<AppState>();
+    let report = updates::check(&state.http, &packages, &smapi, &game).await?;
+    *state.updates.lock().unwrap() = report.clone();
+    let _ = updates::save_cache(&state.updates_file, &report);
+    Ok(report)
+}
+
+/// Downloads and installs the suggested update of package `id`, when smapi.io points
+/// at a GitHub release. Other sites need a browser (or Nexus' nxm links) to download.
+#[tauri::command]
+pub async fn mod_update(app: AppHandle, id: String) -> AppResult<LibraryView> {
+    let state = app.state::<AppState>();
+    let pkg = library::read_package(id.clone(), library::package_path(&state.store_root, &id)?)
+        .ok_or_else(|| AppError::NotFound(id.clone()))?;
+    let found = {
+        let report = state.updates.lock().unwrap();
+        pkg.mods.iter().find_map(|m| {
+            let info = report.mods.get(&m.manifest.unique_id.to_lowercase())?;
+            let repo = updates::github_repo(info.url.as_deref()?)?;
+            Some((m.manifest.name.clone(), info.version.clone()?, repo))
+        })
+    };
+    let (name, version, repo) = found.ok_or_else(|| AppError::NoDownload(id.clone()))?;
+    let dir = state.work_dir.with_file_name("downloads");
+    let file = updates::download_github(&state.http, &repo, &name, &version, &dir).await?;
+    let view = blocking(app, move |s| {
+        let _guard = s.library_lock.lock().unwrap();
+        let installed = library::install_zip(&s.store_root, &s.backup_root, &file);
+        let _ = std::fs::remove_file(&file);
+        record_installs(s, &installed?)?;
+        drop(_guard);
+        Ok(build_view(s))
+    })
+    .await?;
+    Ok(view)
+}
+
+/// Restores the newest backup of the mod `unique_id`; the current version is backed up.
+#[tauri::command]
+pub async fn mod_rollback(app: AppHandle, unique_id: String) -> AppResult<LibraryView> {
+    blocking(app, move |s| {
+        let _guard = s.library_lock.lock().unwrap();
+        let backup = backups::list(&s.backup_root, &unique_id)
+            .into_iter()
+            .next()
+            .ok_or_else(|| AppError::NotFound(unique_id.clone()))?;
+        let installed = library::install_dir(&s.store_root, &s.backup_root, &backup.path)?;
+        backups::discard(&s.backup_root, &backup)?;
+        record_installs(s, &installed)?;
+        drop(_guard);
         Ok(build_view(s))
     })
     .await

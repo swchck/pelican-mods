@@ -25,6 +25,8 @@ pub enum AppError {
     InstallerFailed(String),
     #[error("invalid manifest.json: {0}")]
     BadManifest(String),
+    #[error("no direct download for this mod: {0}")]
+    NoDownload(String),
     #[error("no mods found in the archive")]
     NoMods,
     #[error("not found: {0}")]
@@ -55,6 +57,7 @@ impl AppError {
             Self::InstallerFailed(_) => "installer_failed",
             Self::BadManifest(_) => "bad_manifest",
             Self::NoMods => "no_mods",
+            Self::NoDownload(_) => "no_download",
             Self::NotFound(_) => "not_found",
             Self::BadProfileName(_) => "bad_profile_name",
             Self::LastProfile => "last_profile",
@@ -72,6 +75,7 @@ impl AppError {
             | Self::InstallerFailed(s)
             | Self::BadManifest(s)
             | Self::NotFound(s)
+            | Self::NoDownload(s)
             | Self::BadProfileName(s) => Some(s.clone()),
             Self::Io(e) => Some(e.to_string()),
             _ => None,

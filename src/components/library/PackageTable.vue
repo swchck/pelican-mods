@@ -9,6 +9,7 @@ import {
   packageSource,
   packageStatus,
   packageTitle,
+  packageUpdate,
   packageVersion,
 } from "@/lib/packages";
 import { useLibrary } from "@/stores/library";
@@ -24,7 +25,8 @@ const rows = computed(() =>
       title: packageTitle(p),
       author: packageAuthor(p),
       version: packageVersion(p),
-      status: packageStatus(p),
+      status: packageStatus(p, lib.report),
+      update: packageUpdate(p, lib.report),
       source: packageSource(p),
       parts: p.mods.length,
     })),
@@ -35,6 +37,7 @@ const pill: Record<string, string> = {
   off: "bg-[#ede3d0] border-[#cdba98] text-muted-foreground",
   issue: "bg-warning-soft border-[#d98b76] text-destructive",
   broken: "bg-warning-soft border-[#d98b76] text-destructive",
+  update: "bg-gold border-[#b57f17] text-[#4e2c14]",
 };
 
 function select(p: PackageView) {
@@ -88,7 +91,11 @@ function select(p: PackageView) {
         </div>
         <span class="font-mono text-[13px] font-bold">{{ r.version }}</span>
         <span class="justify-self-start rounded border-2 px-2 py-0.5 text-xs font-extrabold" :class="pill[r.status]">
-          {{ t(`library.status.${r.status}`) }}
+          {{
+            r.status === "update" && r.update
+              ? t("updates.pill", { version: r.update.version })
+              : t(`library.status.${r.status}`)
+          }}
         </span>
         <span class="text-muted-foreground text-xs font-bold">{{ r.source ?? "—" }}</span>
       </div>

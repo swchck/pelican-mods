@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { ModView, PackageView } from "./api";
-import { matchesFilter, packageAuthor, packageSource, packageStatus, packageTitle } from "./packages";
+import {
+  matchesFilter,
+  packageAuthor,
+  packageCompat,
+  packageSource,
+  packageStatus,
+  packageTitle,
+  packageUpdate,
+} from "./packages";
 
 function mod(name: string, id: string, extra: Partial<ModView> = {}): ModView {
   return {
@@ -26,7 +34,16 @@ function mod(name: string, id: string, extra: Partial<ModView> = {}): ModView {
 }
 
 function pkg(extra: Partial<PackageView>): PackageView {
-  return { id: "Folder", path: "/x", system: false, enabled: true, mods: [], broken: [], ...extra };
+  return {
+    id: "Folder",
+    path: "/x",
+    system: false,
+    enabled: true,
+    mods: [],
+    broken: [],
+    backupVersion: null,
+    ...extra,
+  };
 }
 
 describe("packages", () => {
@@ -51,5 +68,26 @@ describe("packages", () => {
     expect(matchesFilter(p, "lookup")).toBe(true);
     expect(matchesFilter(p, "pathoschild.look")).toBe(true);
     expect(matchesFilter(p, "fishing")).toBe(false);
+  });
+
+  it("merges update reports", () => {
+    const p = pkg({ mods: [mod("Lookup", "Pathoschild.Lookup")], enabled: false });
+    const info = (url: string, compatStatus = "Ok") => ({
+      checkedAt: 1,
+      mods: {
+        "pathoschild.lookup": { version: "1.55.0", url, compatStatus, compatSummary: "s", nexusId: 541, errors: [] },
+      },
+    });
+    const nexus = info("https://www.nexusmods.com/stardewvalley/mods/541");
+    expect(packageUpdate(p, nexus)).toEqual({
+      version: "1.55.0",
+      url: nexus.mods["pathoschild.lookup"].url,
+      direct: false,
+    });
+    expect(packageUpdate(p, info("https://github.com/a/b/releases"))?.direct).toBe(true);
+    expect(packageStatus(p, nexus)).toBe("update");
+    expect(packageStatus(p, null)).toBe("off");
+    expect(packageCompat(p, nexus)).toBeNull();
+    expect(packageCompat(p, info("x", "Broken"))).toEqual({ status: "Broken", summary: "s" });
   });
 });

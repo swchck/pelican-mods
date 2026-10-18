@@ -1,4 +1,5 @@
 mod archive;
+mod backups;
 mod commands;
 mod deps;
 mod error;
@@ -11,6 +12,7 @@ mod profiles;
 mod rosetta;
 mod settings;
 mod smapi;
+mod updates;
 mod version;
 
 use tauri::Manager;
@@ -52,6 +54,9 @@ pub fn run() {
             mods_commands::profile_rename,
             mods_commands::profile_delete,
             mods_commands::profile_activate,
+            mods_commands::updates_check,
+            mods_commands::mod_update,
+            mods_commands::mod_rollback,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

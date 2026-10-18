@@ -5,16 +5,25 @@ import { toast } from "vue-sonner";
 import { open } from "@tauri-apps/plugin-dialog";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import type { UnlistenFn } from "@tauri-apps/api/event";
-import { DownloadIcon, PackageOpenIcon, SearchIcon } from "@lucide/vue";
+import { ArrowUpCircleIcon, DownloadIcon, PackageOpenIcon, RefreshCwIcon, SearchIcon } from "@lucide/vue";
+import { useIntervalFn, useNow } from "@vueuse/core";
+import { relativeTime } from "@/lib/time";
+import { computed } from "vue";
 import { Button } from "@/components/ui/button";
 import PackageTable from "@/components/library/PackageTable.vue";
 import PackageDetail from "@/components/library/PackageDetail.vue";
 import ProfileSwitcher from "@/components/library/ProfileSwitcher.vue";
 import { useLibrary } from "@/stores/library";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const lib = useLibrary();
 const dragging = ref(false);
+const checkedAt = computed(() => (lib.report?.checkedAt ? new Date(lib.report.checkedAt * 1000) : null));
+const now = useNow({ scheduler: (cb) => useIntervalFn(cb, 30_000) });
+const ago = computed(() => (checkedAt.value ? relativeTime(checkedAt.value, now.value, locale.value) : ""));
+const checkedTitle = computed(() =>
+  checkedAt.value ? t("updates.checkedAt", { time: checkedAt.value.toLocaleString() }) : t("updates.never"),
+);
 let unlisten: UnlistenFn | undefined;
 
 async function install(paths: string[]) {
@@ -64,6 +73,20 @@ onUnmounted(() => unlisten?.());
           class="w-full bg-transparent text-sm outline-none"
         />
       </label>
+      <Button
+        variant="outline"
+        :disabled="lib.checking"
+        :title="checkedTitle"
+        :aria-label="t('updates.check')"
+        @click="lib.checkUpdates(true)"
+      >
+        <RefreshCwIcon :class="{ 'animate-spin': lib.checking }" />
+        <span v-if="checkedAt" class="text-muted-foreground text-xs font-bold">{{ ago }}</span>
+        <span v-else>{{ t("updates.check") }}</span>
+      </Button>
+      <Button v-if="lib.directUpdates.length" :disabled="lib.updating.size > 0" @click="lib.updateAll()">
+        <ArrowUpCircleIcon />{{ t("updates.updateAll", { n: lib.directUpdates.length }) }}
+      </Button>
       <Button variant="outline" :disabled="lib.working" @click="pick"
         ><DownloadIcon />{{ t("library.installZip") }}</Button
       >

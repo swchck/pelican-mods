@@ -14,18 +14,24 @@ use crate::launcher::{Launcher, LogLine, RunState, Sink, SmapiRun};
 use crate::profiles::ProfilesStore;
 use crate::settings::{Settings, SettingsStore};
 use crate::smapi::{self, Release};
+use crate::updates::UpdateReport;
 
 /// Shared backend state managed by Tauri.
 pub struct AppState {
     settings: SettingsStore,
     launcher: Launcher,
-    http: reqwest::Client,
-    work_dir: PathBuf,
+    pub(crate) http: reqwest::Client,
+    pub(crate) work_dir: PathBuf,
     installing: AtomicBool,
     /// Installed mod packages, one folder each.
     pub(crate) store_root: PathBuf,
     /// Per-profile symlink folders handed to SMAPI.
     pub(crate) deploy_root: PathBuf,
+    /// Packages replaced by updates, for rollback.
+    pub(crate) backup_root: PathBuf,
+    /// Last smapi.io answer, also kept on disk between runs.
+    pub(crate) updates: Mutex<UpdateReport>,
+    pub(crate) updates_file: PathBuf,
     pub(crate) profiles: ProfilesStore,
     /// Serializes store and profile changes; installs run on blocking threads in parallel.
     pub(crate) library_lock: Mutex<()>,
@@ -46,6 +52,9 @@ impl AppState {
             installing: AtomicBool::new(false),
             store_root: data_dir.join("mods"),
             deploy_root: data_dir.join("profiles"),
+            backup_root: data_dir.join("backups"),
+            updates: Mutex::new(crate::updates::load_cache(&cache_dir.join("updates.json"))),
+            updates_file: cache_dir.join("updates.json"),
             profiles: ProfilesStore::load(config_dir.join("profiles.json")),
             library_lock: Mutex::new(()),
         }
