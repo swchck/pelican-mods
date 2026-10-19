@@ -69,6 +69,16 @@ export default {
     tabLog: "Log",
     tabReport: "Report",
   },
+  preflight: {
+    title: "The save is missing mods",
+    text: "The last played save, {save}, uses mods that won't load right now:",
+    disabled: "turned off in the profile",
+    skipped: "SMAPI skipped it last session",
+    locations: "{n} of its locations in the save",
+    risk: "Loading that save and saving drops whatever these mods add.",
+    anyway: "Play anyway",
+    enable: "Turn on and play",
+  },
   calendar: {
     season: { spring: "Spring", summer: "Summer", fall: "Fall", winter: "Winter" },
     prev: "Previous season",

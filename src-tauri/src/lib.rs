@@ -109,6 +109,7 @@ pub fn run() {
             mods_commands::mod_set_github,
             mods_commands::mod_install_dependency,
             mods_commands::mod_save_usage,
+            mods_commands::game_preflight,
             mods_commands::modlist_export,
             mods_commands::modlist_read,
             mods_commands::modlist_profile,

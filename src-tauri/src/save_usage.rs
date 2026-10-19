@@ -37,15 +37,7 @@ pub fn check(mod_dir: &Path, unique_ids: &[String], saves_dir: &Path) -> Vec<Sav
         .into_iter()
         .filter_map(|s| {
             let text = std::fs::read_to_string(s.path.join(&s.id)).ok()?;
-            let lower = text.to_lowercase();
-            let references = ids
-                .iter()
-                .map(|id| lower.matches(id.as_str()).count() as u32)
-                .sum();
-            let found: Vec<&String> = names
-                .iter()
-                .filter(|n| text.contains(&format!("<name>{n}</name>")))
-                .collect();
+            let (references, found) = usage(&SaveText::new(&text), &ids, &names);
             (references > 0 || !found.is_empty()).then(|| SaveUsage {
                 save_id: s.id.clone(),
                 farmer: s.farmer.clone(),
@@ -56,6 +48,116 @@ pub fn check(mod_dir: &Path, unique_ids: &[String], saves_dir: &Path) -> Vec<Sav
             })
         })
         .collect()
+}
+
+/// Mentions of lowercased `ids` in the save, and which of the location `names` it has.
+fn usage<'a>(
+    save: &SaveText,
+    ids: &[String],
+    names: &'a BTreeSet<String>,
+) -> (u32, Vec<&'a String>) {
+    let references = ids
+        .iter()
+        .map(|id| save.lower.matches(id.as_str()).count() as u32)
+        .sum();
+    let found = names
+        .iter()
+        .filter(|n| save.locations.contains(*n))
+        .collect();
+    (references, found)
+}
+
+/// A save read once for many mods: lowercased for UniqueIDs, and its `Custom_`
+/// location names, since checking each mod's names against 10 MB took seconds.
+struct SaveText {
+    lower: String,
+    locations: BTreeSet<String>,
+}
+
+impl SaveText {
+    fn new(text: &str) -> Self {
+        let mut locations = BTreeSet::new();
+        let mut rest = text;
+        while let Some(at) = rest.find("<name>Custom_") {
+            let tail = &rest[at + "<name>".len()..];
+            let end = tail.find('<').unwrap_or(tail.len());
+            locations.insert(tail[..end].to_owned());
+            rest = &tail[end..];
+        }
+        Self {
+            lower: text.to_lowercase(),
+            locations,
+        }
+    }
+}
+
+/// A mod the save uses that won't be there when the game starts.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Missing {
+    pub package: String,
+    pub name: String,
+    pub references: u32,
+    pub location_count: u32,
+    /// Turned off in the active profile; otherwise SMAPI skipped it last session.
+    pub disabled: bool,
+}
+
+/// What the last played save would lose if the game started now.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Preflight {
+    pub save_id: String,
+    pub farmer: String,
+    pub farm_name: String,
+    pub missing: Vec<Missing>,
+}
+
+/// Checks the most recently played save against `packages`: those it uses that are
+/// off in `enabled`, or whose mods SMAPI `skipped` (by name) last session.
+///
+/// Only the newest save: it's the one players usually load, and reading every save
+/// before each launch would cost seconds on a big farm.
+pub fn preflight(
+    saves_dir: &Path,
+    packages: &[crate::library::Package],
+    enabled: &[String],
+    skipped: &[String],
+) -> Option<Preflight> {
+    let save = saves::list(saves_dir)
+        .into_iter()
+        .max_by_key(|s| s.modified)?;
+    let text = SaveText::new(&std::fs::read_to_string(save.path.join(&save.id)).ok()?);
+    let missing: Vec<Missing> = packages
+        .iter()
+        .filter_map(|p| {
+            let disabled = !enabled.contains(&p.id);
+            let failed = p.mods.iter().any(|m| skipped.contains(&m.manifest.name));
+            if !disabled && !failed {
+                return None;
+            }
+            let ids: Vec<String> = p.unique_ids().map(str::to_lowercase).collect();
+            let names = declared_locations(&p.path);
+            let (references, found) = usage(&text, &ids, &names);
+            (references > 0 || !found.is_empty()).then(|| Missing {
+                package: p.id.clone(),
+                name: p
+                    .mods
+                    .first()
+                    .map(|m| m.manifest.name.clone())
+                    .unwrap_or_else(|| p.id.clone()),
+                references,
+                location_count: found.len() as u32,
+                disabled,
+            })
+        })
+        .collect();
+    (!missing.is_empty()).then_some(Preflight {
+        save_id: save.id,
+        farmer: save.farmer,
+        farm_name: save.farm_name,
+        missing,
+    })
 }
 
 // "Custom_…" is the convention content packs name their locations by
@@ -135,8 +237,41 @@ mod tests {
         );
         let used = check(&mod_dir, &["flashshifter.sve".to_owned()], &saves_dir);
         assert_eq!(used.len(), 1);
+        std::fs::write(
+            mod_dir.join("manifest.json"),
+            r#"{"Name":"SVE","Author":"a","Version":"1.0.0","Description":"","UniqueID":"FlashShifter.SVE","ContentPackFor":{"UniqueID":"Pathoschild.ContentPatcher"}}"#,
+        )
+        .unwrap();
+        let packages = crate::library::scan(dir.path());
+        let sve: Vec<_> = packages.iter().filter(|p| p.id == "SVE").cloned().collect();
+        // the preflight reads only the newest save, and the clean one was written last
+        std::fs::remove_dir_all(saves_dir.join("Clean_2")).unwrap();
+        assert!(preflight(&saves_dir, &sve, &["SVE".into()], &[]).is_none());
+        let off = preflight(&saves_dir, &sve, &[], &[]).expect("the save needs SVE");
+        assert!(off.missing[0].disabled);
+        let skipped = preflight(&saves_dir, &sve, &["SVE".into()], &["SVE".into()]).unwrap();
+        assert!(!skipped.missing[0].disabled);
         assert_eq!(used[0].save_id, "Uses_1");
         assert_eq!(used[0].references, 1);
         assert_eq!(used[0].locations, ["Custom_AndyHouse"]);
+    }
+
+    // PELICAN_TEST_SAVES=<Saves> PELICAN_TEST_STORE=<mods> PELICAN_TEST_LOG=<SMAPI-latest.txt> \
+    //   cargo test -- --ignored real_preflight --nocapture
+    #[test]
+    #[ignore]
+    fn real_preflight() {
+        let var = |k| std::path::PathBuf::from(std::env::var(k).unwrap());
+        let packages = crate::library::scan(&var("PELICAN_TEST_STORE"));
+        let skipped: Vec<String> = crate::smapi_log::read(&var("PELICAN_TEST_LOG"))
+            .unwrap()
+            .skipped
+            .into_iter()
+            .map(|s| s.name)
+            .collect();
+        let enabled: Vec<String> = packages.iter().map(|p| p.id.clone()).collect();
+        let started = std::time::Instant::now();
+        let pf = preflight(&var("PELICAN_TEST_SAVES"), &packages, &enabled, &skipped);
+        eprintln!("{:?} in {:?}", pf, started.elapsed());
     }
 }

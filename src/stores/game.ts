@@ -8,6 +8,7 @@ import {
   saves,
   type GameInstall,
   type LogLine,
+  type Preflight,
   type RunState,
   type SmapiProgress,
   type SmapiRelease,
@@ -139,7 +140,18 @@ export const useGame = defineStore("game", () => {
     }
   }
 
-  async function launch(modded: boolean) {
+  /** Set when the last played save uses mods that won't load; the play card asks first. */
+  const preflight = ref<Preflight | null>(null);
+
+  async function launch(modded: boolean, checked = false) {
+    preflight.value = null;
+    if (modded && !checked) {
+      const found = await api.preflight().catch(() => null);
+      if (found) {
+        preflight.value = found;
+        return;
+      }
+    }
     try {
       log.value = [];
       run.value = await api.launch(modded);
@@ -157,6 +169,7 @@ export const useGame = defineStore("game", () => {
   }
 
   return {
+    preflight,
     phase,
     install,
     detected,

@@ -4,6 +4,16 @@ import { useI18n } from "vue-i18n";
 import { ChevronUpIcon, PlayIcon, SquareIcon } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useLibrary } from "@/stores/library";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -17,6 +27,13 @@ import { formatClock, seasonKey } from "@/lib/game-clock";
 const { t } = useI18n();
 const game = useGame();
 const companion = useCompanion();
+const lib = useLibrary();
+
+async function enableAndPlay() {
+  const off = game.preflight?.missing.filter((m) => m.disabled) ?? [];
+  for (const m of off) if (!(await lib.toggle(m.package, true))) return;
+  await game.launch(true);
+}
 
 const live = computed(() => {
   const s = companion.status.state;
@@ -102,5 +119,35 @@ const status = computed(() => {
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
+
+    <Dialog :open="game.preflight !== null" @update:open="(v: boolean) => !v && (game.preflight = null)">
+      <DialogContent v-if="game.preflight">
+        <DialogHeader>
+          <DialogTitle class="font-pixel text-xl">{{ t("preflight.title") }}</DialogTitle>
+          <DialogDescription>
+            {{ t("preflight.text", { save: `${game.preflight.farmer} · ${game.preflight.farmName}` }) }}
+          </DialogDescription>
+        </DialogHeader>
+        <ul class="flex flex-col gap-1 text-sm">
+          <li v-for="m in game.preflight.missing" :key="m.package" class="flex flex-wrap items-baseline gap-x-2">
+            <span class="font-bold">{{ m.name }}</span>
+            <span class="text-muted-foreground text-xs font-semibold">
+              {{ m.disabled ? t("preflight.disabled") : t("preflight.skipped") }}
+              <template v-if="m.locationCount"> · {{ t("preflight.locations", { n: m.locationCount }) }}</template>
+            </span>
+          </li>
+        </ul>
+        <p class="text-destructive text-xs font-bold">{{ t("preflight.risk") }}</p>
+        <DialogFooter class="flex-wrap gap-2">
+          <DialogClose as-child>
+            <Button variant="outline">{{ t("common.cancel") }}</Button>
+          </DialogClose>
+          <Button variant="outline" @click="game.launch(true, true)">{{ t("preflight.anyway") }}</Button>
+          <Button v-if="game.preflight.missing.some((m) => m.disabled)" @click="enableAndPlay">
+            {{ t("preflight.enable") }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

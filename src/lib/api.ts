@@ -63,6 +63,7 @@ export const api = {
   setLocale: (locale: string | null) => invoke<Settings>("settings_set_locale", { locale }),
   gameLanguage: () => invoke<string | null>("game_language"),
   logReport: () => invoke<LogReport>("smapi_log_report"),
+  preflight: () => invoke<Preflight | null>("game_preflight"),
   gameCatalog: () => invoke<GameCatalog>("game_catalog"),
   setWiki: (wiki: string) => invoke<Settings>("settings_set_wiki", { wiki }),
   setBackupFolder: (folder: string | null) => invoke<Settings>("settings_set_backup_folder", { folder }),
@@ -662,5 +663,20 @@ export interface GameCatalog {
     times: [number, number][];
     locations: string[];
     trap: boolean;
+  }[];
+}
+
+/** What the last played save would lose if the game started now. */
+export interface Preflight {
+  saveId: string;
+  farmer: string;
+  farmName: string;
+  missing: {
+    package: string;
+    name: string;
+    references: number;
+    locationCount: number;
+    /** Off in the active profile; otherwise SMAPI skipped it last session. */
+    disabled: boolean;
   }[];
 }

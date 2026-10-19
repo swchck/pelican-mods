@@ -423,6 +423,8 @@ mockIPC(
             locationCount: 120,
           },
         ];
+      case "game_preflight":
+        return null;
       case "game_catalog":
         return baseCatalog;
       case "smapi_log_report":

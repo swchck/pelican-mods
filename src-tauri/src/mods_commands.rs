@@ -576,6 +576,27 @@ async fn fetch_and_install(app: AppHandle, w: Wanted) -> AppResult<UpdateOutcome
     Ok(UpdateOutcome::Queued)
 }
 
+/// What the last played save would lose if the game started now with the active profile.
+#[tauri::command]
+pub async fn game_preflight(app: AppHandle) -> AppResult<Option<crate::save_usage::Preflight>> {
+    let data = crate::commands::game_data_dir(&app)?;
+    blocking(app, move |s| {
+        let skipped: Vec<String> =
+            crate::smapi_log::read(&data.join("ErrorLogs/SMAPI-latest.txt"))?
+                .skipped
+                .into_iter()
+                .map(|m| m.name)
+                .collect();
+        Ok(crate::save_usage::preflight(
+            &data.join("Saves"),
+            &library::scan(&s.store_root),
+            &s.profiles.get().active().enabled,
+            &skipped,
+        ))
+    })
+    .await
+}
+
 /// Lists the saves that still use package `id`: its items and data, or its locations.
 #[tauri::command]
 pub async fn mod_save_usage(
