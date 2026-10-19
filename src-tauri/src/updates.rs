@@ -247,6 +247,8 @@ pub fn save_cache(file: &PathBuf, report: &UpdateReport) -> std::io::Result<()> 
 #[derive(Deserialize)]
 struct GhRelease {
     tag_name: String,
+    #[serde(default)]
+    body: Option<String>,
     assets: Vec<GhAsset>,
 }
 
@@ -291,12 +293,9 @@ pub async fn download_github(
 // so match the version in the tag first and the mod name in the asset second
 fn pick_asset<'a>(releases: &'a [GhRelease], mod_name: &str, version: &str) -> Option<&'a GhAsset> {
     let want = normalize(mod_name);
-    // on a boundary, so version 1.5 doesn't take tag 2.1.5
-    let release = releases.iter().find(|r| {
-        r.tag_name.strip_suffix(version).is_some_and(|head| {
-            head.is_empty() || head.ends_with(['/', 'v', 'V', '-', '_', ' ', '@'])
-        })
-    })?;
+    let release = releases
+        .iter()
+        .find(|r| tags_version(&r.tag_name, version))?;
     let zips: Vec<&GhAsset> = release
         .assets
         .iter()
@@ -309,6 +308,33 @@ fn pick_asset<'a>(releases: &'a [GhRelease], mod_name: &str, version: &str) -> O
             .find(|a| normalize(&a.name).contains(&want))
             .copied(),
     }
+}
+
+// on a boundary, so version 1.5 doesn't take tag 2.1.5
+fn tags_version(tag: &str, version: &str) -> bool {
+    tag.strip_suffix(version)
+        .is_some_and(|head| head.is_empty() || head.ends_with(['/', 'v', 'V', '-', '_', ' ', '@']))
+}
+
+/// The release notes GitHub `repo` published with `version`, if it has any.
+pub async fn github_notes(
+    client: &reqwest::Client,
+    repo: &str,
+    version: &str,
+) -> AppResult<Option<String>> {
+    let url = format!("https://api.github.com/repos/{repo}/releases?per_page=20");
+    let releases: Vec<GhRelease> = client
+        .get(url)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+    Ok(releases
+        .into_iter()
+        .find(|r| tags_version(&r.tag_name, version))
+        .and_then(|r| r.body)
+        .filter(|b| !b.trim().is_empty()))
 }
 
 fn normalize(s: &str) -> String {
@@ -394,6 +420,7 @@ mod tests {
     fn release(tag: &str, assets: &[&str]) -> GhRelease {
         GhRelease {
             tag_name: tag.into(),
+            body: None,
             assets: assets
                 .iter()
                 .map(|n| GhAsset {

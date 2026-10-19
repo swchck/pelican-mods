@@ -346,6 +346,24 @@ fn rest(client: &reqwest::Client, path: &str, key: &str) -> reqwest::RequestBuil
         .header("Application-Version", env!("CARGO_PKG_VERSION"))
 }
 
+/// A mod's changelog from its Nexus page: version → its lines.
+pub async fn changelog(
+    client: &reqwest::Client,
+    key: &str,
+    mod_id: u64,
+) -> AppResult<std::collections::BTreeMap<String, Vec<String>>> {
+    Ok(rest(
+        client,
+        &format!("/games/{GAME_DOMAIN}/mods/{mod_id}/changelogs.json"),
+        key,
+    )
+    .send()
+    .await?
+    .error_for_status()?
+    .json()
+    .await?)
+}
+
 /// Checks an API key and returns its account.
 pub async fn validate(client: &reqwest::Client, key: &str) -> AppResult<Account> {
     #[derive(Deserialize)]

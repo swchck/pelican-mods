@@ -259,6 +259,10 @@ export default {
     updateAll: "Update all ({n})",
     available: "Version {version} is available",
     update: "Update",
+    changes: "What's new?",
+    changesLoading: "Loading changes…",
+    noChanges: "The author didn't describe the changes",
+    changesFrom: { github: "from the GitHub release", nexus: "from the Nexus changelog" },
     openPage: "Open page",
     manual: "Download the file on the mod page and drop it on the window.",
     nexusManual:

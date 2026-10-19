@@ -203,6 +203,7 @@ export const library = {
   profileFromList: (name: string, uniqueIds: string[]) => invoke<LibraryView>("modlist_profile", { name, uniqueIds }),
   saveUsage: (id: string) => invoke<SaveUsage[]>("mod_save_usage", { id }),
   conflicts: () => invoke<Conflict[]>("library_conflicts"),
+  changelog: (id: string) => invoke<Changelog | null>("mod_changelog", { id }),
 };
 
 export type NexusSort = "endorsements" | "downloads" | "updated" | "created";
@@ -688,4 +689,10 @@ export interface Conflict {
   packages: string[];
   /** Some patches apply only under conditions, so the packs may never meet. */
   conditional: boolean;
+}
+
+/** What changed between the installed version and the update, newest first. */
+export interface Changelog {
+  source: "github" | "nexus";
+  versions: { version: string; lines: string[] }[];
 }

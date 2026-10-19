@@ -27,7 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { library, saves, type Issue, type PackageView, type SaveUsage } from "@/lib/api";
+import { library, saves, type Changelog, type Issue, type PackageView, type SaveUsage } from "@/lib/api";
 import DependencyList from "@/components/library/DependencyList.vue";
 import { splitLinks, type Segment } from "@/lib/md-links";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -136,6 +136,21 @@ async function openFolder() {
   }
 }
 
+// fetched on demand: one request per open, and most players never look
+const changes = ref<Changelog | null | "loading" | "none">(null);
+watch(
+  () => props.pkg.id,
+  () => (changes.value = null),
+);
+async function loadChanges() {
+  changes.value = "loading";
+  const id = props.pkg.id;
+  const found = await library.changelog(id).catch(() => null);
+  if (props.pkg.id === id) changes.value = found ?? "none";
+}
+// markdown bullets and headings read fine as plain lines without their markers
+const plain = (line: string) => line.replace(/^\s*(#{1,6}\s+|[*-]\s+)/, "");
+
 // saves that still hold the mod's items or locations; checked when the dialog opens
 const usage = ref<SaveUsage[] | null>(null);
 const backupFirst = ref(true);
@@ -215,6 +230,27 @@ async function remove() {
     >
       <span class="font-extrabold">{{ t("updates.available", { version: update.version }) }}</span>
       <span v-if="updateHint" class="text-muted-foreground text-xs font-semibold">{{ updateHint }}</span>
+      <button
+        v-if="changes === null || changes === 'loading'"
+        type="button"
+        class="text-muted-foreground self-start text-xs font-bold underline decoration-dotted underline-offset-2"
+        :disabled="changes === 'loading'"
+        @click="loadChanges"
+      >
+        {{ changes === "loading" ? t("updates.changesLoading") : t("updates.changes") }}
+      </button>
+      <span v-else-if="changes === 'none'" class="text-muted-foreground text-xs font-semibold">{{
+        t("updates.noChanges")
+      }}</span>
+      <div v-else class="flex max-h-56 flex-col gap-1.5 overflow-auto text-xs select-text">
+        <div v-for="v in changes.versions" :key="v.version">
+          <b>{{ v.version }}</b>
+          <p v-for="(line, i) in v.lines.filter((l) => l.trim())" :key="i" class="leading-snug break-words">
+            {{ plain(line) }}
+          </p>
+        </div>
+        <span class="text-muted-foreground">{{ t(`updates.changesFrom.${changes.source}`) }}</span>
+      </div>
       <Button size="sm" class="self-start" :disabled="busy" @click="lib.update(pkg)">
         <Loader2Icon v-if="busy" class="animate-spin" />
         <ArrowUpCircleIcon v-else-if="inApp" />

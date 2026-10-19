@@ -576,6 +576,97 @@ async fn fetch_and_install(app: AppHandle, w: Wanted) -> AppResult<UpdateOutcome
     Ok(UpdateOutcome::Queued)
 }
 
+/// What changed between the installed version of a mod and its update.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Changelog {
+    /// "github" or "nexus".
+    pub source: &'static str,
+    /// Newest first.
+    pub versions: Vec<ChangelogVersion>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChangelogVersion {
+    pub version: String,
+    pub lines: Vec<String>,
+}
+
+/// Lines kept per version; release notes can run to whole manuals.
+const CHANGELOG_LINES: usize = 40;
+
+/// The changes since the installed version of package `id`, from GitHub release notes
+/// or the Nexus changelog; `None` when neither has any.
+#[tauri::command]
+pub async fn mod_changelog(app: AppHandle, id: String) -> AppResult<Option<Changelog>> {
+    let state = app.state::<AppState>();
+    let pkg = library::read_package(id.clone(), library::package_path(&state.store_root, &id)?)
+        .ok_or_else(|| AppError::NotFound(id.clone()))?;
+    let repos = state.settings.get().github_repos;
+    let found = {
+        let report = state.updates.lock().unwrap();
+        pkg.mods.iter().find_map(|m| {
+            let info = report.mods.get(&m.manifest.unique_id.to_lowercase())?;
+            Some((
+                m.manifest.version.clone(),
+                info.version.clone()?,
+                info.nexus_id
+                    .or_else(|| info.url.as_deref().and_then(nexus::mod_page_id)),
+                repos
+                    .get(&m.manifest.unique_id.to_lowercase())
+                    .cloned()
+                    .or_else(|| updates::github_key(&m.manifest.update_keys))
+                    .or_else(|| info.url.as_deref().and_then(updates::github_repo)),
+            ))
+        })
+    };
+    let Some((installed, target, nexus_id, github)) = found else {
+        return Ok(None);
+    };
+    let notes = match &github {
+        Some(repo) => updates::github_notes(&state.http, repo, &target)
+            .await
+            .ok()
+            .flatten(),
+        None => None,
+    };
+    if let Some(notes) = notes {
+        return Ok(Some(Changelog {
+            source: "github",
+            versions: vec![ChangelogVersion {
+                version: target,
+                lines: notes
+                    .lines()
+                    .take(CHANGELOG_LINES)
+                    .map(str::to_owned)
+                    .collect(),
+            }],
+        }));
+    }
+    let (Some(mod_id), Some(key)) = (nexus_id, nexus::load_key()?) else {
+        return Ok(None);
+    };
+    let all = nexus::changelog(&state.http, &key, mod_id).await?;
+    let newer = |v: &str| {
+        crate::version::compare(v, &installed).is_gt()
+            && crate::version::compare(v, &target).is_le()
+    };
+    let mut versions: Vec<ChangelogVersion> = all
+        .into_iter()
+        .filter(|(v, _)| newer(v))
+        .map(|(version, lines)| ChangelogVersion {
+            version,
+            lines: lines.into_iter().take(CHANGELOG_LINES).collect(),
+        })
+        .collect();
+    versions.sort_by(|a, b| crate::version::compare(&b.version, &a.version));
+    Ok((!versions.is_empty()).then_some(Changelog {
+        source: "nexus",
+        versions,
+    }))
+}
+
 /// Content packs in the active profile that load the same asset exclusively.
 #[tauri::command]
 pub async fn library_conflicts(app: AppHandle) -> AppResult<Vec<crate::conflicts::Conflict>> {

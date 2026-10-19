@@ -256,6 +256,10 @@ export default {
     updateAll: "Обновить всё ({n})",
     available: "Доступна версия {version}",
     update: "Обновить",
+    changes: "Что нового?",
+    changesLoading: "Загружаем изменения…",
+    noChanges: "Автор не описал изменения",
+    changesFrom: { github: "из релиза на GitHub", nexus: "из истории изменений на Nexus" },
     openPage: "Открыть страницу",
     manual: "Скачайте файл на странице мода и перетащите его в окно.",
     nexusManual:

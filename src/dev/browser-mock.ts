@@ -423,6 +423,8 @@ mockIPC(
             locationCount: 120,
           },
         ];
+      case "mod_changelog":
+        return { source: "github", versions: [{ version: "1.55.0", lines: ["## What's Changed", "* Fixed a crash"] }] };
       case "library_conflicts":
         return [];
       case "game_preflight":
