@@ -7,12 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ReleaseNotes from "@/components/ReleaseNotes.vue";
 import { bundledChangelog, useAppUpdate } from "@/stores/appUpdate";
+import { compareVersions } from "@/lib/version";
 
 const { t } = useI18n();
 const app = useAppUpdate();
 const history = ref(false);
 const shortcuts = useShortcuts();
-const releases = computed(() => (history.value ? bundledChangelog() : []));
+// the changelog in the repo can already describe the next version; show up to this one
+const releases = computed(() =>
+  history.value && app.current ? bundledChangelog().filter((r) => compareVersions(r.version, app.current!) <= 0) : [],
+);
 </script>
 
 <template>

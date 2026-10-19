@@ -1,5 +1,34 @@
 # What's new
 
+## 0.2.0
+
+### Game link
+
+- A SMAPI companion mod ships with the app and shows the farm, date, time, money and where the player is.
+- Settings of mods with a GMCM menu open with the same names, hints, limits and sections as in the game, and apply without a restart.
+
+### Perfection
+
+- Progress to 100% by the 1.6 rules: shipping, obelisks, the Gold Clock, Monster Slayer, friends, level, stardrops, cooking, crafting, fish and walnuts, with what's left in each.
+- Fish, recipe and item lists come from your modded game, in its language.
+
+### Helpers
+
+- Forecast: today's luck, tomorrow's weather and Clint's next geodes.
+- Fair: the best nine items from your backpack and chests for the grange, with the score.
+
+### Mod updates
+
+- Nexus mods update from the app: right away with Premium, through the site's button without it.
+- ModDrop mods update in one click.
+
+### Reliability and security
+
+- Download links from websites install a mod only after you confirm.
+- Installing, removing and updating mods waits until the game is closed.
+- Automatic save backups no longer push out the ones you made by hand.
+- The game console costs the app less; sections load as you open them.
+
 ## 0.1.0 — 2026-10-19
 
 The first Pelican Mods release.

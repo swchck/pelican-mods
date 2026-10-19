@@ -17,6 +17,8 @@ import {
 import { errorText, i18n } from "@/i18n";
 import { useLibrary } from "@/stores/library";
 
+const DETAILS_KEPT = 20;
+
 export const useNexus = defineStore("nexus", () => {
   const query = ref("");
   const sort = ref<NexusSort>("endorsements");
@@ -86,7 +88,10 @@ export const useNexus = defineStore("nexus", () => {
     if (details.value[modId]) return;
     loadingDetails.value = true;
     try {
-      details.value = { ...details.value, [modId]: await nexus.mod(modId) };
+      const loaded = await nexus.mod(modId);
+      // descriptions run to hundreds of KB of BBCode; keep the last few, not the session
+      const kept = Object.entries(details.value).slice(-(DETAILS_KEPT - 1));
+      details.value = { ...Object.fromEntries(kept), [modId]: loaded };
     } catch (e) {
       if (selectedId.value === modId) toast.error(errorText(e));
     } finally {
