@@ -95,6 +95,12 @@ export default {
     quiet: "No festivals or birthdays.",
     span: "days {from}–{to}",
     loves: "Loves:",
+    upcoming: "Birthdays this week",
+    today: "today",
+    inDays: "in {n} days",
+    inventory: "in your backpack",
+    needGame: "Load your farm in the game to see which loved gifts you already have and where.",
+    noneOwned: "You don't have any of their loved gifts yet.",
   },
   fish: {
     scope: { now: "Biting now", season: "Whole season", year: "Whole year" },

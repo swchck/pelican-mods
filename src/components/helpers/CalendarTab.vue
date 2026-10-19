@@ -1,15 +1,34 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { CakeIcon, ChevronLeftIcon, ChevronRightIcon, PartyPopperIcon } from "@lucide/vue";
+import { CakeIcon, ChevronLeftIcon, ChevronRightIcon, GiftIcon, PartyPopperIcon } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import WikiName from "@/components/WikiName.vue";
 import { api, type GameCatalog } from "@/lib/api";
 import { SEASONS, type Season } from "@/lib/game-clock";
 import { useFarmDate } from "@/lib/farm-date";
+import { useLiveItems } from "@/lib/live-items";
 
 const { t } = useI18n();
 const date = useFarmDate();
+const { live, byId: owned } = useLiveItems();
+const placeText = (id: string) =>
+  (owned.value.get(id) ?? []).map((p) => (p.where === "inventory" ? t("calendar.inventory") : p.where)).join(", ");
+
+// the next week of birthdays, with the loved gifts the player already has
+const upcoming = computed(() => {
+  const d = date.value;
+  const c = catalog.value;
+  if (!d || !c) return [];
+  const order = (season: string | null, day: number) => SEASONS.indexOf(season as Season) * 28 + day;
+  const today = order(d.season, d.day);
+  return c.villagers
+    .filter((v) => v.birthSeason && v.birthDay)
+    .map((v) => ({ v, inDays: (order(v.birthSeason, v.birthDay) - today + 112) % 112 }))
+    .filter((x) => x.inDays <= 7)
+    .sort((a, b) => a.inDays - b.inDays)
+    .map(({ v, inDays }) => ({ v, inDays, have: v.loves.filter((id) => owned.value.has(id)) }));
+});
 const catalog = ref<GameCatalog | null>(null);
 const titles = ref<Record<string, string>>({});
 const season = ref<Season>("spring");
@@ -66,6 +85,28 @@ function shift(by: number) {
         {{ date.live ? t("calendar.fromGame") : t("calendar.fromSave") }}
       </span>
     </div>
+
+    <section v-if="upcoming.length" class="wood-panel flex flex-col gap-1.5 p-3.5 text-sm">
+      <h3 class="font-extrabold">{{ t("calendar.upcoming") }}</h3>
+      <div v-for="u in upcoming" :key="u.v.key" class="flex flex-col">
+        <span class="font-bold">
+          <CakeIcon class="mr-1 inline size-4 text-[#d9534f]" />{{ u.v.name }}
+          <span class="text-muted-foreground text-xs font-semibold">
+            · {{ u.inDays === 0 ? t("calendar.today") : t("calendar.inDays", { n: u.inDays }) }}</span
+          >
+        </span>
+        <span v-if="!live" class="text-muted-foreground text-xs font-semibold">{{ t("calendar.needGame") }}</span>
+        <span v-else-if="!u.have.length" class="text-muted-foreground text-xs font-semibold">{{
+          t("calendar.noneOwned")
+        }}</span>
+        <span v-for="id in u.have" v-else :key="id" class="text-xs font-semibold">
+          <GiftIcon class="text-gold-shade mr-1 inline size-3.5" /><WikiName :title="titles[id]">{{
+            itemName.get(id) ?? id
+          }}</WikiName>
+          <span class="text-muted-foreground"> — {{ placeText(id) }}</span>
+        </span>
+      </div>
+    </section>
 
     <div class="grid grid-cols-7 gap-1.5">
       <button
