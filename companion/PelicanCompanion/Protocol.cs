@@ -73,7 +73,12 @@ internal record CatalogMessage(
     List<CatalogRecipe> Cooking,
     List<CatalogRecipe> Crafting,
     List<CatalogVillager> Villagers,
-    List<CatalogGoal> Monsters
+    List<CatalogGoal> Monsters,
+    List<CatalogItem> Items,
+    List<CatalogMuseumItem> Museum,
+    List<CatalogAchievement> Achievements,
+    List<CatalogOrder> SpecialOrders,
+    List<CatalogCrop> Crops
 )
 {
     public string Type => "catalog";
@@ -84,6 +89,17 @@ internal record CatalogItem(string Id, string Name);
 
 /// <summary>A recipe by its data key, with the id of the item it makes.</summary>
 internal record CatalogRecipe(string Key, string Name, string Output);
+
+/// <summary>Something the museum takes; <see cref="Kind"/> is "artifact" or "mineral".</summary>
+internal record CatalogMuseumItem(string Id, string Name, string Kind);
+
+internal record CatalogAchievement(int Id, string Name, string Description);
+
+/// <summary>A special order; Qi's walnut-room orders have <see cref="Qi"/> set.</summary>
+internal record CatalogOrder(string Key, string Name, string Requester, bool Qi);
+
+/// <summary>A crop the Polyculture or Monoculture achievements count, by harvest id.</summary>
+internal record CatalogCrop(string Id, bool Polyculture, bool Monoculture);
 
 internal record CatalogVillager(string Key, string Name, bool Romance);
 

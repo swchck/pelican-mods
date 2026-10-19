@@ -371,8 +371,42 @@ export interface Perfection {
   parts: PerfectionPart[];
 }
 
+export interface CheckupItem {
+  id: string;
+  /** A name from the game; otherwise translate `label` with have/need. */
+  name: string | null;
+  label: string | null;
+  have: number | null;
+  need: number | null;
+  done: boolean;
+  note: string | null;
+}
+
+export interface CheckupGroup {
+  id: string;
+  title: string | null;
+  /** Heading above the group, such as a Community Center room. */
+  category: string | null;
+  done: number;
+  total: number;
+  items: CheckupItem[];
+}
+
+export interface CheckupSection {
+  id: string;
+  done: number;
+  total: number;
+  groups: CheckupGroup[];
+}
+
+export interface Checkup {
+  sections: CheckupSection[];
+  catalog: boolean;
+}
+
 export const saves = {
   list: () => invoke<SaveSummary[]>("saves_list"),
+  checkup: (id: string) => invoke<Checkup>("saves_checkup", { id }),
   perfection: (id: string) => invoke<Perfection>("saves_perfection", { id }),
   progress: (id: string) => invoke<SaveProgress>("saves_progress", { id }),
   snapshots: (id: string) => invoke<Snapshot[]>("saves_snapshots", { id }),

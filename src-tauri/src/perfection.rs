@@ -52,6 +52,54 @@ pub struct Catalog {
     pub crafting: Vec<CatalogRecipe>,
     pub villagers: Vec<CatalogVillager>,
     pub monsters: Vec<CatalogGoal>,
+    // added after 0.2.0; default so a catalog cached by an older version still loads
+    /// Every object, unqualified id → display name.
+    #[serde(default)]
+    pub items: Vec<CatalogItem>,
+    #[serde(default)]
+    pub museum: Vec<CatalogMuseumItem>,
+    #[serde(default)]
+    pub achievements: Vec<CatalogAchievement>,
+    #[serde(default)]
+    pub special_orders: Vec<CatalogOrder>,
+    #[serde(default)]
+    pub crops: Vec<CatalogCrop>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CatalogMuseumItem {
+    pub id: String,
+    pub name: String,
+    /// "artifact" or "mineral".
+    pub kind: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CatalogAchievement {
+    pub id: u32,
+    pub name: String,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CatalogOrder {
+    pub key: String,
+    pub name: String,
+    pub requester: String,
+    /// Qi's walnut-room orders rather than the town board's.
+    pub qi: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CatalogCrop {
+    /// Unqualified harvest item id.
+    pub id: String,
+    pub polyculture: bool,
+    pub monoculture: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -107,6 +155,38 @@ pub struct Facts {
     pub walnuts: u32,
     /// Finished buildings anywhere in the world, by type.
     pub buildings: HashSet<String>,
+    /// Item id → number shipped.
+    pub shipped_counts: HashMap<String, u32>,
+    /// Qualified fish id → number caught.
+    pub fish_counts: HashMap<String, u32>,
+    pub money_earned: u64,
+    /// Experience in the save's order: farming, fishing, foraging, mining, combat.
+    pub xp: Vec<u32>,
+    /// Levels: farming, fishing, foraging, mining, combat, luck.
+    pub levels: [u32; 6],
+    /// `stats/Values`, the 1.6 stat store (books read, mastery, quests…).
+    pub stats: HashMap<String, u64>,
+    pub achievements: HashSet<u32>,
+    pub events: HashSet<String>,
+    pub notes: HashSet<u32>,
+    pub artifacts_found: HashSet<String>,
+    pub minerals_found: HashSet<String>,
+    /// Item ids in the museum, unqualified.
+    pub donated: HashSet<String>,
+    pub house_level: u32,
+    pub spouse: Option<String>,
+    pub children: u32,
+    pub deepest_mine: u32,
+    pub friend_status: HashMap<String, String>,
+    pub special_orders: HashSet<String>,
+    /// "Room/id" → bundle definition, as `bundleData` stores it.
+    pub bundle_data: Vec<(String, String)>,
+    /// Bundle id → which of its items are in.
+    pub bundles: HashMap<u32, Vec<bool>>,
+    pub raccoons_fed: u32,
+    pub waivers: u32,
+    /// Candles lit at Grandpa's shrine, 0 before the evaluation.
+    pub grandpa_candles: u32,
 }
 
 /// One line of the perfection tracker.
@@ -417,6 +497,114 @@ pub fn facts(dir: &Path) -> AppResult<Facts> {
     facts_from(std::io::BufReader::with_capacity(1 << 16, file))
 }
 
+// everything the checkup reads beyond perfection; `key` carries a dictionary key from
+// its <key> to the matching <value>
+fn collect_more(
+    f: &mut Facts,
+    path: &[String],
+    t: &str,
+    key: &mut Option<String>,
+    location: Option<&str>,
+) {
+    let at = |i: usize, name: &str| path.get(i).is_some_and(|p| p == name);
+    let n = path.len();
+    let num = || t.parse::<u64>().unwrap_or(0);
+    if at(1, "player") {
+        match n {
+            3 => match path[2].as_str() {
+                "totalMoneyEarned" => f.money_earned = num(),
+                "farmingLevel" => f.levels[0] = num() as u32,
+                "fishingLevel" => f.levels[1] = num() as u32,
+                "foragingLevel" => f.levels[2] = num() as u32,
+                "miningLevel" => f.levels[3] = num() as u32,
+                "combatLevel" => f.levels[4] = num() as u32,
+                "luckLevel" => f.levels[5] = num() as u32,
+                "houseUpgradeLevel" => f.house_level = num() as u32,
+                "deepestMineLevel" => f.deepest_mine = num() as u32,
+                "spouse" if !t.is_empty() => f.spouse = Some(t.to_owned()),
+                _ => {}
+            },
+            4 => match path[2].as_str() {
+                "experiencePoints" => f.xp.push(num() as u32),
+                "achievements" => {
+                    f.achievements.insert(num() as u32);
+                }
+                "eventsSeen" => {
+                    f.events.insert(t.to_owned());
+                }
+                "secretNotesSeen" => {
+                    f.notes.insert(num() as u32);
+                }
+                _ => {}
+            },
+            6 if at(3, "item") && at(4, "key") => match path[2].as_str() {
+                "archaeologyFound" => {
+                    f.artifacts_found.insert(t.to_owned());
+                }
+                "mineralsFound" => {
+                    f.minerals_found.insert(t.to_owned());
+                }
+                _ => {}
+            },
+            6 if at(3, "item") && at(4, "value") && at(2, "basicShipped") => {
+                if let Some(k) = key.as_ref() {
+                    f.shipped_counts.insert(k.clone(), num() as u32);
+                }
+            }
+            7 if at(2, "fishCaught") && at(4, "value") => {
+                // [count, biggest size]; the first int is the count
+                if let Some(k) = key.as_ref() {
+                    f.fish_counts.entry(k.clone()).or_insert(num() as u32);
+                }
+            }
+            7 if at(2, "friendshipData") && at(6, "Status") => {
+                if let Some(k) = key.as_ref() {
+                    f.friend_status.insert(k.clone(), t.to_owned());
+                }
+            }
+            7 if at(2, "stats") && at(3, "Values") && at(5, "key") => *key = Some(t.to_owned()),
+            7 if at(2, "stats") && at(3, "Values") && at(5, "value") => {
+                if let Some(k) = key.as_ref() {
+                    f.stats.insert(k.clone(), num());
+                }
+            }
+            _ => {}
+        }
+        return;
+    }
+    match (n, path.get(1).map(String::as_str)) {
+        (2, Some("timesFedRaccoons")) => f.raccoons_fed = num() as u32,
+        (2, Some("perfectionWaivers")) => f.waivers = num() as u32,
+        (3, Some("completedSpecialOrders")) => {
+            f.special_orders.insert(t.to_owned());
+        }
+        (5, Some("bundleData")) if at(3, "key") => *key = Some(t.to_owned()),
+        (5, Some("bundleData")) if at(3, "value") => {
+            if let Some(k) = key.take() {
+                f.bundle_data.push((k, t.to_owned()));
+            }
+        }
+        _ => {}
+    }
+    if at(1, "locations") {
+        match (location, n) {
+            (Some("Farm"), 4) if at(3, "grandpaScore") => f.grandpa_candles = num() as u32,
+            (Some("CommunityCenter"), 7) if at(3, "bundles") && at(5, "key") => {
+                *key = Some(t.to_owned())
+            }
+            (Some("CommunityCenter"), 8) if at(3, "bundles") && at(6, "ArrayOfBoolean") => {
+                if let Some(id) = key.as_ref().and_then(|k| k.parse().ok()) {
+                    f.bundles.entry(id).or_default().push(t == "true");
+                }
+            }
+            (Some("LibraryMuseum"), 7) if at(3, "museumPieces") && at(5, "value") => {
+                f.donated.insert(t.trim_start_matches("(O)").to_owned());
+            }
+            _ => {}
+        }
+    }
+}
+
 #[derive(Default)]
 struct Building {
     depth: usize,
@@ -433,6 +621,14 @@ fn facts_from(reader: impl BufRead) -> AppResult<Facts> {
     // dictionary entries are <item><key>…</key><value>…</value></item>; the key comes first
     let mut key: Option<String> = None;
     let mut buildings: Vec<Building> = Vec::new();
+    // xsi:type of the <GameLocation> we're inside, if any
+    let mut location: Option<String> = None;
+    let type_of = |e: &quick_xml::events::BytesStart<'_>| {
+        e.attributes()
+            .flatten()
+            .find(|a| a.key.local_name().as_ref() == "type")
+            .map(|a| a.value.to_string())
+    };
 
     let ends = |path: &[String], tail: &[&str]| {
         path.len() >= tail.len()
@@ -449,6 +645,12 @@ fn facts_from(reader: impl BufRead) -> AppResult<Facts> {
         {
             Event::Start(e) => {
                 let name = e.local_name().as_ref().to_owned();
+                if name == "GameLocation" && path.len() == 2 {
+                    location = type_of(&e);
+                }
+                if name == "NPC" && type_of(&e).as_deref() == Some("Child") {
+                    f.children += 1;
+                }
                 if name == "Building" && path.last().is_some_and(|p| p == "buildings") {
                     buildings.push(Building {
                         depth: path.len() + 1,
@@ -464,6 +666,10 @@ fn facts_from(reader: impl BufRead) -> AppResult<Facts> {
                 let t = text.trim();
                 // only the main player counts; farmhands live under <farmhands>
                 let player = path.len() >= 3 && path[1] == "player";
+                collect_more(&mut f, &path, t, &mut key, location.as_deref());
+                if path.len() == 3 && path[1] == "locations" {
+                    location = None;
+                }
                 if player && path.len() == 6 && path[3] == "item" && path[4] == "key" {
                     key = Some(t.to_owned());
                     let set = match path[2].as_str() {
@@ -574,6 +780,7 @@ fn facts_from(reader: impl BufRead) -> AppResult<Facts> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
 
     const SAVE: &str = r#"<?xml version="1.0" encoding="utf-8"?>
 <SaveGame xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -664,6 +871,7 @@ mod tests {
                     targets: vec!["Bat".into()],
                 },
             ],
+            ..Catalog::default()
         }
     }
 
@@ -732,5 +940,43 @@ mod tests {
         assert_eq!(part(&p, "fish").total, None);
         assert_eq!(part(&p, "fish").done, 1);
         assert_eq!(part(&p, "walnuts").total, Some(130));
+    }
+
+    // a real save, read-only: PELICAN_TEST_SAVE=<save folder> cargo test -- --ignored real_save_facts --nocapture
+    #[test]
+    #[ignore]
+    fn real_save_facts() {
+        let dir = PathBuf::from(std::env::var("PELICAN_TEST_SAVE").unwrap());
+        let f = facts(&dir).unwrap();
+        eprintln!(
+            "money {} xp {:?} levels {:?} house {} spouse {:?} children {} mine {}",
+            f.money_earned, f.xp, f.levels, f.house_level, f.spouse, f.children, f.deepest_mine
+        );
+        eprintln!(
+            "achievements {} events {} notes {} donated {} artifacts {} minerals {}",
+            f.achievements.len(),
+            f.events.len(),
+            f.notes.len(),
+            f.donated.len(),
+            f.artifacts_found.len(),
+            f.minerals_found.len()
+        );
+        eprintln!(
+            "shipped {} fish {} friends {} statuses {} orders {} bundles {}/{} raccoons {} candles {}",
+            f.shipped_counts.len(),
+            f.fish_counts.len(),
+            f.friends.len(),
+            f.friend_status.len(),
+            f.special_orders.len(),
+            f.bundle_data.len(),
+            f.bundles.len(),
+            f.raccoons_fed,
+            f.grandpa_candles
+        );
+        let mut stats: Vec<_> = f.stats.iter().collect();
+        stats.sort();
+        eprintln!("stats {stats:?}");
+        assert_eq!(f.xp.len(), 6);
+        assert!(!f.bundle_data.is_empty() && !f.bundles.is_empty());
     }
 }

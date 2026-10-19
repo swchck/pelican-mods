@@ -1,5 +1,12 @@
 # What's new
 
+## 0.3.0
+
+### Progress
+
+- A detailed save report in the spirit of Stardew Checkup: achievements, skills and mastery, Community Center bundles item by item, the museum with what's found but not donated, friendship with every villager, collections and polyculture, quests and special orders, Monster Slayer, the island and its upgrades, books, powers and secret notes, Grandpa's evaluation, money.
+- Names come from your modded game in its language; the rules come from the 1.6 game code.
+
 ## 0.2.0 — 2026-10-19
 
 ### Game link

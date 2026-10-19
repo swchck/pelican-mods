@@ -653,6 +653,13 @@ mod tests {
                 eprintln!("  e.g. {:?} / {:?} / {:?}", c.fish.first(), c.villagers.first(), c.monsters.first());
                 assert!(c.shipping.len() > 100 && c.fish.len() > 50 && c.cooking.len() > 70);
                 assert!(c.crafting.len() > 100 && c.villagers.len() > 25 && c.monsters.len() > 8);
+                eprintln!(
+                    "  museum {}, achievements {}, orders {}, crops {}, items {}",
+                    c.museum.len(), c.achievements.len(), c.special_orders.len(), c.crops.len(), c.items.len()
+                );
+                if let Ok(out) = std::env::var("PELICAN_TEST_CATALOG_OUT") {
+                    std::fs::write(out, serde_json::to_vec(&c).unwrap()).unwrap();
+                }
 
                 let forecast = companion.query("forecast").await.unwrap();
                 let geodes = forecast["geodes"].as_array().unwrap();

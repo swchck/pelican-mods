@@ -30,8 +30,11 @@ internal static class Catalog
         // GetAllIds and GetData give the same ParsedItemData
         dynamic objects = itemRegistry.GetMethod("GetObjectTypeDefinition", Static)!.Invoke(null, null)!;
         MethodInfo basicShipped = obj.GetMethod("isPotentialBasicShipped", Static)!;
+        MethodInfo donatable = Find("StardewValley.Locations.LibraryMuseum")!.GetMethod("IsItemSuitableForDonation", Static)!;
         var shipping = new List<CatalogItem>();
         var fish = new List<CatalogItem>();
+        var items = new List<CatalogItem>();
+        var museum = new List<CatalogMuseumItem>();
         foreach (string itemId in (IEnumerable<string>)objects.GetAllIds())
         {
             dynamic? data = objects.GetData(itemId);
@@ -44,6 +47,9 @@ internal static class Catalog
                 shipping.Add(new CatalogItem(id, data.DisplayName));
             if (type == "Fish" && !ExcludedFromFishing(data.RawData))
                 fish.Add(new CatalogItem((string)data.QualifiedItemId, data.DisplayName));
+            items.Add(new CatalogItem(id, data.DisplayName));
+            if ((bool)donatable.Invoke(null, new object[] { id, false })!)
+                museum.Add(new CatalogMuseumItem(id, data.DisplayName, type == "Arch" ? "artifact" : "mineral"));
         }
 
         return new CatalogMessage(
@@ -54,7 +60,12 @@ internal static class Catalog
             Cooking: Recipes(recipe, "cookingRecipes", cooking: true),
             Crafting: Recipes(recipe, "craftingRecipes", cooking: false).Where(r => r.Key != "Wedding Ring").ToList(),
             Villagers: Villagers(game1),
-            Monsters: Monsters(game1)
+            Monsters: Monsters(game1),
+            Items: items,
+            Museum: museum,
+            Achievements: Achievements(game1),
+            SpecialOrders: SpecialOrders(game1),
+            Crops: Crops(game1)
         );
     }
 
@@ -113,6 +124,50 @@ internal static class Catalog
             var targets = ((IEnumerable<string>?)q.Targets)?.ToList() ?? new List<string>();
             string key = (string)entry.Key;
             list.Add(new CatalogGoal(key, Parse((string?)q.DisplayName) ?? key, (int)q.Count, targets));
+        }
+        return list;
+    }
+
+    // "name^description^shown on collections tab^prerequisite^hat"
+    private static List<CatalogAchievement> Achievements(Type game1)
+    {
+        var all = (IDictionary)game1.GetField("achievements", Static)!.GetValue(null)!;
+        var list = new List<CatalogAchievement>();
+        foreach (DictionaryEntry entry in all)
+        {
+            string[] fields = ((string)entry.Value!).Split('^');
+            list.Add(new CatalogAchievement((int)entry.Key, fields[0], fields.Length > 1 ? fields[1] : ""));
+        }
+        return list.OrderBy(a => a.Id).ToList();
+    }
+
+    private static List<CatalogOrder> SpecialOrders(Type game1)
+    {
+        object content = game1.GetField("content", Static)!.GetValue(null)!;
+        MethodInfo load = Find("StardewValley.DataLoader")!.GetMethod("SpecialOrders", Static)!;
+        var orders = (IDictionary)load.Invoke(null, new[] { content })!;
+        // names are "[Willy_Name]" keys into Strings/SpecialOrderStrings, resolved the game's way
+        MethodInfo localize = Find("StardewValley.SpecialOrders.SpecialOrder")!.GetMethod("MakeLocalizationReplacements", Static)!;
+        var list = new List<CatalogOrder>();
+        foreach (DictionaryEntry entry in orders)
+        {
+            dynamic o = entry.Value!;
+            string key = (string)entry.Key;
+            string name = (string?)o.Name is { } raw ? (string)localize.Invoke(null, new object[] { raw })! : key;
+            list.Add(new CatalogOrder(key, name, (string?)o.Requester ?? "", (string?)o.OrderType == "Qi"));
+        }
+        return list;
+    }
+
+    private static List<CatalogCrop> Crops(Type game1)
+    {
+        var crops = (IEnumerable)(game1.GetField("cropData", Static)!.GetValue(null)!);
+        var list = new List<CatalogCrop>();
+        foreach (object raw in crops)
+        {
+            dynamic c = ((dynamic)raw).Value;
+            if ((bool)c.CountForPolyculture || (bool)c.CountForMonoculture)
+                list.Add(new CatalogCrop((string)c.HarvestItemId, (bool)c.CountForPolyculture, (bool)c.CountForMonoculture));
         }
         return list;
     }

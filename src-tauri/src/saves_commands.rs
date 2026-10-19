@@ -55,30 +55,46 @@ pub async fn saves_list(app: AppHandle) -> AppResult<Vec<SaveSummary>> {
 pub async fn saves_perfection(app: AppHandle, id: String) -> AppResult<Perfection> {
     let path = save_path(&app, &id)?;
     blocking(app, move |s| {
-        let modified = saves::summary(&path)?.modified;
-        let cached = s
-            .save_facts
-            .0
-            .lock()
-            .unwrap()
-            .get(&id)
-            .filter(|(m, _)| *m == modified)
-            .map(|(_, f)| f.clone());
-        let facts = match cached {
-            Some(f) => f,
-            None => {
-                let f = perfection::facts(&path)?;
-                s.save_facts
-                    .0
-                    .lock()
-                    .unwrap()
-                    .insert(id.clone(), (modified, f.clone()));
-                f
-            }
-        };
+        let facts = cached_facts(s, &id, &path)?;
         Ok(perfection::evaluate(&facts, s.companion.catalog().as_ref()))
     })
     .await
+}
+
+/// The detailed progress report for save `id`: achievements, bundles, museum and the rest.
+#[tauri::command]
+pub async fn saves_checkup(app: AppHandle, id: String) -> AppResult<crate::checkup::Checkup> {
+    let path = save_path(&app, &id)?;
+    blocking(app, move |s| {
+        let facts = cached_facts(s, &id, &path)?;
+        Ok(crate::checkup::build(
+            &facts,
+            s.companion.catalog().as_ref(),
+        ))
+    })
+    .await
+}
+
+fn cached_facts(s: &AppState, id: &str, path: &std::path::Path) -> AppResult<perfection::Facts> {
+    let modified = saves::summary(path)?.modified;
+    let cached = s
+        .save_facts
+        .0
+        .lock()
+        .unwrap()
+        .get(id)
+        .filter(|(m, _)| *m == modified)
+        .map(|(_, f)| f.clone());
+    if let Some(f) = cached {
+        return Ok(f);
+    }
+    let f = perfection::facts(path)?;
+    s.save_facts
+        .0
+        .lock()
+        .unwrap()
+        .insert(id.to_owned(), (modified, f.clone()));
+    Ok(f)
 }
 
 #[tauri::command]

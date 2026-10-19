@@ -391,6 +391,90 @@ mockIPC(
           ],
         };
       }
+      case "saves_checkup": {
+        const it = (id: string, name: string | null, done: boolean, extra = {}) => ({
+          id,
+          name,
+          label: null,
+          have: null,
+          need: null,
+          done,
+          note: null,
+          ...extra,
+        });
+        const goal = (label: string, have: number, need: number) => ({
+          id: `${label}-${need}`,
+          name: null,
+          label,
+          have,
+          need,
+          done: have >= need,
+          note: null,
+        });
+        const group = (id: string, items: { done: boolean }[], extra = {}) => ({
+          id,
+          title: null,
+          category: null,
+          done: items.filter((i) => i.done).length,
+          total: items.length,
+          items,
+          ...extra,
+        });
+        const section = (id: string, groups: { done: number; total: number }[]) => ({
+          id,
+          done: groups.reduce((a, g) => a + g.done, 0),
+          total: groups.reduce((a, g) => a + g.total, 0),
+          groups,
+        });
+        return {
+          catalog: true,
+          sections: [
+            section("achievements", [
+              group("achievementList", [
+                it("0", "Greenhorn", true),
+                it("4", "Legend", false),
+                it("5", "A Complete Collection", false),
+              ]),
+            ]),
+            section("cc", [
+              group(
+                "bundle-0",
+                [
+                  it("0-0", "Пастернак", true),
+                  it("0-1", "Зелёная фасоль", false),
+                  it("0-2", "Цветная капуста", true, { need: 5, note: "gold" }),
+                ],
+                {
+                  title: "Весенние культуры",
+                  category: "Pantry",
+                },
+              ),
+              group("bundle-23", [{ ...goal("gold", 2500, 2500), done: false }], {
+                title: "2 500з",
+                category: "Vault",
+              }),
+            ]),
+            section("museum", [
+              group("museumGoals", [
+                goal("treasureTrove", 41, 40),
+                goal("rustyKey", 41, 60),
+                goal("completeCollection", 41, 95),
+              ]),
+              group("minerals", [
+                it("74", "Призматический осколок", false, { note: "foundNotDonated" }),
+                it("60", "Изумруд", true),
+              ]),
+            ]),
+            section("friends", [
+              group("villagers", [
+                it("Abigail", "Эбигейл", false, { have: 6, need: 8, note: "dating" }),
+                it("Krobus", "Кробус", false, { have: 0, need: 10, note: "notMet" }),
+              ]),
+            ]),
+            section("money", [group("earned", [goal("earn", 60000, 15000), goal("earn", 60000, 1000000)])]),
+          ],
+        };
+      }
       case "saves_progress":
         return {
           ccRooms: ["ccPantry", "ccVault"],
