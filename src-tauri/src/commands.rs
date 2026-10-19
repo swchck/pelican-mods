@@ -19,7 +19,7 @@ use crate::updates::UpdateReport;
 /// Shared backend state managed by Tauri.
 pub struct AppState {
     settings: SettingsStore,
-    launcher: Launcher,
+    pub(crate) launcher: Launcher,
     pub(crate) http: reqwest::Client,
     pub(crate) work_dir: PathBuf,
     installing: AtomicBool,
@@ -35,6 +35,9 @@ pub struct AppState {
     pub(crate) downloads: crate::downloads::Downloads,
     /// Account of the stored Nexus key, once validated this session.
     pub(crate) nexus_account: Mutex<Option<crate::nexus::Account>>,
+    /// Zip snapshots of save folders.
+    pub(crate) save_backup_root: PathBuf,
+    pub(crate) save_progress: crate::saves_commands::ProgressCache,
     pub(crate) profiles: ProfilesStore,
     /// Serializes store and profile changes; installs run on blocking threads in parallel.
     pub(crate) library_lock: Mutex<()>,
@@ -60,6 +63,8 @@ impl AppState {
             updates_file: cache_dir.join("updates.json"),
             downloads: Default::default(),
             nexus_account: Mutex::new(None),
+            save_backup_root: data_dir.join("save-backups"),
+            save_progress: Default::default(),
             profiles: ProfilesStore::load(config_dir.join("profiles.json")),
             library_lock: Mutex::new(()),
         }
@@ -181,6 +186,10 @@ pub async fn game_launch(
     if state.installing.load(Ordering::SeqCst) {
         return Err(AppError::Busy);
     }
+    // the snapshot must not keep anyone from playing; a failure is reported, not fatal
+    if let Err(e) = crate::saves_commands::snapshot_before_launch(&app).await {
+        let _ = app.emit("saves:backup-failed", &e);
+    }
     let smapi = if modded {
         Some(SmapiRun {
             log: game_data_dir(&app)?.join("ErrorLogs/SMAPI-latest.txt"),
@@ -244,7 +253,7 @@ pub async fn rosetta_install() -> AppResult<()> {
 }
 
 // the game keeps its data under ~/.config on macOS too, a Linux habit of MonoGame
-fn game_data_dir(app: &AppHandle) -> AppResult<PathBuf> {
+pub(crate) fn game_data_dir(app: &AppHandle) -> AppResult<PathBuf> {
     let home = app
         .path()
         .home_dir()

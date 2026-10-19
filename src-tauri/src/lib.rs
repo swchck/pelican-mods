@@ -13,6 +13,9 @@ mod nexus;
 mod nexus_commands;
 mod profiles;
 mod rosetta;
+mod save_backups;
+mod saves;
+mod saves_commands;
 mod settings;
 mod smapi;
 mod updates;
@@ -88,6 +91,13 @@ pub fn run() {
             nexus_commands::nxm_open,
             nexus_commands::downloads_list,
             nexus_commands::downloads_clear,
+            saves_commands::saves_list,
+            saves_commands::saves_progress,
+            saves_commands::saves_snapshots,
+            saves_commands::saves_backup,
+            saves_commands::saves_restore,
+            saves_commands::saves_export,
+            saves_commands::saves_import,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

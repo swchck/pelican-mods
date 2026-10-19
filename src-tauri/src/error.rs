@@ -45,6 +45,8 @@ pub enum AppError {
     BadNxm(String),
     #[error("Keychain error: {0}")]
     Keychain(String),
+    #[error("save file can't be read: {0}")]
+    BadSave(String),
     #[error("Rosetta 2 is required to run the game")]
     RosettaMissing,
     #[error("cancelled by the user")]
@@ -76,6 +78,7 @@ impl AppError {
             Self::NexusNoKey => "nexus_no_key",
             Self::BadNxm(_) => "bad_nxm",
             Self::Keychain(_) => "keychain",
+            Self::BadSave(_) => "bad_save",
             Self::RosettaMissing => "rosetta_missing",
             Self::Cancelled => "cancelled",
             Self::Io(_) => "io",
@@ -92,6 +95,7 @@ impl AppError {
             | Self::NotFound(s)
             | Self::NoDownload(s)
             | Self::BadNxm(s)
+            | Self::BadSave(s)
             | Self::Keychain(s)
             | Self::BadProfileName(s) => Some(s.clone()),
             Self::Io(e) => Some(e.to_string()),

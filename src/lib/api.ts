@@ -261,3 +261,59 @@ export const nexusEvents = {
   libraryChanged: (cb: () => void): Promise<UnlistenFn> => listen("library:changed", () => cb()),
   nxmError: (cb: (e: AppError) => void): Promise<UnlistenFn> => listen<AppError>("nxm:error", (e) => cb(e.payload)),
 };
+
+export interface Skills {
+  farming: number;
+  mining: number;
+  foraging: number;
+  fishing: number;
+  combat: number;
+}
+
+export interface SaveSummary {
+  id: string;
+  path: string;
+  farmer: string;
+  farmName: string;
+  money: number;
+  totalEarned: number;
+  /** 0 spring … 3 winter. */
+  season: number;
+  day: number;
+  year: number;
+  playTimeMs: number;
+  gameVersion: string | null;
+  skills: Skills;
+  /** Unix seconds. */
+  modified: number;
+}
+
+export interface SaveProgress {
+  ccRooms: string[];
+  joja: boolean;
+  museumItems: number;
+  fishSpecies: number;
+  cookingKnown: number;
+  cookingCooked: number;
+  craftingKnown: number;
+  friendships: { name: string; points: number; hearts: number }[];
+}
+
+export interface Snapshot {
+  saveId: string;
+  /** Unix milliseconds. */
+  created: number;
+  reason: "manual" | "launch" | "replaced";
+  size: number;
+  file: string;
+}
+
+export const saves = {
+  list: () => invoke<SaveSummary[]>("saves_list"),
+  progress: (id: string) => invoke<SaveProgress>("saves_progress", { id }),
+  snapshots: (id: string) => invoke<Snapshot[]>("saves_snapshots", { id }),
+  backup: (id: string) => invoke<Snapshot>("saves_backup", { id }),
+  restore: (file: string) => invoke<string>("saves_restore", { file }),
+  export: (id: string, dest: string) => invoke<void>("saves_export", { id, dest }),
+  import: (file: string) => invoke<string>("saves_import", { file }),
+};

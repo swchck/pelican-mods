@@ -44,6 +44,34 @@ pub fn extract(archive: &Path, out: &Path) -> AppResult<()> {
     }
 }
 
+/// Packs the folder `src` into a new zip at `dest`, under a top-level folder `root`.
+pub fn zip_dir(src: &Path, dest: &Path, root: &str) -> AppResult<()> {
+    use std::io::Write;
+
+    let tmp = dest.with_extension("zip.part");
+    let mut w = zip::ZipWriter::new(std::fs::File::create(&tmp)?);
+    let opts = zip::write::SimpleFileOptions::default().unix_permissions(0o644);
+    let mut stack = vec![(src.to_path_buf(), PathBuf::from(root))];
+    while let Some((dir, rel)) = stack.pop() {
+        w.add_directory(rel.to_string_lossy(), opts)?;
+        for entry in std::fs::read_dir(&dir)? {
+            let entry = entry?;
+            let ty = entry.file_type()?;
+            let child = rel.join(entry.file_name());
+            if ty.is_dir() {
+                stack.push((entry.path(), child));
+            } else if ty.is_file() {
+                w.start_file(child.to_string_lossy(), opts)?;
+                w.write_all(&std::fs::read(entry.path())?)?;
+            }
+        }
+    }
+    w.finish()?;
+    // a half-written zip must never look like a finished backup
+    std::fs::rename(tmp, dest)?;
+    Ok(())
+}
+
 // the relative path an entry may be written to, or None when it would escape `out`
 fn safe_relative(name: &Path) -> Option<PathBuf> {
     let mut rel = PathBuf::new();
@@ -233,5 +261,27 @@ pub(crate) mod tests {
         assert_eq!(safe_relative(Path::new("../a")), None);
         assert_eq!(safe_relative(Path::new("/etc/passwd")), None);
         assert_eq!(safe_relative(Path::new("")), None);
+    }
+
+    #[test]
+    fn zips_folder_round_trip() {
+        let dir = tempfile::tempdir().unwrap();
+        let src = dir.path().join("Farm_1");
+        std::fs::create_dir_all(src.join("sub")).unwrap();
+        std::fs::write(src.join("Farm_1"), "world").unwrap();
+        std::fs::write(src.join("sub/x"), "y").unwrap();
+        let zip = dir.path().join("b.zip");
+        zip_dir(&src, &zip, "Farm_1").unwrap();
+        let out = dir.path().join("out");
+        extract(&zip, &out).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(out.join("Farm_1/Farm_1")).unwrap(),
+            "world"
+        );
+        assert_eq!(
+            std::fs::read_to_string(out.join("Farm_1/sub/x")).unwrap(),
+            "y"
+        );
+        assert!(!dir.path().join("b.zip.part").exists());
     }
 }

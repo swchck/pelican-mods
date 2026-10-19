@@ -1,8 +1,17 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { CheckIcon, DownloadIcon, ExternalLinkIcon, HeartIcon, Loader2Icon } from "@lucide/vue";
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  DownloadIcon,
+  ExternalLinkIcon,
+  HeartIcon,
+  Loader2Icon,
+} from "@lucide/vue";
+import ImageLightbox from "@/components/ImageLightbox.vue";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { NexusFile, NexusMod } from "@/lib/api";
@@ -18,10 +27,24 @@ const gallery = computed(() => {
   return props.mod.pictureUrl ? [props.mod.pictureUrl, ...imgs.filter((i) => i !== props.mod.pictureUrl)] : imgs;
 });
 const shown = ref(0);
+const lightbox = ref<number | null>(null);
+const strip = ref<HTMLElement>();
 watch(
   () => props.mod.modId,
-  () => (shown.value = 0),
+  () => {
+    shown.value = 0;
+    lightbox.value = null;
+  },
 );
+watch(shown, async (i) => {
+  await nextTick();
+  (strip.value?.children[i] as HTMLElement | undefined)?.scrollIntoView({ block: "nearest", inline: "nearest" });
+});
+
+function step(delta: number) {
+  const n = gallery.value.length;
+  if (n) shown.value = (shown.value + delta + n) % n;
+}
 
 const html = computed(() => bbcodeToHtml(props.mod.description ?? props.mod.summary ?? ""));
 const visibleFiles = computed(() =>
@@ -45,8 +68,8 @@ function onClick(e: MouseEvent) {
 </script>
 
 <template>
-  <article :aria-label="mod.name" class="wood-panel flex min-w-0 flex-1 flex-col gap-3.5 overflow-hidden p-5">
-    <header class="flex items-start gap-4">
+  <article :aria-label="mod.name" class="wood-panel flex min-w-0 flex-1 flex-col gap-3.5 overflow-hidden p-5 pr-3">
+    <header class="flex shrink-0 items-start gap-4">
       <div class="flex min-w-0 flex-1 flex-col gap-1">
         <h2 class="font-pixel text-wood-dark text-[28px] leading-tight font-bold break-words">{{ mod.name }}</h2>
         <span class="text-muted-foreground text-[13px] font-bold">
@@ -89,107 +112,125 @@ function onClick(e: MouseEvent) {
       </div>
     </header>
 
-    <div v-if="gallery.length" class="grid h-52 shrink-0 grid-cols-[2fr_1fr] gap-2.5">
-      <img
-        :src="gallery[shown]"
-        alt=""
-        class="h-full w-full rounded-md border-2 border-[#a0703f] bg-[#cfe6f5] object-cover"
-      />
-      <div class="grid min-h-0 auto-rows-[minmax(0,1fr)] gap-2.5 overflow-hidden">
-        <button
-          v-for="(src, i) in gallery.slice(0, 4)"
-          :key="src"
-          type="button"
-          :aria-label="t('nexus.screenshot', { n: i + 1 })"
-          class="min-h-0 overflow-hidden rounded-md border-2"
-          :class="i === shown ? 'border-wood-dark' : 'border-[#a0703f] opacity-80 hover:opacity-100'"
-          @click="shown = i"
-        >
-          <img :src="src" alt="" class="h-full w-full object-cover" loading="lazy" />
-        </button>
-      </div>
-    </div>
-
-    <Tabs default-value="about" class="flex min-h-0 flex-1 flex-col">
-      <TabsList
-        class="border-border-soft h-auto justify-start gap-1 rounded-none border-b-2 border-dashed bg-transparent p-0 pb-1.5"
-      >
-        <TabsTrigger
-          value="about"
-          class="data-[state=active]:bg-gold data-[state=active]:border-wood-dark rounded-md border-2 border-transparent px-3 font-extrabold data-[state=active]:shadow-[inset_0_-3px_0_var(--gold-shade)]"
-          >{{ t("nexus.tabs.about") }}</TabsTrigger
-        >
-        <TabsTrigger
-          value="files"
-          class="data-[state=active]:bg-gold data-[state=active]:border-wood-dark rounded-md border-2 border-transparent px-3 font-extrabold data-[state=active]:shadow-[inset_0_-3px_0_var(--gold-shade)]"
-          >{{ t("nexus.tabs.files", { n: visibleFiles.length }) }}</TabsTrigger
-        >
-        <TabsTrigger
-          value="requirements"
-          class="data-[state=active]:bg-gold data-[state=active]:border-wood-dark rounded-md border-2 border-transparent px-3 font-extrabold data-[state=active]:shadow-[inset_0_-3px_0_var(--gold-shade)]"
-          >{{ t("nexus.tabs.requirements", { n: mod.requirements.length }) }}</TabsTrigger
-        >
-      </TabsList>
-
-      <TabsContent value="about" class="min-h-0 flex-1 overflow-auto pr-1">
-        <!-- eslint-disable-next-line vue/no-v-html -- bbcodeToHtml escapes the source and emits only whitelisted tags -->
-        <div class="bbcode text-sm leading-relaxed select-text" @click="onClick" v-html="html" />
-      </TabsContent>
-
-      <TabsContent value="files" class="min-h-0 flex-1 overflow-auto pr-1">
-        <div class="flex flex-col gap-2">
-          <div
-            v-for="f in visibleFiles"
-            :key="f.fileId"
-            class="bg-parchment border-border-soft flex items-center gap-3 rounded-md border-2 p-2.5"
+    <div class="-mr-2 min-h-0 flex-1 overflow-y-auto pr-2">
+      <div v-if="gallery.length" class="flex flex-col gap-2 pb-3.5">
+        <div class="group relative aspect-[16/8] overflow-hidden rounded-md border-2 border-[#a0703f] bg-[#cfe6f5]">
+          <button
+            type="button"
+            class="h-full w-full cursor-zoom-in"
+            :aria-label="t('gallery.open')"
+            @click="lightbox = shown"
           >
-            <div class="flex min-w-0 flex-1 flex-col">
-              <span class="truncate text-sm font-extrabold">{{ f.name }}</span>
-              <span class="text-muted-foreground text-xs font-semibold">
-                {{ f.category ? t(`nexus.category.${f.category}`, f.category) : "" }} · {{ f.version }} ·
-                {{ size(f) }} ·
-                {{ date(f.date) }}
-              </span>
-            </div>
-            <Button size="sm" variant="outline" :disabled="busy" @click="nx.download(mod.modId, f.fileId)">
-              <DownloadIcon />{{ t("nexus.download") }}
-            </Button>
-          </div>
-        </div>
-      </TabsContent>
-
-      <TabsContent value="requirements" class="min-h-0 flex-1 overflow-auto pr-1">
-        <p v-if="!mod.requirements.length" class="text-muted-foreground text-sm font-semibold">
-          {{ t("nexus.noRequirements") }}
-        </p>
-        <div class="flex flex-col gap-2">
-          <div
-            v-for="(r, i) in mod.requirements"
-            :key="i"
-            class="bg-parchment border-border-soft flex items-center gap-3 rounded-md border-2 p-2.5"
-          >
-            <div class="flex min-w-0 flex-1 flex-col">
-              <span class="text-sm font-extrabold">{{ r.modName ?? r.url }}</span>
-              <span v-if="r.notes" class="text-muted-foreground text-xs">{{ r.notes }}</span>
-            </div>
+            <img :src="gallery[shown]" alt="" class="h-full w-full object-cover" />
+          </button>
+          <template v-if="gallery.length > 1">
+            <button
+              type="button"
+              class="bg-card/90 border-wood-dark absolute top-1/2 left-2 grid size-9 -translate-y-1/2 place-items-center rounded-md border-2 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+              :aria-label="t('gallery.prev')"
+              @click="step(-1)"
+            >
+              <ChevronLeftIcon class="size-5" />
+            </button>
+            <button
+              type="button"
+              class="bg-card/90 border-wood-dark absolute top-1/2 right-2 grid size-9 -translate-y-1/2 place-items-center rounded-md border-2 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+              :aria-label="t('gallery.next')"
+              @click="step(1)"
+            >
+              <ChevronRightIcon class="size-5" />
+            </button>
             <span
-              v-if="r.modId && installedIds.has(r.modId)"
-              class="bg-success-soft rounded border-2 border-[#9cc07a] px-2 py-0.5 text-xs font-extrabold text-[#2e5a1e]"
-              >{{ t("nexus.installedBadge") }}</span
+              class="bg-card/90 border-wood-dark absolute right-2 bottom-2 rounded border-2 px-1.5 font-mono text-xs font-bold"
+              >{{ shown + 1 }} / {{ gallery.length }}</span
             >
-            <Button
-              v-else-if="r.modId && !r.externalRequirement"
-              size="sm"
-              variant="outline"
-              @click="nx.select(r.modId)"
-            >
-              {{ t("nexus.open") }}
-            </Button>
-            <Button v-else-if="r.url" size="sm" variant="link" @click="openUrl(r.url)"><ExternalLinkIcon /></Button>
-          </div>
+          </template>
         </div>
-      </TabsContent>
-    </Tabs>
+        <div v-if="gallery.length > 1" ref="strip" class="no-scrollbar flex snap-x gap-2 overflow-x-auto">
+          <button
+            v-for="(src, i) in gallery"
+            :key="src"
+            type="button"
+            :aria-label="t('nexus.screenshot', { n: i + 1 })"
+            class="h-14 w-24 shrink-0 snap-start overflow-hidden rounded-md border-2"
+            :class="i === shown ? 'border-wood-dark' : 'border-[#a0703f] opacity-70 hover:opacity-100'"
+            @click="shown = i"
+          >
+            <img :src="src" alt="" class="h-full w-full object-cover" loading="lazy" />
+          </button>
+        </div>
+      </div>
+
+      <Tabs default-value="about" class="gap-3">
+        <TabsList class="bg-card sticky top-0 z-10 w-full">
+          <TabsTrigger value="about">{{ t("nexus.tabs.about") }}</TabsTrigger>
+          <TabsTrigger value="files">{{ t("nexus.tabs.files", { n: visibleFiles.length }) }}</TabsTrigger>
+          <TabsTrigger value="requirements">{{
+            t("nexus.tabs.requirements", { n: mod.requirements.length })
+          }}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="about">
+          <!-- eslint-disable-next-line vue/no-v-html -- bbcodeToHtml escapes the source and emits only whitelisted tags -->
+          <div class="bbcode text-sm leading-relaxed select-text" @click="onClick" v-html="html" />
+        </TabsContent>
+
+        <TabsContent value="files">
+          <div class="flex flex-col gap-2">
+            <div
+              v-for="f in visibleFiles"
+              :key="f.fileId"
+              class="bg-parchment border-border-soft flex items-center gap-3 rounded-md border-2 p-2.5"
+            >
+              <div class="flex min-w-0 flex-1 flex-col">
+                <span class="truncate text-sm font-extrabold">{{ f.name }}</span>
+                <span class="text-muted-foreground text-xs font-semibold">
+                  {{ f.category ? t(`nexus.category.${f.category}`, f.category) : "" }} · {{ f.version }} ·
+                  {{ size(f) }} ·
+                  {{ date(f.date) }}
+                </span>
+              </div>
+              <Button size="sm" variant="outline" :disabled="busy" @click="nx.download(mod.modId, f.fileId)">
+                <DownloadIcon />{{ t("nexus.download") }}
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="requirements">
+          <p v-if="!mod.requirements.length" class="text-muted-foreground text-sm font-semibold">
+            {{ t("nexus.noRequirements") }}
+          </p>
+          <div class="flex flex-col gap-2">
+            <div
+              v-for="(r, i) in mod.requirements"
+              :key="i"
+              class="bg-parchment border-border-soft flex items-center gap-3 rounded-md border-2 p-2.5"
+            >
+              <div class="flex min-w-0 flex-1 flex-col">
+                <span class="text-sm font-extrabold">{{ r.modName ?? r.url }}</span>
+                <span v-if="r.notes" class="text-muted-foreground text-xs">{{ r.notes }}</span>
+              </div>
+              <span
+                v-if="r.modId && installedIds.has(r.modId)"
+                class="bg-success-soft rounded border-2 border-[#9cc07a] px-2 py-0.5 text-xs font-extrabold text-[#2e5a1e]"
+                >{{ t("nexus.installedBadge") }}</span
+              >
+              <Button
+                v-else-if="r.modId && !r.externalRequirement"
+                size="sm"
+                variant="outline"
+                @click="nx.select(r.modId)"
+              >
+                {{ t("nexus.open") }}
+              </Button>
+              <Button v-else-if="r.url" size="sm" variant="link" @click="openUrl(r.url)"><ExternalLinkIcon /></Button>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+    <ImageLightbox v-model="lightbox" :images="gallery" />
   </article>
 </template>
 
