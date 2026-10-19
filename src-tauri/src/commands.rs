@@ -155,6 +155,12 @@ pub fn settings_get(state: State<AppState>) -> Settings {
     state.settings.get()
 }
 
+/// The language the game is set to, such as "ru", if it has ever started.
+#[tauri::command]
+pub fn game_language(app: AppHandle) -> Option<String> {
+    crate::perfection::game_language(&game_data_dir(&app).ok()?)
+}
+
 #[tauri::command]
 pub fn settings_set_locale(state: State<AppState>, locale: Option<String>) -> AppResult<Settings> {
     state.settings.update(|s| s.locale = locale)

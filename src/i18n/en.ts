@@ -77,7 +77,7 @@ export default {
     game: "Game folder",
     change: "Change…",
     language: "Language",
-    languageSystem: "System default",
+    languageSystem: "Same as the game",
     smapi: "SMAPI",
     reinstall: "Reinstall",
     uninstall: "Remove SMAPI",

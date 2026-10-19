@@ -57,6 +57,7 @@ export function isAppError(e: unknown): e is AppError {
 export const api = {
   settings: () => invoke<Settings>("settings_get"),
   setLocale: (locale: string | null) => invoke<Settings>("settings_set_locale", { locale }),
+  gameLanguage: () => invoke<string | null>("game_language"),
   detectGames: () => invoke<GameInstall[]>("game_detect"),
   currentGame: () => invoke<GameInstall | null>("game_current"),
   setGamePath: (path: string) => invoke<GameInstall>("game_set_path", { path }),

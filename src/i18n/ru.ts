@@ -75,7 +75,7 @@ export default {
     game: "Папка игры",
     change: "Изменить…",
     language: "Язык",
-    languageSystem: "Как в системе",
+    languageSystem: "Как в игре",
     smapi: "SMAPI",
     reinstall: "Переустановить",
     uninstall: "Удалить SMAPI",

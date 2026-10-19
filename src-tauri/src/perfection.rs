@@ -96,7 +96,20 @@ impl Catalog {
 }
 
 // English first: it stands in for any language missing here
-const BUILTIN: [(&str, &str); 1] = [("en", include_str!("../resources/catalogs/en.json"))];
+const BUILTIN: [(&str, &str); 12] = [
+    ("en", include_str!("../resources/catalogs/en.json")),
+    ("ja", include_str!("../resources/catalogs/ja.json")),
+    ("ru", include_str!("../resources/catalogs/ru.json")),
+    ("zh", include_str!("../resources/catalogs/zh.json")),
+    ("pt", include_str!("../resources/catalogs/pt.json")),
+    ("es", include_str!("../resources/catalogs/es.json")),
+    ("de", include_str!("../resources/catalogs/de.json")),
+    ("fr", include_str!("../resources/catalogs/fr.json")),
+    ("ko", include_str!("../resources/catalogs/ko.json")),
+    ("it", include_str!("../resources/catalogs/it.json")),
+    ("tr", include_str!("../resources/catalogs/tr.json")),
+    ("hu", include_str!("../resources/catalogs/hu.json")),
+];
 
 /// The language code the game was last set to, from its startup preferences in `data_dir`.
 pub fn game_language(data_dir: &Path) -> Option<String> {
@@ -879,6 +892,9 @@ mod tests {
         let c = Catalog::builtin("en");
         assert!(c.builtin);
         assert_eq!(Catalog::builtin("xx"), c);
+        let ru = Catalog::builtin("ru");
+        assert_eq!(ru.language, "ru");
+        assert!(ru.items.iter().any(|i| i.name == "Пастернак"));
         assert_eq!(c.museum.len(), 95);
         assert!(c.achievements.len() >= 39 && c.items.len() > 800);
         assert!(c.items.iter().any(|i| i.id == "Book_Trash"));

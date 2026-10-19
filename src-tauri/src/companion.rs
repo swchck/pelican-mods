@@ -734,6 +734,11 @@ mod tests {
         std::fs::create_dir_all(&mods).unwrap();
         std::os::unix::fs::symlink(built, mods.join("PelicanCompanion")).unwrap();
         let home = PathBuf::from(std::env::var("HOME").unwrap());
+        // switching languages makes the game save the last one as the player's own
+        let prefs_file = home.join(".config/StardewValley/startup_preferences");
+        let prefs = std::fs::read(&prefs_file).unwrap();
+        let own = crate::perfection::game_language(&home.join(".config/StardewValley"))
+            .unwrap_or_else(|| "en".to_owned());
         let companion = Arc::new(Companion::new(dir.path()));
         tauri::async_runtime::block_on(async {
             tauri::async_runtime::spawn(companion.clone().serve(Arc::new(Recorder::default())));
@@ -763,16 +768,15 @@ mod tests {
                         }
                         tokio::time::sleep(Duration::from_millis(200)).await;
                     }
-                    let first = companion.catalog().expect("a catalog arrives");
-                    // the player's own language goes last so the game is left as it was
+                    assert!(companion.catalog().is_some(), "a catalog arrives");
+                    // th is left out: the game has no Thai item names and shows English ones
                     let mut codes: Vec<String> = [
-                        "en", "ja", "ru", "zh", "pt", "es", "de", "th", "fr", "ko", "it", "tr",
-                        "hu",
+                        "en", "ja", "ru", "zh", "pt", "es", "de", "fr", "ko", "it", "tr", "hu",
                     ]
                     .map(String::from)
                     .to_vec();
-                    codes.retain(|c| *c != first.language);
-                    codes.push(first.language.clone());
+                    codes.retain(|c| *c != own);
+                    codes.push(own.clone());
                     for code in &codes {
                         companion
                             .send_raw(serde_json::json!({ "type": "testLocale", "text": code }));
@@ -809,6 +813,7 @@ mod tests {
                 }
                 tokio::time::sleep(Duration::from_millis(100)).await;
             }
+            std::fs::write(&prefs_file, &prefs).unwrap();
             if let Err(panic) = result {
                 std::panic::resume_unwind(panic);
             }

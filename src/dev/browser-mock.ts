@@ -405,6 +405,8 @@ mockIPC(
           ],
         };
       }
+      case "game_language":
+        return "ru";
       case "nxm_take_pending":
         return [];
       case "saves_checkup": {

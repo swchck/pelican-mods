@@ -26,6 +26,7 @@ internal sealed class ModEntry : Mod
     private GameSnapshot? LastState;
     private volatile bool Resend;
     private bool Launched;
+    private bool LocaleDirty;
     private CatalogMessage? CachedCatalog;
     private string? CachedLanguage;
 
@@ -41,12 +42,9 @@ internal sealed class ModEntry : Mod
         helper.Events.GameLoop.GameLaunched += (_, _) => this.Launched = true;
         helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => this.SendState(force: true);
-        // the game applies the player's language after GameLaunched; names follow it
-        helper.Events.Content.LocaleChanged += (_, _) =>
-        {
-            if (this.Launched)
-                this.SendCatalog();
-        };
+        // the game applies the player's language after GameLaunched; names follow it. The
+        // event fires before the game reloads its achievements, so the catalog waits a tick
+        helper.Events.Content.LocaleChanged += (_, _) => this.LocaleDirty = true;
     }
 
     protected override void Dispose(bool disposing)
@@ -58,6 +56,11 @@ internal sealed class ModEntry : Mod
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
     {
         Bridge bridge = this.Bridge!;
+        if (this.LocaleDirty && this.Launched)
+        {
+            this.LocaleDirty = false;
+            this.SendCatalog();
+        }
         // GMCM menus are registered during GameLaunched, so describe them after it
         if (this.Resend && this.Launched)
         {

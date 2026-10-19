@@ -28,8 +28,16 @@ export const i18n = createI18n<[typeof ru], Locale, false>({
   pluralRules: { ru: russianPlural },
 });
 
+let gameLanguage: string | null = null;
+
+/** Remembers the game's language; with no language picked, the app follows it. */
+export function setGameLanguage(code: string | null) {
+  gameLanguage = code;
+}
+
+/** Applies `locale`, or with none picked the game's language, or else the system's. */
 export function setLocale(locale: string | null) {
-  const next = locales.find((l) => l === locale) ?? systemLocale();
+  const next = locales.find((l) => l === locale) ?? locales.find((l) => l === gameLanguage) ?? systemLocale();
   i18n.global.locale.value = next;
   document.documentElement.lang = next;
 }

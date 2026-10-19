@@ -66,6 +66,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::settings_get,
             commands::settings_set_locale,
+            commands::game_language,
             companion_commands::settings_set_companion,
             companion_commands::companion_status,
             companion_commands::companion_available,
