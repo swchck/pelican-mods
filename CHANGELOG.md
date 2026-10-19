@@ -17,6 +17,13 @@
 
 - Mods that list a GitHub repo update from its releases first, even when the newest version was found on Nexus, so they update in one click without a Nexus Premium account.
 
+- Mods that share a Nexus page, such as Grandpa's Farm on the Stardew Valley Expanded page, update with their own file instead of the page's main one.
+
+### Library and saves
+
+- Removing a mod also sends the copy in the game's Mods folder to the Trash, so it doesn't come back as importable or load when the game starts without the launcher.
+- Saves can be deleted from the Saves screen; the folder goes to the Trash.
+
 ### Settings
 
 - The app's language follows the game's (Russian or English) unless you pick one; other game languages fall back to the system's.

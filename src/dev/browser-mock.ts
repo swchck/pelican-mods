@@ -405,6 +405,8 @@ mockIPC(
           ],
         };
       }
+      case "saves_delete":
+        return null;
       case "game_language":
         return "ru";
       case "nxm_take_pending":

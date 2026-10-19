@@ -273,6 +273,18 @@ pub async fn library_remove(app: AppHandle, id: String) -> AppResult<LibraryView
     blocking(app, move |s| {
         ensure_stopped(s)?;
         let _guard = lock_library(s);
+        let path = library::package_path(&s.store_root, &id)?;
+        let ids: std::collections::HashSet<String> = library::read_package(id.clone(), path)
+            .map(|p| p.unique_ids().map(str::to_lowercase).collect())
+            .unwrap_or_default();
+        // an import copies from the game's Mods folder; the original would come back as
+        // importable and still load when the game starts without the launcher
+        let (_, others) = game_mods(s);
+        for p in others.iter().filter(|p| {
+            !p.mods.is_empty() && p.unique_ids().all(|u| ids.contains(&u.to_lowercase()))
+        }) {
+            trash::delete(&p.path).map_err(|e| AppError::Io(std::io::Error::other(e)))?;
+        }
         library::remove(&s.store_root, &id)?;
         s.profiles.update(|p| {
             p.forget_package(&id);
@@ -427,10 +439,11 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> 
                 info.url.clone()?,
                 info.nexus_id,
                 updates::github_key(&m.manifest.update_keys),
+                nexus::update_subkey(&m.manifest.update_keys),
             ))
         })
     };
-    let (name, version, url, nexus_id, github) =
+    let (name, version, url, nexus_id, github, subkey) =
         found.ok_or_else(|| AppError::NoDownload(id.clone()))?;
     let dir = state.work_dir.with_file_name("downloads");
     let mut file = None;
@@ -479,7 +492,8 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> 
         return Ok(UpdateOutcome::OpenPage { url });
     };
     let details = nexus::details(&state.http, mod_id).await?;
-    let Some(file) = nexus::pick_update_file(&details.files, &version, &name) else {
+    let Some(file) = nexus::pick_update_file(&details.files, &version, &name, subkey.as_deref())
+    else {
         return Ok(UpdateOutcome::OpenPage { url });
     };
     let premium = nexus_commands::nexus_account(app.clone())

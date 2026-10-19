@@ -187,6 +187,17 @@ pub async fn saves_import(app: AppHandle, file: PathBuf) -> AppResult<String> {
     .await
 }
 
+/// Moves save `id` to the Trash, where Finder can put it back; its backups stay.
+#[tauri::command]
+pub async fn saves_delete(app: AppHandle, id: String) -> AppResult<()> {
+    let path = save_path(&app, &id)?;
+    blocking(app, move |s| {
+        ensure_stopped(s)?;
+        trash::delete(&path).map_err(|e| AppError::Io(std::io::Error::other(e)))
+    })
+    .await
+}
+
 /// Snapshots changed saves; called right before the game starts.
 pub async fn snapshot_before_launch(app: &AppHandle) -> AppResult<usize> {
     let dir = saves_dir(app)?;

@@ -422,6 +422,7 @@ export const saves = {
   restore: (file: string) => invoke<string>("saves_restore", { file }),
   export: (id: string, dest: string) => invoke<void>("saves_export", { id, dest }),
   import: (file: string) => invoke<string>("saves_import", { file }),
+  delete: (id: string) => invoke<void>("saves_delete", { id }),
 };
 
 export interface SchemaField {

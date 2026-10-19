@@ -129,7 +129,8 @@ export default {
     openFolder: "Mod folder",
     remove: "Remove",
     removeTitle: "Remove “{name}”?",
-    removeText: "The mod folder and its settings are removed from the library in every profile.",
+    removeText:
+      "The mod folder and its settings are removed from the library in every profile. A copy in the game's Mods folder, if any, goes to the Trash.",
     removeWarn: "Other enabled mods need this one: {list}.",
     brokenManifest: "manifest.json can't be read: {error}",
   },
@@ -257,6 +258,10 @@ export default {
     exported: "Save exported",
     imported: "Save imported",
     restored: "Backup restored",
+    delete: "Delete save",
+    deleteTitle: "Delete {name}?",
+    deleteText: "The save folder goes to the Trash, where Finder can put it back. Its backups stay here.",
+    deleted: "{name} moved to the Trash",
   },
   gallery: { open: "Open full screen", prev: "Previous screenshot", next: "Next screenshot", close: "Close" },
   deps: {

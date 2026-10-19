@@ -478,15 +478,34 @@ pub fn mod_page_id(url: &str) -> Option<u64> {
     }
 }
 
+/// Returns the subkey of a mod's Nexus update key ("Nexus:3753@GF" gives "@GF"), if any.
+pub fn update_subkey(keys: &[String]) -> Option<String> {
+    keys.iter().find_map(|k| {
+        let (site, rest) = k.split_once(':')?;
+        if !site.trim().eq_ignore_ascii_case("nexus") {
+            return None;
+        }
+        let at = rest.find('@')?;
+        let sub = rest[at..].trim();
+        (sub.len() > 1).then(|| sub.to_owned())
+    })
+}
+
 /// Picks the file that carries `version` of the mod called `mod_name`.
 ///
 /// Prefers MAIN files of exactly that version; when a mod ships several (one per
 /// mod in a pack, or per platform), the one whose name contains `mod_name` wins.
+/// With a `subkey` only files mentioning it count, optional ones included, as SMAPI
+/// does for mods that share a page.
 pub fn pick_update_file<'a>(
     files: &'a [ModFile],
     version: &str,
     mod_name: &str,
+    subkey: Option<&str>,
 ) -> Option<&'a ModFile> {
+    if let Some(sub) = subkey {
+        return pick_by_subkey(files, version, sub);
+    }
     let main = |f: &&ModFile| {
         f.category
             .as_deref()
@@ -515,6 +534,40 @@ pub fn pick_update_file<'a>(
     pool.iter()
         .find(|f| compact(&f.name).contains(&want))
         .or_else(|| pool.first())
+        .copied()
+}
+
+// a page like Stardew Valley Expanded carries its farm maps as OPTIONAL files marked
+// "Manifest Key: @GF"; the MAIN file of the same version is a different mod entirely
+fn pick_by_subkey<'a>(files: &'a [ModFile], version: &str, subkey: &str) -> Option<&'a ModFile> {
+    let sub = subkey.to_lowercase();
+    let marked: Vec<&ModFile> = files
+        .iter()
+        .filter(|f| {
+            f.category.as_deref().is_none_or(|c| {
+                ["MAIN", "OPTIONAL", "UPDATE"]
+                    .iter()
+                    .any(|k| c.eq_ignore_ascii_case(k))
+            })
+        })
+        .filter(|f| {
+            [Some(&f.name), f.description.as_ref(), f.version.as_ref()]
+                .into_iter()
+                .flatten()
+                .any(|s| s.to_lowercase().contains(&sub))
+        })
+        .collect();
+    marked
+        .iter()
+        .find(|f| {
+            f.version
+                .as_deref()
+                .is_some_and(|v| crate::version::compare(v, version).is_eq())
+        })
+        .or(match marked.as_slice() {
+            [only] => Some(only),
+            _ => None,
+        })
         .copied()
 }
 
@@ -576,18 +629,23 @@ mod tests {
             file(3, "Extra assets", Some("1.55.0"), "OPTIONAL"),
         ];
         assert_eq!(
-            pick_update_file(&files, "1.55.0", "Lookup Anything")
+            pick_update_file(&files, "1.55.0", "Lookup Anything", None)
                 .unwrap()
                 .file_id,
             5
         );
-        assert_eq!(pick_update_file(&files, "v1.55", "x").unwrap().file_id, 5);
+        assert_eq!(
+            pick_update_file(&files, "v1.55", "x", None)
+                .unwrap()
+                .file_id,
+            5
+        );
         let pack = [
             file(9, "Content Patcher pack", Some("2.0.0"), "MAIN"),
             file(8, "Farm Type Manager", Some("2.0.0"), "MAIN"),
         ];
         assert_eq!(
-            pick_update_file(&pack, "2.0.0", "Farm Type Manager")
+            pick_update_file(&pack, "2.0.0", "Farm Type Manager", None)
                 .unwrap()
                 .file_id,
             8
@@ -597,13 +655,33 @@ mod tests {
             file(2, "Old", None, "OLD_VERSION"),
         ];
         assert_eq!(
-            pick_update_file(&unversioned, "3.0.0", "Mod")
+            pick_update_file(&unversioned, "3.0.0", "Mod", None)
                 .unwrap()
                 .file_id,
             1
         );
         let ambiguous = [file(1, "A", None, "MAIN"), file(2, "B", None, "MAIN")];
-        assert!(pick_update_file(&ambiguous, "3.0.0", "C").is_none());
+        assert!(pick_update_file(&ambiguous, "3.0.0", "C", None).is_none());
+    }
+
+    #[test]
+    fn picks_files_by_subkey() {
+        let marked = |id, name: &str, key: &str, category| ModFile {
+            description: Some(format!("A farm map.\n\nManifest Key: {key}")),
+            ..file(id, name, Some("1.15.11"), category)
+        };
+        let sve = [
+            file(1, "Stardew Valley Expanded", Some("1.15.11"), "MAIN"),
+            marked(2, "Immersive Farm 2 Remastered", "@IF2R", "OPTIONAL"),
+            marked(3, "Grandpa's Farm", "@GF", "OPTIONAL"),
+            marked(4, "Frontier Farm", "@FF", "OPTIONAL"),
+        ];
+        let pick = pick_update_file(&sve, "1.15.11", "Grandpa's Farm", Some("@GF"));
+        assert_eq!(pick.unwrap().file_id, 3);
+        assert!(pick_update_file(&sve, "1.15.11", "x", Some("@NOPE")).is_none());
+        let keys = ["Nexus:3753@GF".to_owned()];
+        assert_eq!(update_subkey(&keys).as_deref(), Some("@GF"));
+        assert_eq!(update_subkey(&["Nexus:3753".to_owned()]), None);
     }
 
     #[test]
@@ -692,7 +770,7 @@ mod tests {
             );
             assert!(d.files.windows(2).all(|w| w[0].date >= w[1].date));
             let latest = d.version.clone().unwrap();
-            let pick = pick_update_file(&d.files, &latest, "Lookup Anything").unwrap();
+            let pick = pick_update_file(&d.files, &latest, "Lookup Anything", None).unwrap();
             assert_eq!(pick.category.as_deref(), Some("MAIN"));
         });
     }

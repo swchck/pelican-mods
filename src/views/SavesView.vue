@@ -9,6 +9,7 @@ import {
   FolderOpenIcon,
   Loader2Icon,
   SaveIcon,
+  Trash2Icon,
   TrophyIcon,
   UploadIcon,
 } from "@lucide/vue";
@@ -39,6 +40,7 @@ const progressFor = ref<string | null>(null);
 const snapshots = ref<Snapshot[]>([]);
 const busy = ref(false);
 const restoreTarget = ref<Snapshot | null>(null);
+const deleteTarget = ref<SaveSummary | null>(null);
 
 const selected = computed(() => list.value.find((s) => s.id === selectedId.value) ?? null);
 
@@ -117,6 +119,19 @@ async function importSave() {
     selectedId.value = await saves.import(file);
     await load();
   }, t("saves.imported"));
+}
+
+async function deleteSave() {
+  const s = deleteTarget.value;
+  deleteTarget.value = null;
+  if (!s) return;
+  await run(
+    async () => {
+      await saves.delete(s.id);
+      await load();
+    },
+    t("saves.deleted", { name: s.farmName }),
+  );
 }
 
 async function restore() {
@@ -284,6 +299,13 @@ useShortcut("page.install", () => void importSave());
             <Button variant="outline" :disabled="busy" @click="exportSave"
               ><DownloadIcon />{{ t("saves.export") }}</Button
             >
+            <Button
+              variant="destructive"
+              class="col-span-2"
+              :disabled="busy || game.running || !selected"
+              @click="deleteTarget = selected"
+              ><Trash2Icon />{{ t("saves.delete") }}</Button
+            >
           </div>
         </aside>
       </div>
@@ -300,6 +322,23 @@ useShortcut("page.install", () => void importSave());
             <Button variant="outline">{{ t("common.cancel") }}</Button>
           </DialogClose>
           <Button @click="restore">{{ t("saves.restore") }}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog :open="deleteTarget !== null" @update:open="(v: boolean) => !v && (deleteTarget = null)">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle class="font-pixel text-xl">{{
+            t("saves.deleteTitle", { name: deleteTarget ? `${deleteTarget.farmer} · ${deleteTarget.farmName}` : "" })
+          }}</DialogTitle>
+          <DialogDescription>{{ t("saves.deleteText") }}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose as-child>
+            <Button variant="outline">{{ t("common.cancel") }}</Button>
+          </DialogClose>
+          <Button variant="destructive" @click="deleteSave"><Trash2Icon />{{ t("saves.delete") }}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
