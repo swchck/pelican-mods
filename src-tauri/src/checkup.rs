@@ -17,8 +17,8 @@ use crate::perfection::{Catalog, Facts};
 #[serde(rename_all = "camelCase")]
 pub struct Checkup {
     pub sections: Vec<Section>,
-    /// Whether the game's lists were there; without them name lists stay empty.
-    pub catalog: bool,
+    /// The lists used; without any, name lists stay empty.
+    pub catalog: Option<crate::perfection::CatalogInfo>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -151,7 +151,7 @@ pub fn build(facts: &Facts, catalog: Option<&Catalog>) -> Checkup {
             grandpa(facts),
             money(facts),
         ],
-        catalog: catalog.is_some(),
+        catalog: catalog.map(Catalog::info),
     }
 }
 
@@ -938,17 +938,20 @@ mod tests {
     }
 
     // PELICAN_TEST_SAVE=<save folder> PELICAN_TEST_CATALOG=<catalog.json> \
-    //   cargo test -- --ignored real_save_checkup --nocapture
+    //   cargo test -- --ignored real_save_checkup --nocapture (PELICAN_TEST_JSON_OUT dumps the report)
     #[test]
     #[ignore]
     fn real_save_checkup() {
         let dir = std::path::PathBuf::from(std::env::var("PELICAN_TEST_SAVE").unwrap());
-        let catalog: Catalog = serde_json::from_slice(
-            &std::fs::read(std::env::var("PELICAN_TEST_CATALOG").unwrap()).unwrap(),
-        )
-        .unwrap();
+        // without PELICAN_TEST_CATALOG this is what a launcher that never saw the game shows
+        let catalog: Option<Catalog> = std::env::var("PELICAN_TEST_CATALOG")
+            .ok()
+            .map(|p| serde_json::from_slice(&std::fs::read(p).unwrap()).unwrap());
         let facts = crate::perfection::facts(&dir).unwrap();
-        let c = build(&facts, Some(&catalog));
+        let c = build(&facts, catalog.as_ref());
+        if let Ok(out) = std::env::var("PELICAN_TEST_JSON_OUT") {
+            std::fs::write(out, serde_json::to_vec_pretty(&c).unwrap()).unwrap();
+        }
         for s in &c.sections {
             eprintln!("{:<12} {:>3}/{:<3}", s.id, s.done, s.total);
             for g in &s.groups {

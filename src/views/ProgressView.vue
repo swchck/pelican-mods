@@ -140,7 +140,7 @@ onMounted(async () => {
     <div v-else-if="result" class="flex min-h-0 flex-1 gap-4">
       <nav
         :aria-label="t('progress.sections')"
-        class="wood-panel flex w-56 shrink-0 flex-col gap-1 overflow-auto p-2.5"
+        class="wood-panel flex w-64 shrink-0 flex-col gap-1 overflow-auto p-2.5"
       >
         <button
           v-for="entry in [
@@ -158,7 +158,7 @@ onMounted(async () => {
           :aria-current="active === entry.id ? 'page' : undefined"
           @click="show(entry.id)"
         >
-          <span class="truncate">{{ t(`checkup.sections.${entry.id}`) }}</span>
+          <span class="leading-tight">{{ t(`checkup.sections.${entry.id}`) }}</span>
           <span class="shrink-0 font-mono text-[11px] font-bold opacity-70">
             {{
               entry.total === null
@@ -170,10 +170,10 @@ onMounted(async () => {
           </span>
         </button>
         <p
-          v-if="checkup && !checkup.catalog"
+          v-if="checkup && (!checkup.catalog || checkup.catalog.builtin)"
           class="text-muted-foreground px-2 pt-2 text-xs leading-snug font-semibold"
         >
-          {{ t("checkup.needsCatalog") }}
+          {{ checkup.catalog ? t("checkup.builtinCatalog") : t("checkup.needsCatalog") }}
         </p>
       </nav>
 
@@ -195,7 +195,11 @@ onMounted(async () => {
                 {{ t("progress.noCatalog") }}
               </p>
               <p v-else class="text-muted-foreground text-xs font-semibold">
-                {{ t("progress.catalogFrom", { game: result.catalog[0] }) }}
+                {{
+                  t(result.catalog.builtin ? "progress.builtinCatalog" : "progress.catalogFrom", {
+                    game: result.catalog.game,
+                  })
+                }}
               </p>
             </div>
           </section>

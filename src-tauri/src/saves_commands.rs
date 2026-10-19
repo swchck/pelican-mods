@@ -50,13 +50,18 @@ pub async fn saves_list(app: AppHandle) -> AppResult<Vec<SaveSummary>> {
     blocking(app, move |_| Ok(saves::list(&dir))).await
 }
 
-/// Scores save `id` for perfection, against the catalog the companion last sent.
+/// Scores save `id` for perfection, against the catalog the companion last sent
+/// or, before any game has, the built-in one.
 #[tauri::command]
 pub async fn saves_perfection(app: AppHandle, id: String) -> AppResult<Perfection> {
     let path = save_path(&app, &id)?;
     blocking(app, move |s| {
         let facts = cached_facts(s, &id, &path)?;
-        Ok(perfection::evaluate(&facts, s.companion.catalog().as_ref()))
+        let catalog = s.companion.catalog();
+        Ok(perfection::evaluate(
+            &facts,
+            Some(catalog.as_ref().unwrap_or(perfection::Catalog::builtin())),
+        ))
     })
     .await
 }
@@ -67,9 +72,10 @@ pub async fn saves_checkup(app: AppHandle, id: String) -> AppResult<crate::check
     let path = save_path(&app, &id)?;
     blocking(app, move |s| {
         let facts = cached_facts(s, &id, &path)?;
+        let catalog = s.companion.catalog();
         Ok(crate::checkup::build(
             &facts,
-            s.companion.catalog().as_ref(),
+            Some(catalog.as_ref().unwrap_or(perfection::Catalog::builtin())),
         ))
     })
     .await

@@ -41,6 +41,9 @@ pub const STARDROPS: [&str; 7] = [
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Catalog {
+    /// Set on the copy built into the launcher; a game never sends it.
+    #[serde(skip)]
+    pub builtin: bool,
     pub game: String,
     /// The game's language when the lists were made; names are in it.
     pub language: String,
@@ -64,6 +67,37 @@ pub struct Catalog {
     pub special_orders: Vec<CatalogOrder>,
     #[serde(default)]
     pub crops: Vec<CatalogCrop>,
+}
+
+impl Catalog {
+    /// The base game's lists in English, for a launcher that hasn't heard from the game yet.
+    pub fn builtin() -> &'static Catalog {
+        static BUILTIN: std::sync::OnceLock<Catalog> = std::sync::OnceLock::new();
+        BUILTIN.get_or_init(|| Catalog {
+            builtin: true,
+            ..serde_json::from_str(include_str!("../resources/base-catalog.json"))
+                .expect("the built-in catalog parses")
+        })
+    }
+
+    /// Which game, language and source the lists came from.
+    pub fn info(&self) -> CatalogInfo {
+        CatalogInfo {
+            game: self.game.clone(),
+            language: self.language.clone(),
+            builtin: self.builtin,
+        }
+    }
+}
+
+/// Where a report's names and totals came from.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CatalogInfo {
+    pub game: String,
+    pub language: String,
+    /// The launcher's own base-game lists: no mod content, names in English.
+    pub builtin: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -233,8 +267,8 @@ impl Missing {
 pub struct Perfection {
     /// 0–100, once every part has a total.
     pub percent: Option<f32>,
-    /// The catalog's game version and language, when one was used.
-    pub catalog: Option<(String, String)>,
+    /// The catalog used, if any.
+    pub catalog: Option<CatalogInfo>,
     pub parts: Vec<Part>,
 }
 
@@ -366,7 +400,7 @@ pub fn evaluate(facts: &Facts, catalog: Option<&Catalog>) -> Perfection {
         .map(|s| (s * 10.0).round() / 10.0);
     Perfection {
         percent,
-        catalog: catalog.map(|c| (c.game.clone(), c.language.clone())),
+        catalog: catalog.map(Catalog::info),
         parts,
     }
 }
@@ -823,6 +857,15 @@ mod tests {
   </locations>
   <goldenWalnutsFound>65</goldenWalnutsFound>
 </SaveGame>"#;
+
+    #[test]
+    fn builtin_catalog_covers_the_base_game() {
+        let c = Catalog::builtin();
+        assert!(c.builtin);
+        assert_eq!(c.museum.len(), 95);
+        assert!(c.achievements.len() >= 39 && c.items.len() > 800);
+        assert!(c.items.iter().any(|i| i.id == "Book_Trash"));
+    }
 
     fn catalog() -> Catalog {
         let item = |id: &str, name: &str| CatalogItem {

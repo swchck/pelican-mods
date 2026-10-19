@@ -297,6 +297,8 @@ export default {
     noCatalog:
       "To count everything the launcher needs the fish, recipe and item lists from your modded game. Launch the game through the launcher once and they arrive by themselves.",
     catalogFrom: "Lists from game {game}; the save is read from disk and refreshes after you play.",
+    builtinCatalog:
+      "Counted against the base game {game}. Launch the game through the launcher once to count mod content too and see names in your language.",
     needsCatalog: "Up to {weight}% — needs the game's lists",
     score: "{score} of {weight}%",
     filter: "Find…",
@@ -414,6 +416,28 @@ export default {
     allDone: "All done here",
     nothingFound: "Nothing found",
     needsCatalog: "Names and full lists come from the game: launch it through the launcher once.",
+    builtinCatalog: "Base game lists, names in English. Launch the game through the launcher once to add mod content.",
+    about: {
+      achievements: "The game's achievements, the ones that also count toward perfection and Grandpa.",
+      skills:
+        "Each skill to level 10, then mastery: after all five reach 10, experience keeps adding up to five mastery levels in the cave west of the Mountain.",
+      cc: "Every bundle item by item, grouped by room. A room bought through Joja instead counts as done with all its bundles.",
+      museum:
+        "Gunther's rewards for donations and every artifact and mineral. 'Found, not donated' means it's in your collection but not in the museum yet.",
+      friends:
+        "Hearts with each villager (8 for unmarried datable ones, 10 for the rest), plus the house, spouse and children.",
+      collections:
+        "Fish caught, recipes cooked and crafted, items shipped. Polyculture needs 15 of each crop shipped; monoculture needs 300 of one.",
+      quests:
+        "Help Wanted board quests, special orders from the town board and Mr. Qi's walnut room, and feeding the raccoons.",
+      monsters: "The bottom of the Mines and the Adventurer's Guild slayer goals: kills per monster family.",
+      island:
+        "Ginger Island: golden walnuts, upgrades bought from the parrots and the Island Trader, and the field office journal scraps.",
+      secrets: "Power books you've read, special items and powers from the wallet, and secret notes found.",
+      grandpa:
+        "What Grandpa's shrine will score at the start of year 3: up to 21 points, one candle at 1, two at 4, three at 8, four at 12. Lit candles are what the shrine shows now.",
+      money: "Total money earned, the number behind the earnings achievements.",
+    },
     sections: {
       perfection: "Perfection",
       achievements: "Achievements",

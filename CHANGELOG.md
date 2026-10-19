@@ -6,6 +6,8 @@
 
 - A detailed save report in the spirit of Stardew Checkup: achievements, skills and mastery, Community Center bundles item by item, the museum with what's found but not donated, friendship with every villager, collections and polyculture, quests and special orders, Monster Slayer, the island and its upgrades, books, powers and secret notes, Grandpa's evaluation, money.
 - Names come from your modded game in its language; the rules come from the 1.6 game code.
+- Before the game has run through the launcher, the report counts against the base game's lists built into the launcher instead of showing empty sections.
+- Each section explains what it counts.
 
 ### Helpers
 

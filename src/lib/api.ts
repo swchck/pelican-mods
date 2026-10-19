@@ -366,8 +366,7 @@ export interface PerfectionPart {
 export interface Perfection {
   /** 0–100, once every part has a total. */
   percent: number | null;
-  /** Game version and language of the lists used. */
-  catalog: [string, string] | null;
+  catalog: CatalogInfo | null;
   parts: PerfectionPart[];
 }
 
@@ -401,7 +400,15 @@ export interface CheckupSection {
 
 export interface Checkup {
   sections: CheckupSection[];
-  catalog: boolean;
+  catalog: CatalogInfo | null;
+}
+
+/** Where a report's names and totals came from. */
+export interface CatalogInfo {
+  game: string;
+  language: string;
+  /** The launcher's own base-game lists: no mod content, names in English. */
+  builtin: boolean;
 }
 
 export const saves = {

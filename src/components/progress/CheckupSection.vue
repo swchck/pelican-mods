@@ -25,13 +25,16 @@ function title(group: CheckupGroup): string {
   return te(key) ? t(key) : group.id;
 }
 
+/** Millions squeezed next to a goal name crowd the name out; 2.4M reads just as well. */
+const count = (v: number) => (v >= 100_000 ? n(v, { notation: "compact", maximumFractionDigits: 1 }) : n(v));
+
 /** Goals spell their target in the text; show the count only where it adds something. */
 function progress(item: CheckupItem): string | null {
   // a labelled item without progress already says its amount ("2 500з")
   if (item.have === null || item.need === null)
-    return item.name && item.need !== null && item.need > 1 ? `×${n(item.need)}` : null;
+    return item.name && item.need !== null && item.need > 1 ? `×${count(item.need)}` : null;
   if (item.label === "journalScrap" || item.label === "secretNote") return null;
-  return `${n(item.have)} / ${n(item.need)}`;
+  return `${count(item.have)} / ${count(item.need)}`;
 }
 
 const groups = computed(() => {
@@ -50,6 +53,12 @@ const categoryOf = (g: CheckupGroup, i: number) =>
 
 <template>
   <div class="flex flex-col gap-3">
+    <p
+      v-if="te(`checkup.about.${section.id}`)"
+      class="text-muted-foreground max-w-3xl text-sm leading-snug font-semibold"
+    >
+      {{ t(`checkup.about.${section.id}`) }}
+    </p>
     <div class="flex flex-wrap items-center gap-3">
       <div class="relative max-w-72 flex-1">
         <SearchIcon class="text-muted-foreground absolute top-2.5 left-2.5 size-4" />
@@ -86,7 +95,7 @@ const categoryOf = (g: CheckupGroup, i: number) =>
             :style="{ width: `${entry.group.total ? (entry.group.done / entry.group.total) * 100 : 0}%` }"
           />
         </div>
-        <ul class="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-x-4 gap-y-1">
+        <ul class="grid grid-cols-[repeat(auto-fill,minmax(min(230px,100%),1fr))] gap-x-4 gap-y-1">
           <li
             v-for="item in entry.items"
             :key="item.id"
@@ -95,7 +104,7 @@ const categoryOf = (g: CheckupGroup, i: number) =>
           >
             <CheckIcon v-if="item.done" class="text-success size-4 shrink-0" />
             <CircleIcon v-else class="text-wood-light size-3.5 shrink-0" />
-            <span class="truncate font-semibold" :title="text(item)">
+            <span class="min-w-0 leading-snug font-semibold [overflow-wrap:anywhere]">
               {{ text(item) }}
               <template v-if="item.label === 'journalScrap' || item.label === 'secretNote'"> #{{ item.have }}</template>
             </span>

@@ -383,7 +383,7 @@ mockIPC(
         });
         return {
           percent: 41.3,
-          catalog: ["1.6.15", "ru"],
+          catalog: { game: "1.6.15", language: "ru", builtin: false },
           parts: [
             part("shipping", 15, 98, 154, [m("188", "Зелёная фасоль"), m("190", "Цветная капуста")]),
             part("obelisks", 4, 1, 4, [m("Water Obelisk"), m("Desert Obelisk"), m("Island Obelisk")]),
@@ -405,6 +405,8 @@ mockIPC(
           ],
         };
       }
+      case "nxm_take_pending":
+        return [];
       case "saves_checkup": {
         const it = (id: string, name: string | null, done: boolean, extra = {}) => ({
           id,
@@ -441,7 +443,7 @@ mockIPC(
           groups,
         });
         return {
-          catalog: true,
+          catalog: { game: "1.6.15", language: "ru", builtin: false },
           sections: [
             section("achievements", [
               group("achievementList", [
