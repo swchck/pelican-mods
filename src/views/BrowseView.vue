@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { watchDebounced } from "@vueuse/core";
-import { DownloadIcon, HeartIcon, Loader2Icon, SearchIcon } from "@lucide/vue";
+import { DownloadIcon, HeartIcon, Loader2Icon, SearchIcon, SlidersHorizontalIcon } from "@lucide/vue";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import NexusModDetail from "@/components/browse/NexusModDetail.vue";
@@ -16,6 +18,33 @@ const nx = useNexus();
 const lib = useLibrary();
 
 const installed = computed(() => installedNexusIds(lib.packages));
+const visible = computed(() =>
+  nx.hideInstalled ? nx.results.filter((m) => !installed.value.has(m.modId)) : nx.results,
+);
+const showFilters = ref(nx.filtersActive);
+const updatedOptions = ["any", "week", "month", "year"] as const;
+const endorsementOptions = [0, 100, 1000, 10000];
+
+// reka Select can't hold null; "__all" stands for no category
+const categoryModel = computed({
+  get: () => nx.category ?? "__all",
+  set: (v: string) => {
+    nx.category = v === "__all" ? null : v;
+    void nx.search();
+  },
+});
+const endorsementsModel = computed({
+  get: () => String(nx.minEndorsements),
+  set: (v: string) => {
+    nx.minEndorsements = Number(v);
+    void nx.search();
+  },
+});
+
+function reset() {
+  nx.resetFilters();
+  void nx.search();
+}
 const sorts: NexusSort[] = ["endorsements", "downloads", "updated", "created"];
 const num = (n: number) => new Intl.NumberFormat(locale.value, { notation: "compact" }).format(n);
 
@@ -47,6 +76,10 @@ onMounted(() => {
         />
         <Loader2Icon v-if="nx.searching" class="text-muted-foreground size-4 animate-spin" />
       </label>
+      <Button variant="outline" :aria-pressed="showFilters" @click="showFilters = !showFilters">
+        <SlidersHorizontalIcon />{{ t("nexus.filters.title") }}
+        <span v-if="nx.filtersActive" class="bg-gold border-wood-dark size-2 rounded-full border" />
+      </Button>
       <Select v-model="nx.sort" @update:model-value="nx.search()">
         <SelectTrigger :aria-label="t('nexus.sortLabel')" class="bg-card border-input h-10 w-48 border-2 font-bold">
           <SelectValue />
@@ -57,16 +90,68 @@ onMounted(() => {
       </Select>
     </header>
 
+    <div
+      v-if="showFilters"
+      class="bg-parchment border-border-soft flex flex-wrap items-center gap-2.5 rounded-md border-2 p-2.5"
+    >
+      <Select v-model="categoryModel">
+        <SelectTrigger
+          :aria-label="t('nexus.filters.category')"
+          class="bg-card border-input h-9 w-60 border-2 font-bold"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__all">{{ t("nexus.filters.allCategories") }}</SelectItem>
+          <SelectItem v-for="[name, count] in nx.categories" :key="name" :value="name">
+            {{ name }} <span class="text-muted-foreground">· {{ count }}</span>
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <Select v-model="nx.updated" @update:model-value="nx.search()">
+        <SelectTrigger
+          :aria-label="t('nexus.filters.updated')"
+          class="bg-card border-input h-9 w-48 border-2 font-bold"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem v-for="u in updatedOptions" :key="u" :value="u">{{
+            t(`nexus.filters.updatedOpt.${u}`)
+          }}</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select v-model="endorsementsModel">
+        <SelectTrigger
+          :aria-label="t('nexus.filters.endorsements')"
+          class="bg-card border-input h-9 w-48 border-2 font-bold"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem v-for="n in endorsementOptions" :key="n" :value="String(n)">
+            {{ n ? t("nexus.filters.minEndorsements", { n: num(n) }) : t("nexus.filters.anyEndorsements") }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <div class="flex items-center gap-2 px-1">
+        <Switch id="hide-installed" v-model="nx.hideInstalled" />
+        <Label for="hide-installed" class="font-bold">{{ t("nexus.filters.hideInstalled") }}</Label>
+      </div>
+      <div class="flex-1" />
+      <Button v-if="nx.filtersActive" variant="ghost" size="sm" @click="reset">{{ t("nexus.filters.reset") }}</Button>
+    </div>
+
     <div class="flex min-h-0 flex-1 gap-4">
       <section
         :aria-label="t('nexus.results')"
         class="flex w-[360px] shrink-0 flex-col gap-2.5 overflow-auto pr-1 pb-1"
       >
-        <p v-if="!nx.searching && !nx.results.length" class="text-muted-foreground p-4 text-sm font-semibold">
+        <p v-if="!nx.searching && !visible.length" class="text-muted-foreground p-4 text-sm font-semibold">
           {{ t("nexus.nothing") }}
         </p>
         <button
-          v-for="m in nx.results"
+          v-for="m in visible"
           :key="m.modId"
           type="button"
           class="flex gap-3 rounded-lg border-[3px] p-3 text-left"

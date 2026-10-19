@@ -14,10 +14,10 @@ const manifest = (name: string, id: string, version: string, extra: Record<strin
   uniqueId: id,
   entryDll: `${name}.dll`,
   contentPackFor: null,
-  dependencies: [],
   updateKeys: [] as string[],
   minimumApiVersion: "4.0.0",
   minimumGameVersion: null,
+  dependencies: [] as { uniqueId: string; minimumVersion: string | null; isRequired: boolean }[],
   ...extra,
 });
 
@@ -26,7 +26,17 @@ const pkg = (id: string, m: ReturnType<typeof manifest>, extra: Record<string, u
   path: `/mock/mods/${id}`,
   system: false,
   enabled: true,
-  mods: [{ relPath: "", manifest: m, source: m.updateKeys[0]?.split(":")[0] ?? null, issues: [], requiredBy: [] }],
+  mods: [
+    {
+      relPath: "",
+      manifest: m,
+      source: m.updateKeys[0]?.split(":")[0] ?? null,
+      issues: [],
+      requiredBy: [],
+      hasConfig: true,
+      hasSchema: false,
+    },
+  ],
   broken: [],
   backupVersion: null,
   ...extra,
@@ -41,7 +51,15 @@ const library = {
     ),
     pkg(
       "LookupAnything",
-      manifest("Lookup Anything", "Pathoschild.LookupAnything", "1.49.0", { updateKeys: ["Nexus:541"] }),
+      manifest("Lookup Anything", "Pathoschild.LookupAnything", "1.49.0", {
+        updateKeys: ["Nexus:541"],
+        dependencies: [
+          { uniqueId: "Pathoschild.ContentPatcher", minimumVersion: "2.0.0", isRequired: true },
+          { uniqueId: "spacechase0.JsonAssets", minimumVersion: null, isRequired: true },
+          { uniqueId: "CJBok.CheatsMenu", minimumVersion: null, isRequired: true },
+          { uniqueId: "Bouhm.NPCMapLocations", minimumVersion: null, isRequired: false },
+        ],
+      }),
       { backupVersion: "1.48.0" },
     ),
     pkg("CJBCheatsMenu", manifest("CJB Cheats Menu", "CJBok.CheatsMenu", "1.38.0", { updateKeys: ["Nexus:4"] }), {
@@ -165,11 +183,57 @@ mockIPC(
         return {
           total: 40,
           items: [card(541, "Lookup Anything"), card(1915, "Content Patcher"), card(4, "CJB Cheats")],
+          categories: [
+            ["Gameplay Mechanics", 4240],
+            ["User Interface", 1516],
+            ["Fishing", 357],
+          ],
         };
       case "nexus_mod":
         return { ...nexusMod, modId: Number(a.modId) };
       case "nexus_account":
         return null;
+      case "mod_config_get":
+        if (a.package === "ContentPatcher") {
+          return {
+            path: "/mock/mods/ContentPatcher/config.json",
+            values: null,
+            schema: [
+              {
+                key: "EnableJohn",
+                allowValues: ["true", "false"],
+                allowBlank: false,
+                allowMultiple: false,
+                default: ["true"],
+                description: "Adds John to town",
+                section: null,
+                boolean: true,
+              },
+              {
+                key: "Seasons",
+                allowValues: ["spring", "summer", "fall", "winter"],
+                allowBlank: false,
+                allowMultiple: true,
+                default: ["spring"],
+                description: null,
+                section: "Looks",
+                boolean: false,
+              },
+            ],
+          };
+        }
+        return {
+          path: "/mock/mods/LookupAnything/config.json",
+          values: {
+            Controls: { ToggleLookup: "F1", ToggleSearch: "LeftShift + F1", ScrollUp: "Up" },
+            ShowUnknownGiftTastes: false,
+            ShowDataMiningFields: false,
+            TableRows: 20,
+            Scale: 1.25,
+            HideOnKeyUp: true,
+          },
+          schema: null,
+        };
       case "saves_list":
         return [save];
       case "saves_progress":

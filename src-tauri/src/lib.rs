@@ -1,6 +1,7 @@
 mod archive;
 mod backups;
 mod commands;
+mod config_commands;
 mod deps;
 mod downloads;
 mod error;
@@ -8,6 +9,7 @@ mod game;
 mod launcher;
 mod library;
 mod manifest;
+mod mod_config;
 mod mods_commands;
 mod nexus;
 mod nexus_commands;
@@ -98,6 +100,10 @@ pub fn run() {
             saves_commands::saves_restore,
             saves_commands::saves_export,
             saves_commands::saves_import,
+            config_commands::mod_config_get,
+            config_commands::mod_config_save,
+            config_commands::mod_config_defaults,
+            config_commands::mods_generate_configs,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

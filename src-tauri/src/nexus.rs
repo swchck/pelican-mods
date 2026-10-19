@@ -69,6 +69,40 @@ pub struct ModCard {
 pub struct SearchPage {
     pub total: u64,
     pub items: Vec<ModCard>,
+    /// Categories matching the query with their mod counts, largest first.
+    pub categories: Vec<(String, u64)>,
+}
+
+/// Narrowing beyond the name query.
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct SearchFilters {
+    pub category: Option<String>,
+    /// Unix seconds; only mods updated at or after this.
+    pub updated_since: Option<u64>,
+    pub min_endorsements: Option<u64>,
+}
+
+fn filter_json(query: &str, f: &SearchFilters) -> serde_json::Value {
+    let mut filter = json!({
+        "gameDomainName": [{ "value": GAME_DOMAIN }],
+        "adultContent": [{ "value": false }],
+    });
+    let query = query.trim();
+    if !query.is_empty() {
+        filter["name"] = json!([{ "value": query, "op": "WILDCARD" }]);
+    }
+    if let Some(c) = f.category.as_deref().filter(|c| !c.is_empty()) {
+        filter["categoryName"] = json!([{ "value": c }]);
+    }
+    // the date filter wants unix seconds as a string; ISO dates match nothing
+    if let Some(t) = f.updated_since {
+        filter["updatedAt"] = json!([{ "value": t.to_string(), "op": "GTE" }]);
+    }
+    if let Some(n) = f.min_endorsements {
+        filter["endorsements"] = json!([{ "value": n, "op": "GTE" }]);
+    }
+    filter
 }
 
 /// Everything the mod page shows.
@@ -191,6 +225,7 @@ async fn graphql<T: for<'de> Deserialize<'de>>(
 pub async fn search(
     client: &reqwest::Client,
     query: &str,
+    filters: &SearchFilters,
     sort: Sort,
     offset: u32,
     count: u32,
@@ -198,36 +233,57 @@ pub async fn search(
     #[derive(Deserialize)]
     struct Data {
         mods: Mods,
+        facets: Mods,
     }
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct Mods {
         total_count: u64,
         nodes: Vec<ModCard>,
+        #[serde(default)]
+        facets_data: Option<Facets>,
     }
-    let mut filter = json!({
-        "gameDomainName": [{ "value": GAME_DOMAIN }],
-        "adultContent": [{ "value": false }],
-    });
-    let query = query.trim();
-    if !query.is_empty() {
-        filter["name"] = json!([{ "value": query, "op": "WILDCARD" }]);
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Facets {
+        #[serde(default)]
+        category_name: std::collections::HashMap<String, u64>,
     }
+    // facets ignore the category filter so the list keeps showing the other choices
+    let facet_filters = SearchFilters {
+        category: None,
+        ..filters.clone()
+    };
+    let filter = filter_json(query, filters);
     let sort = json!([{ sort.field(): { "direction": "DESC" } }]);
     let data: Data = graphql(
         client,
-        "query($f: ModsFilter, $s: [ModsSort!], $o: Int, $c: Int) {
+        "query($f: ModsFilter, $ff: ModsFilter, $s: [ModsSort!], $o: Int, $c: Int) {
             mods(filter: $f, sort: $s, offset: $o, count: $c) {
                 totalCount
                 nodes { modId name summary author version thumbnailUrl endorsements downloads updatedAt category }
             }
+            facets: mods(filter: $ff, count: 0, facets: { categoryName: [] }) { totalCount nodes { modId } facetsData }
         }",
-        json!({ "f": filter, "s": sort, "o": offset, "c": count.min(50) }),
+        json!({
+            "f": filter,
+            "ff": filter_json(query, &facet_filters),
+            "s": sort,
+            "o": offset,
+            "c": count.min(50),
+        }),
     )
     .await?;
+    let mut categories: Vec<(String, u64)> = data
+        .facets
+        .facets_data
+        .map(|f| f.category_name.into_iter().collect())
+        .unwrap_or_default();
+    categories.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
     Ok(SearchPage {
         total: data.mods.total_count,
         items: data.mods.nodes,
+        categories,
     })
 }
 
@@ -479,9 +535,16 @@ mod tests {
             .build()
             .unwrap();
         tauri::async_runtime::block_on(async {
-            let page = search(&client, "lookup anything", Sort::Endorsements, 0, 5)
-                .await
-                .unwrap();
+            let page = search(
+                &client,
+                "lookup anything",
+                &SearchFilters::default(),
+                Sort::Endorsements,
+                0,
+                5,
+            )
+            .await
+            .unwrap();
             assert!(page.items.iter().any(|m| m.mod_id == 541), "{page:?}");
             let d = details(&client, 541).await.unwrap();
             assert_eq!(d.name, "Lookup Anything");
@@ -492,6 +555,52 @@ mod tests {
                     .any(|f| f.category.as_deref() == Some("MAIN"))
             );
             assert!(d.files.windows(2).all(|w| w[0].date >= w[1].date));
+        });
+    }
+
+    #[test]
+    fn builds_filters() {
+        let f = filter_json(
+            " fish ",
+            &SearchFilters {
+                category: Some("Fishing".into()),
+                updated_since: Some(1_790_812_800),
+                min_endorsements: Some(100),
+            },
+        );
+        assert_eq!(f["name"][0]["value"], "fish");
+        assert_eq!(f["categoryName"][0]["value"], "Fishing");
+        assert_eq!(f["updatedAt"][0]["value"], "1790812800");
+        assert_eq!(f["endorsements"][0]["op"], "GTE");
+        let empty = filter_json("", &SearchFilters::default());
+        assert!(empty.get("name").is_none() && empty.get("categoryName").is_none());
+    }
+
+    // network: filters and facets against the live API
+    #[test]
+    #[ignore]
+    fn filters_live() {
+        let client = reqwest::Client::builder()
+            .user_agent("PelicanMods-test")
+            .build()
+            .unwrap();
+        tauri::async_runtime::block_on(async {
+            let f = SearchFilters {
+                category: Some("Fishing".into()),
+                ..Default::default()
+            };
+            let page = search(&client, "", &f, Sort::Endorsements, 0, 5)
+                .await
+                .unwrap();
+            assert!(
+                page.items
+                    .iter()
+                    .all(|m| m.category.as_deref() == Some("Fishing"))
+            );
+            assert!(
+                page.categories.len() > 5,
+                "facets ignore the category filter"
+            );
         });
     }
 }

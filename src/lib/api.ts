@@ -110,6 +110,9 @@ export interface ModView {
   source: string | null;
   issues: Issue[];
   requiredBy: string[];
+  hasConfig: boolean;
+  /** A content pack whose content.json declares a ConfigSchema. */
+  hasSchema: boolean;
 }
 
 export interface PackageView {
@@ -189,6 +192,15 @@ export interface NexusCard {
 export interface NexusPage {
   total: number;
   items: NexusCard[];
+  /** Categories matching the query, with mod counts. */
+  categories: [string, number][];
+}
+
+export interface NexusFilters {
+  category: string | null;
+  /** Unix seconds. */
+  updatedSince: number | null;
+  minEndorsements: number | null;
 }
 
 export interface NexusFile {
@@ -242,8 +254,8 @@ export type DownloadState =
 export type Download = { id: number; name: string; nexusModId: number | null } & DownloadState;
 
 export const nexus = {
-  search: (query: string, sort: NexusSort, offset: number) =>
-    invoke<NexusPage>("nexus_search", { query, sort, offset }),
+  search: (query: string, filters: NexusFilters, sort: NexusSort, offset: number) =>
+    invoke<NexusPage>("nexus_search", { query, filters, sort, offset }),
   mod: (modId: number) => invoke<NexusMod>("nexus_mod", { modId }),
   account: () => invoke<NexusAccount | null>("nexus_account"),
   setKey: (key: string) => invoke<NexusAccount>("nexus_set_key", { key }),
@@ -316,4 +328,30 @@ export const saves = {
   restore: (file: string) => invoke<string>("saves_restore", { file }),
   export: (id: string, dest: string) => invoke<void>("saves_export", { id, dest }),
   import: (file: string) => invoke<string>("saves_import", { file }),
+};
+
+export interface SchemaField {
+  key: string;
+  allowValues: string[];
+  allowBlank: boolean;
+  allowMultiple: boolean;
+  default: string[];
+  description: string | null;
+  section: string | null;
+  boolean: boolean;
+}
+
+export interface ModConfig {
+  path: string;
+  /** null before the mod has written config.json. */
+  values: Record<string, import("./config-form").Json> | null;
+  schema: SchemaField[] | null;
+}
+
+export const modConfig = {
+  get: (pkg: string, relPath: string) => invoke<ModConfig>("mod_config_get", { package: pkg, relPath }),
+  save: (pkg: string, relPath: string, values: unknown) =>
+    invoke<ModConfig>("mod_config_save", { package: pkg, relPath, values }),
+  defaults: (pkg: string, relPath: string) => invoke<ModConfig>("mod_config_defaults", { package: pkg, relPath }),
+  generate: () => invoke<void>("mods_generate_configs"),
 };

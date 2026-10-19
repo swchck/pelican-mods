@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
 import {
   ArrowUpCircleIcon,
@@ -8,6 +9,7 @@ import {
   ExternalLinkIcon,
   FolderIcon,
   Loader2Icon,
+  SlidersHorizontalIcon,
   Trash2Icon,
   Undo2Icon,
 } from "@lucide/vue";
@@ -22,6 +24,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { library, type Issue, type PackageView } from "@/lib/api";
+import DependencyList from "@/components/library/DependencyList.vue";
+import { splitLinks, type Segment } from "@/lib/md-links";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { useNexus } from "@/stores/nexus";
 import {
   packageAuthor,
   packageCompat,
@@ -37,12 +43,29 @@ const props = defineProps<{ pkg: PackageView }>();
 const { t } = useI18n();
 const lib = useLibrary();
 const confirmRemove = ref(false);
+const router = useRouter();
+const nx = useNexus();
+// mods with settings first; a multi-part package opens its first configurable part
+const configTarget = computed(() =>
+  props.pkg.system ? null : (props.pkg.mods.find((m) => m.hasConfig || m.hasSchema) ?? props.pkg.mods[0] ?? null),
+);
 
 const single = computed(() => (props.pkg.mods.length === 1 ? props.pkg.mods[0] : null));
 const description = computed(() => single.value?.manifest.description ?? "");
 const update = computed(() => packageUpdate(props.pkg, lib.report));
 const compat = computed(() => packageCompat(props.pkg, lib.report));
 const busy = computed(() => lib.updating.has(props.pkg.id));
+const compatSegments = computed(() => (compat.value?.summary ? splitLinks(` ${compat.value.summary}`) : []));
+
+// a Nexus mod opens in the app's own browser tab; anything else in the system browser
+function openSegment(seg: Segment) {
+  if (seg.nexusModId) {
+    void nx.select(seg.nexusModId);
+    void router.push("/browse");
+  } else if (seg.url) {
+    void openUrl(seg.url);
+  }
+}
 const requiredBy = computed(() => [...new Set(props.pkg.mods.flatMap((m) => m.requiredBy))]);
 
 const tags = computed(() => {
@@ -126,9 +149,19 @@ async function remove() {
 
     <p
       v-if="compat"
-      class="bg-warning-soft text-destructive rounded-md border-2 border-[#d98b76] p-2.5 text-[13px] font-semibold"
+      class="bg-warning-soft text-destructive rounded-md border-2 border-[#d98b76] p-2.5 text-[13px] font-semibold break-words"
     >
-      {{ t(`updates.compat.${compat.status}`) }}<template v-if="compat.summary">: {{ compat.summary }}</template>
+      <b>{{ t(`updates.compat.${compat.status}`) }}</b>
+      <template v-for="(seg, i) in compatSegments" :key="i">
+        <a
+          v-if="seg.url"
+          :href="seg.url"
+          class="underline decoration-dotted underline-offset-2 hover:text-[#4a1a10]"
+          @click.prevent="openSegment(seg)"
+          >{{ seg.text }}</a
+        >
+        <template v-else>{{ seg.text }}</template>
+      </template>
     </p>
 
     <ul
@@ -148,13 +181,7 @@ async function remove() {
       </li>
     </ul>
 
-    <div v-if="single?.manifest.dependencies.length" class="flex flex-col gap-1 text-[13px]">
-      <span class="font-extrabold">{{ t("library.dependencies") }}</span>
-      <span v-for="d in single.manifest.dependencies" :key="d.uniqueId" class="text-muted-foreground font-mono text-xs">
-        {{ d.uniqueId }}<template v-if="d.minimumVersion"> {{ d.minimumVersion }}+</template>
-        <template v-if="!d.isRequired"> ({{ t("library.optional") }})</template>
-      </span>
-    </div>
+    <DependencyList v-if="single?.manifest.dependencies.length" :deps="single.manifest.dependencies" />
 
     <div v-if="pkg.mods.length > 1" class="flex flex-col gap-1 text-[13px]">
       <span class="font-extrabold">{{ t("library.parts") }}</span>
@@ -176,6 +203,13 @@ async function remove() {
       @click="lib.rollback(pkg.mods[0].manifest.uniqueId)"
     >
       <Undo2Icon />{{ t("updates.rollback", { version: pkg.backupVersion }) }}
+    </Button>
+    <Button
+      v-if="configTarget"
+      variant="outline"
+      @click="router.push({ path: '/config', query: { pkg: pkg.id, rel: configTarget.relPath } })"
+    >
+      <SlidersHorizontalIcon />{{ t("config.open") }}
     </Button>
     <div class="grid grid-cols-2 gap-2">
       <Button variant="outline" @click="openFolder"><FolderIcon />{{ t("library.openFolder") }}</Button>

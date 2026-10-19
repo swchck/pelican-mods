@@ -6,17 +6,18 @@ use crate::commands::AppState;
 use crate::downloads::{self, Download, State};
 use crate::error::{AppError, AppResult};
 use crate::mods_commands;
-use crate::nexus::{self, Account, LinkGrant, ModDetails, SearchPage, Sort};
+use crate::nexus::{self, Account, LinkGrant, ModDetails, SearchFilters, SearchPage, Sort};
 
 #[tauri::command]
 pub async fn nexus_search(
     app: AppHandle,
     query: String,
+    filters: SearchFilters,
     sort: Sort,
     offset: u32,
 ) -> AppResult<SearchPage> {
     let state = app.state::<AppState>();
-    nexus::search(&state.http, &query, sort, offset, 20).await
+    nexus::search(&state.http, &query, &filters, sort, offset, 20).await
 }
 
 #[tauri::command]

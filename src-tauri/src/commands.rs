@@ -78,7 +78,7 @@ impl AppState {
     }
 }
 
-struct EventSink(AppHandle);
+pub(crate) struct EventSink(pub(crate) AppHandle);
 
 impl Sink for EventSink {
     fn log(&self, line: &LogLine) {

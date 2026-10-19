@@ -48,7 +48,7 @@ function select(p: PackageView) {
 <template>
   <section :aria-label="t('library.title')" class="wood-panel flex min-w-0 flex-1 flex-col overflow-hidden">
     <div
-      class="text-muted-foreground border-border-soft grid grid-cols-[52px_minmax(0,1fr)_96px_124px_84px] gap-2 border-b-2 border-dashed px-4 pt-3 pb-2.5 text-xs font-extrabold tracking-wider uppercase"
+      class="text-muted-foreground border-border-soft grid grid-cols-[52px_minmax(0,1fr)_112px_124px_84px] gap-2 border-b-2 border-dashed px-4 pt-3 pb-2.5 text-xs font-extrabold tracking-wider uppercase"
     >
       <span>{{ t("library.columns.on") }}</span>
       <span>{{ t("library.columns.mod") }}</span>
@@ -69,7 +69,7 @@ function select(p: PackageView) {
         role="option"
         :aria-selected="lib.selectedId === r.pkg.id"
         tabindex="0"
-        class="grid cursor-default grid-cols-[52px_minmax(0,1fr)_96px_124px_84px] items-center gap-2 border-b border-[#ebd3a8] px-4 py-2 outline-none focus-visible:bg-[#fbe3a8]/60"
+        class="grid cursor-default grid-cols-[52px_minmax(0,1fr)_112px_124px_84px] items-center gap-2 border-b border-[#ebd3a8] px-4 py-2 outline-none focus-visible:bg-[#fbe3a8]/60"
         :class="lib.selectedId === r.pkg.id ? 'bg-accent' : 'hover:bg-[#fbefd4]'"
         @click="select(r.pkg)"
         @keydown.enter="select(r.pkg)"
@@ -89,7 +89,7 @@ function select(p: PackageView) {
           </span>
           <span class="text-muted-foreground truncate text-xs">{{ r.author }}</span>
         </div>
-        <span class="font-mono text-[13px] font-bold">{{ r.version }}</span>
+        <span class="min-w-0 truncate font-mono text-[13px] font-bold" :title="r.version">{{ r.version }}</span>
         <span class="justify-self-start rounded border-2 px-2 py-0.5 text-xs font-extrabold" :class="pill[r.status]">
           {{
             r.status === "update" && r.update

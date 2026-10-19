@@ -9,6 +9,7 @@ import {
   type Download,
   type NexusAccount,
   type NexusCard,
+  type NexusFilters,
   type NexusMod,
   type NexusSort,
 } from "@/lib/api";
@@ -18,6 +19,14 @@ import { useLibrary } from "@/stores/library";
 export const useNexus = defineStore("nexus", () => {
   const query = ref("");
   const sort = ref<NexusSort>("endorsements");
+  const category = ref<string | null>(null);
+  const updated = ref<"any" | "week" | "month" | "year">("any");
+  const minEndorsements = ref(0);
+  const hideInstalled = ref(false);
+  const categories = ref<[string, number][]>([]);
+  const filtersActive = computed(
+    () => category.value !== null || updated.value !== "any" || minEndorsements.value > 0 || hideInstalled.value,
+  );
   const results = ref<NexusCard[]>([]);
   const total = ref(0);
   const searching = ref(false);
@@ -34,16 +43,34 @@ export const useNexus = defineStore("nexus", () => {
   const selected = computed(() => (selectedId.value ? (details.value[selectedId.value] ?? null) : null));
   const active = computed(() => downloads.value.filter((d) => d.state !== "done" && d.state !== "failed"));
 
+  const DAYS = { any: 0, week: 7, month: 30, year: 365 };
+  function filters(): NexusFilters {
+    const days = DAYS[updated.value];
+    return {
+      category: category.value,
+      updatedSince: days ? Math.floor(Date.now() / 1000) - days * 86400 : null,
+      minEndorsements: minEndorsements.value || null,
+    };
+  }
+
+  function resetFilters() {
+    category.value = null;
+    updated.value = "any";
+    minEndorsements.value = 0;
+    hideInstalled.value = false;
+  }
+
   let generation = 0;
   async function search(more = false) {
     const gen = ++generation;
     searching.value = true;
     try {
-      const page = await nexus.search(query.value, sort.value, more ? results.value.length : 0);
+      const page = await nexus.search(query.value, filters(), sort.value, more ? results.value.length : 0);
       // a newer search started while this one was in flight; its results win
       if (gen !== generation) return;
       results.value = more ? [...results.value, ...page.items] : page.items;
       total.value = page.total;
+      categories.value = page.categories;
     } catch (e) {
       if (gen === generation) toast.error(errorText(e));
     } finally {
@@ -133,6 +160,13 @@ export const useNexus = defineStore("nexus", () => {
   return {
     query,
     sort,
+    category,
+    updated,
+    minEndorsements,
+    hideInstalled,
+    categories,
+    filtersActive,
+    resetFilters,
     results,
     total,
     searching,

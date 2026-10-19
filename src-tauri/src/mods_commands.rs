@@ -16,6 +16,7 @@ use crate::error::{AppError, AppResult};
 use crate::game;
 use crate::library::{self, BrokenMod, Package};
 use crate::manifest::{self, Manifest};
+use crate::mod_config;
 use crate::profiles::{self, Profiles};
 use crate::updates::{self, UpdateReport};
 
@@ -52,6 +53,9 @@ pub struct ModView {
     pub issues: Vec<Issue>,
     /// Names of enabled mods that need this one.
     pub required_by: Vec<String>,
+    pub has_config: bool,
+    /// A content pack whose `content.json` declares a `ConfigSchema`.
+    pub has_schema: bool,
 }
 
 // SMAPI's own mods ("SMAPI.ConsoleCommands", …) come with the installer and update with it
@@ -122,6 +126,9 @@ fn build_view(state: &AppState) -> LibraryView {
                     .get(&m.manifest.unique_id.to_lowercase())
                     .cloned()
                     .unwrap_or_default(),
+                has_config: p.path.join(&m.rel_path).join("config.json").is_file(),
+                has_schema: m.manifest.content_pack_for.is_some()
+                    && mod_config::declares_schema(&p.path.join(&m.rel_path)),
                 source: manifest::source(&m.manifest),
                 rel_path: m.rel_path,
                 manifest: m.manifest,

@@ -45,6 +45,8 @@ pub enum AppError {
     BadNxm(String),
     #[error("Keychain error: {0}")]
     Keychain(String),
+    #[error("config.json can't be read: {0}")]
+    BadConfig(String),
     #[error("save file can't be read: {0}")]
     BadSave(String),
     #[error("Rosetta 2 is required to run the game")]
@@ -79,6 +81,7 @@ impl AppError {
             Self::BadNxm(_) => "bad_nxm",
             Self::Keychain(_) => "keychain",
             Self::BadSave(_) => "bad_save",
+            Self::BadConfig(_) => "bad_config",
             Self::RosettaMissing => "rosetta_missing",
             Self::Cancelled => "cancelled",
             Self::Io(_) => "io",
@@ -96,6 +99,7 @@ impl AppError {
             | Self::NoDownload(s)
             | Self::BadNxm(s)
             | Self::BadSave(s)
+            | Self::BadConfig(s)
             | Self::Keychain(s)
             | Self::BadProfileName(s) => Some(s.clone()),
             Self::Io(e) => Some(e.to_string()),

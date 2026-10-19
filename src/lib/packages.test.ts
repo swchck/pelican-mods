@@ -16,6 +16,8 @@ function mod(name: string, id: string, extra: Partial<ModView> = {}): ModView {
     source: null,
     issues: [],
     requiredBy: [],
+    hasConfig: false,
+    hasSchema: false,
     manifest: {
       name,
       author: "Pathoschild",
