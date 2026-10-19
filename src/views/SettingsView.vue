@@ -32,9 +32,13 @@ const companion = useCompanion();
 const companionOn = ref(true);
 
 onMounted(async () => {
-  const s = await api.settings();
-  locale.value = s.locale ?? "system";
-  companionOn.value = !s.companionDisabled;
+  try {
+    const s = await api.settings();
+    locale.value = s.locale ?? "system";
+    companionOn.value = !s.companionDisabled;
+  } catch (e) {
+    toast.error(errorText(e));
+  }
 });
 
 async function toggleCompanion() {

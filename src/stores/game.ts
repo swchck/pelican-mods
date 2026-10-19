@@ -50,15 +50,20 @@ export const useGame = defineStore("game", () => {
       }),
       events.state((s) => {
         run.value = s;
-        if (s.state === "exited") void refresh();
+        if (s.state === "exited") refresh().catch((e) => toast.error(errorText(e)));
       }),
       events.smapiProgress((p) => (progress.value = p)),
     ]);
-    [install.value, run.value, log.value] = await Promise.all([api.currentGame(), api.runState(), api.log()]);
-    // nothing saved yet, or the saved folder is gone: one install found means no question to ask
-    if (!install.value) {
-      detected.value = await api.detectGames();
-      if (detected.value.length === 1) await choose(detected.value[0].path);
+    try {
+      [install.value, run.value, log.value] = await Promise.all([api.currentGame(), api.runState(), api.log()]);
+      // nothing saved yet, or the saved folder is gone: one install found means no question to ask
+      if (!install.value) {
+        detected.value = await api.detectGames();
+        if (detected.value.length === 1) await choose(detected.value[0].path);
+      }
+    } catch (e) {
+      // setup lets the user pick the game by hand; a spinner forever helps nobody
+      toast.error(errorText(e));
     }
     phase.value = install.value ? "ready" : "setup";
     await checkSmapi();

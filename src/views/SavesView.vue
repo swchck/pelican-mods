@@ -98,7 +98,8 @@ async function backup() {
   if (!id) return;
   await run(async () => {
     await saves.backup(id);
-    snapshots.value = await saves.snapshots(id);
+    const list = await saves.snapshots(id);
+    if (selectedId.value === id) snapshots.value = list;
   }, t("saves.backedUp"));
 }
 
@@ -126,8 +127,8 @@ async function restore() {
     await saves.restore(snap.file);
     progress.value = null;
     await load();
-    snapshots.value = await saves.snapshots(snap.saveId);
-    progress.value = await saves.progress(snap.saveId);
+    const [list, p] = await Promise.all([saves.snapshots(snap.saveId), saves.progress(snap.saveId)]);
+    if (selectedId.value === snap.saveId) [snapshots.value, progress.value] = [list, p];
   }, t("saves.restored"));
 }
 

@@ -59,20 +59,27 @@ const cloneJson = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 const live = computed(() => (current.value ? companion.loaded(current.value.m.manifest.uniqueId) : false));
 const dirty = computed(() => JSON.stringify(draft.value) !== JSON.stringify(cfg.value?.values ?? null));
 
+// bumped per load: a slow answer for a mod the user already left must not land in the
+// form, or the next save writes that mod's values into this one's file
+let generation = 0;
+
 async function load() {
   const c = current.value;
+  const gen = ++generation;
   cfg.value = null;
   draft.value = null;
   raw.value = null;
   if (!c) return;
   loading.value = true;
   try {
-    cfg.value = await modConfig.get(c.pkg, c.rel, locale.value);
-    draft.value = cfg.value.values ? cloneJson(cfg.value.values) : null;
+    const next = await modConfig.get(c.pkg, c.rel, locale.value);
+    if (gen !== generation) return;
+    cfg.value = next;
+    draft.value = next.values ? cloneJson(next.values) : null;
   } catch (e) {
-    toast.error(errorText(e));
+    if (gen === generation) toast.error(errorText(e));
   } finally {
-    loading.value = false;
+    if (gen === generation) loading.value = false;
   }
 }
 
@@ -155,7 +162,8 @@ function toggleRaw() {
 useShortcut("page.save", () => {
   if (draft.value && !busy.value && (dirty.value || raw.value !== null)) save();
 });
-watch(current, load);
+// by key: `entries` rebuilds its objects whenever the library reloads, mid-edit included
+watch(() => (current.value ? `${current.value.pkg}/${current.value.rel}` : ""), load);
 // the game just described its GMCM menus; pick them up unless the user is mid-edit
 watch(
   () => companion.gmcmSeen.at,

@@ -62,9 +62,10 @@ async function pick() {
   if (paths) await install(paths);
 }
 
+let unmounted = false;
 onMounted(async () => {
   void lib.load();
-  unlisten = await getCurrentWebview().onDragDropEvent((e) => {
+  const off = await getCurrentWebview().onDragDropEvent((e) => {
     const p = e.payload;
     if (p.type === "enter" || p.type === "over") dragging.value = true;
     else if (p.type === "leave") dragging.value = false;
@@ -73,8 +74,14 @@ onMounted(async () => {
       void install(p.paths);
     }
   });
+  // left before the listener was in place: drop it now, or every drop installs twice
+  if (unmounted) off();
+  else unlisten = off;
 });
-onUnmounted(() => unlisten?.());
+onUnmounted(() => {
+  unmounted = true;
+  unlisten?.();
+});
 </script>
 
 <template>

@@ -33,8 +33,9 @@ const levelClass: Record<LogLevel, string> = {
   info: "text-[#f3e4c3]",
 };
 
+// by the newest line, not the count: once the buffer is full the count stops changing
 watch(
-  () => lines.value.length,
+  () => lines.value[lines.value.length - 1]?.seq,
   async () => {
     if (!follow.value) return;
     await nextTick();

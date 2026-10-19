@@ -78,11 +78,15 @@ export const useShortcuts = defineStore("shortcuts", () => {
     if (e.repeat && !e.key.startsWith("Arrow")) return;
     const typing = isTyping(document.activeElement);
     const dialog = document.querySelector('[role="dialog"][data-state="open"], [role="dialog"][aria-modal="true"]');
+    // an open select or menu owns the arrows and Space even though it isn't a dialog
+    const popup = document.querySelector('[role="listbox"][data-state="open"], [role="menu"][data-state="open"]');
     for (const def of SHORTCUTS) {
       const combo = def.combos.map(parseCombo).find((c) => matches(c, e, isMac));
       if (!combo) continue;
-      // plain keys belong to whatever has focus or is on top
-      if (!combo.mod && (typing || dialog)) return;
+      // plain keys belong to whatever has focus or is on top; a modal dialog also keeps
+      // ⌘-combos away from the page behind it, except the cheat sheet and navigation
+      if (!combo.mod && (typing || dialog || popup)) return;
+      if (dialog && def.group !== "help" && def.group !== "nav") return;
       const list = handlers.get(def.id) ?? [];
       const fn = list[list.length - 1];
       if (!fn) return;

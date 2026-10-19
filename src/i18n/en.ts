@@ -158,6 +158,7 @@ export default {
     pill: "→ {version}",
   },
   nexus: {
+    openLink: "Open {name}",
     title: "Browse mods",
     search: "Search Nexus Mods",
     filters: {

@@ -20,6 +20,7 @@ describe("shortcuts", () => {
     expect(matches(parseCombo("?"), ev({ key: "?", code: "Slash", shiftKey: true }), true)).toBe(true);
     expect(matches(parseCombo("?"), ev({ key: "/", code: "Slash", shiftKey: true }), true)).toBe(true);
     expect(matches(parseCombo("mod+/"), ev({ key: "/", code: "Slash", metaKey: true }), true)).toBe(true);
+    expect(matches(parseCombo("space"), ev({ key: " ", code: "Space" }), true)).toBe(true);
   });
 
   it("formats for each platform", () => {

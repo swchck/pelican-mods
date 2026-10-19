@@ -21,18 +21,29 @@ export const useLibrary = defineStore("library", () => {
   const profiles = computed(() => view.value?.profiles ?? null);
   const activeProfile = computed(() => profiles.value?.profiles.find((p) => p.id === profiles.value?.active) ?? null);
 
+  let started = 0;
+  let applied = 0;
+  let inFlight = 0;
+
   /** Runs a library command, swapping in the view it returns; failures become toasts. */
   async function run(op: () => Promise<LibraryView>): Promise<boolean> {
+    const seq = ++started;
+    inFlight++;
     working.value = true;
     try {
-      view.value = await op();
+      const next = await op();
+      // a reload that started before a toggle can answer after it; keep the newer view
+      if (seq > applied) {
+        applied = seq;
+        view.value = next;
+      }
       if (selectedId.value && !packages.value.some((p) => p.id === selectedId.value)) selectedId.value = null;
       return true;
     } catch (e) {
       toast.error(errorText(e), { duration: 10000 });
       return false;
     } finally {
-      working.value = false;
+      working.value = --inFlight > 0;
     }
   }
 

@@ -29,17 +29,22 @@ const search = ref<InstanceType<typeof Input> | null>(null);
 const saveId = computed(() => String(route.query.save ?? "") || list.value[0]?.id || "");
 const pct = (v: number) => n(v, { maximumFractionDigits: 1 });
 
+let generation = 0;
+
 async function load() {
   const id = saveId.value;
+  const gen = ++generation;
   if (!id) return;
   loading.value = true;
   try {
-    result.value = await saves.perfection(id);
+    const next = await saves.perfection(id);
+    if (gen === generation) result.value = next;
   } catch (e) {
+    if (gen !== generation) return;
     result.value = null;
     toast.error(errorText(e));
   } finally {
-    loading.value = false;
+    if (gen === generation) loading.value = false;
   }
 }
 
@@ -82,12 +87,14 @@ watch(
   },
 );
 onMounted(async () => {
+  const before = saveId.value;
   try {
     list.value = await saves.list();
   } catch (e) {
     toast.error(errorText(e));
   }
-  await load();
+  // with no save in the URL the list just picked one, and watch(saveId) loads it
+  if (saveId.value === before) await load();
 });
 </script>
 

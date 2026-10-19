@@ -16,11 +16,16 @@ export const useCompanion = defineStore("companion", () => {
     connected.value && (status.value.hello?.mods.some((m) => m.toLowerCase() === uniqueId.toLowerCase()) ?? false);
 
   async function init() {
-    available.value = await api.available();
-    status.value = await api.status();
-    void api.onStatus((s) => (status.value = s));
-    void api.onGmcm((ids) => (gmcmSeen.value = { ids, at: Date.now() }));
-    void api.onCatalog(() => (catalogAt.value = Date.now()));
+    await Promise.all([
+      api.onStatus((s) => (status.value = s)),
+      api.onGmcm((ids) => (gmcmSeen.value = { ids, at: Date.now() })),
+      api.onCatalog(() => (catalogAt.value = Date.now())),
+    ]);
+    try {
+      [available.value, status.value] = await Promise.all([api.available(), api.status()]);
+    } catch {
+      // stays "not connected"; the next status event corrects it
+    }
   }
 
   return { status, available, connected, gmcmSeen, catalogAt, loaded, init };

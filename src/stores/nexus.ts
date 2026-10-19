@@ -85,9 +85,10 @@ export const useNexus = defineStore("nexus", () => {
     try {
       details.value = { ...details.value, [modId]: await nexus.mod(modId) };
     } catch (e) {
-      toast.error(errorText(e));
+      if (selectedId.value === modId) toast.error(errorText(e));
     } finally {
-      loadingDetails.value = false;
+      // an older click finishing must not hide the spinner of the one now shown
+      if (selectedId.value === modId) loadingDetails.value = false;
     }
   }
 
@@ -141,7 +142,6 @@ export const useNexus = defineStore("nexus", () => {
 
   async function init() {
     const library = useLibrary();
-    downloads.value = await nexus.downloads();
     await Promise.all([
       nexusEvents.downloads((list) => {
         for (const d of list) {
@@ -155,6 +155,12 @@ export const useNexus = defineStore("nexus", () => {
       nexusEvents.libraryChanged(() => void library.load()),
       nexusEvents.nxmError((e) => toast.error(errorText(e))),
     ]);
+    // listeners first: a failed fetch must not leave downloads and nxm errors unheard
+    try {
+      downloads.value = await nexus.downloads();
+    } catch (e) {
+      toast.error(errorText(e));
+    }
   }
 
   return {

@@ -155,6 +155,7 @@ export default {
     pill: "→ {version}",
   },
   nexus: {
+    openLink: "Открыть {name}",
     title: "Найти моды",
     search: "Поиск по Nexus Mods",
     filters: {

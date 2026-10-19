@@ -224,7 +224,14 @@ function onClick(e: MouseEvent) {
               >
                 {{ t("nexus.open") }}
               </Button>
-              <Button v-else-if="r.url" size="sm" variant="link" @click="openUrl(r.url)"><ExternalLinkIcon /></Button>
+              <Button
+                v-else-if="r.url"
+                size="sm"
+                variant="link"
+                :aria-label="t('nexus.openLink', { name: r.modName ?? r.url })"
+                @click="openUrl(r.url)"
+                ><ExternalLinkIcon
+              /></Button>
             </div>
           </div>
         </TabsContent>

@@ -24,6 +24,8 @@ function keyOf(e: Pick<KeyboardEvent, "key" | "code" | "shiftKey">): string {
   if (e.code === "Period") return ".";
   // "?" is Shift+/ on US keyboards but sits elsewhere in other layouts; go by the key
   if (e.code === "Slash") return e.shiftKey ? "?" : "/";
+  // e.key is " " for Space, which no combo string can spell
+  if (e.code === "Space") return "space";
   return e.key.toLowerCase();
 }
 
