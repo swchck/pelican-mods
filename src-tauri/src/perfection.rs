@@ -70,13 +70,18 @@ pub struct Catalog {
 }
 
 impl Catalog {
-    /// The base game's lists in English, for a launcher that hasn't heard from the game yet.
-    pub fn builtin() -> &'static Catalog {
-        static BUILTIN: std::sync::OnceLock<Catalog> = std::sync::OnceLock::new();
-        BUILTIN.get_or_init(|| Catalog {
+    /// The base game's lists in `language` (a game language code such as "ru"), or in
+    /// English for one the game doesn't ship; for a launcher that hasn't heard from the game yet.
+    pub fn builtin(language: &str) -> &'static Catalog {
+        static PARSED: [std::sync::OnceLock<Catalog>; BUILTIN.len()] =
+            [const { std::sync::OnceLock::new() }; BUILTIN.len()];
+        let i = BUILTIN
+            .iter()
+            .position(|(code, _)| *code == language)
+            .unwrap_or(0);
+        PARSED[i].get_or_init(|| Catalog {
             builtin: true,
-            ..serde_json::from_str(include_str!("../resources/base-catalog.json"))
-                .expect("the built-in catalog parses")
+            ..serde_json::from_str(BUILTIN[i].1).expect("the built-in catalog parses")
         })
     }
 
@@ -90,13 +95,24 @@ impl Catalog {
     }
 }
 
+// English first: it stands in for any language missing here
+const BUILTIN: [(&str, &str); 1] = [("en", include_str!("../resources/catalogs/en.json"))];
+
+/// The language code the game was last set to, from its startup preferences in `data_dir`.
+pub fn game_language(data_dir: &Path) -> Option<String> {
+    let prefs = std::fs::read_to_string(data_dir.join("startup_preferences")).ok()?;
+    let start = prefs.find("<languageCode>")? + "<languageCode>".len();
+    let len = prefs[start..].find('<')?;
+    Some(prefs[start..start + len].to_owned())
+}
+
 /// Where a report's names and totals came from.
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogInfo {
     pub game: String,
     pub language: String,
-    /// The launcher's own base-game lists: no mod content, names in English.
+    /// The launcher's own base-game lists: no mod content.
     pub builtin: bool,
 }
 
@@ -860,8 +876,9 @@ mod tests {
 
     #[test]
     fn builtin_catalog_covers_the_base_game() {
-        let c = Catalog::builtin();
+        let c = Catalog::builtin("en");
         assert!(c.builtin);
+        assert_eq!(Catalog::builtin("xx"), c);
         assert_eq!(c.museum.len(), 95);
         assert!(c.achievements.len() >= 39 && c.items.len() > 800);
         assert!(c.items.iter().any(|i| i.id == "Book_Trash"));

@@ -407,7 +407,7 @@ export interface Checkup {
 export interface CatalogInfo {
   game: string;
   language: string;
-  /** The launcher's own base-game lists: no mod content, names in English. */
+  /** The launcher's own base-game lists: no mod content. */
   builtin: boolean;
 }
 

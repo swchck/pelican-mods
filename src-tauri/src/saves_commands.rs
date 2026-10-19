@@ -55,12 +55,17 @@ pub async fn saves_list(app: AppHandle) -> AppResult<Vec<SaveSummary>> {
 #[tauri::command]
 pub async fn saves_perfection(app: AppHandle, id: String) -> AppResult<Perfection> {
     let path = save_path(&app, &id)?;
+    let language = game_language(&app);
     blocking(app, move |s| {
         let facts = cached_facts(s, &id, &path)?;
         let catalog = s.companion.catalog();
         Ok(perfection::evaluate(
             &facts,
-            Some(catalog.as_ref().unwrap_or(perfection::Catalog::builtin())),
+            Some(
+                catalog
+                    .as_ref()
+                    .unwrap_or(perfection::Catalog::builtin(&language)),
+            ),
         ))
     })
     .await
@@ -70,15 +75,28 @@ pub async fn saves_perfection(app: AppHandle, id: String) -> AppResult<Perfectio
 #[tauri::command]
 pub async fn saves_checkup(app: AppHandle, id: String) -> AppResult<crate::checkup::Checkup> {
     let path = save_path(&app, &id)?;
+    let language = game_language(&app);
     blocking(app, move |s| {
         let facts = cached_facts(s, &id, &path)?;
         let catalog = s.companion.catalog();
         Ok(crate::checkup::build(
             &facts,
-            Some(catalog.as_ref().unwrap_or(perfection::Catalog::builtin())),
+            Some(
+                catalog
+                    .as_ref()
+                    .unwrap_or(perfection::Catalog::builtin(&language)),
+            ),
         ))
     })
     .await
+}
+
+/// The game's own language, so built-in names match the bundle names the save carries.
+fn game_language(app: &AppHandle) -> String {
+    game_data_dir(app)
+        .ok()
+        .and_then(|dir| perfection::game_language(&dir))
+        .unwrap_or_else(|| "en".to_owned())
 }
 
 fn cached_facts(s: &AppState, id: &str, path: &std::path::Path) -> AppResult<perfection::Facts> {

@@ -298,7 +298,7 @@ export default {
       "To count everything the launcher needs the fish, recipe and item lists from your modded game. Launch the game through the launcher once and they arrive by themselves.",
     catalogFrom: "Lists from game {game}; the save is read from disk and refreshes after you play.",
     builtinCatalog:
-      "Counted against the base game {game}. Launch the game through the launcher once to count mod content too and see names in your language.",
+      "Counted against the base game {game}. Launch the game through the launcher once to count mod content too.",
     needsCatalog: "Up to {weight}% — needs the game's lists",
     score: "{score} of {weight}%",
     filter: "Find…",
@@ -416,7 +416,7 @@ export default {
     allDone: "All done here",
     nothingFound: "Nothing found",
     needsCatalog: "Names and full lists come from the game: launch it through the launcher once.",
-    builtinCatalog: "Base game lists, names in English. Launch the game through the launcher once to add mod content.",
+    builtinCatalog: "Base game lists. Launch the game through the launcher once to add mod content.",
     about: {
       achievements: "The game's achievements, the ones that also count toward perfection and Grandpa.",
       skills:

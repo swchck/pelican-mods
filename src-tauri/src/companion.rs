@@ -710,6 +710,111 @@ mod tests {
         });
     }
 
+    // records the base game's lists in every language the game ships, for the launcher's
+    // built-in fallback; only the companion is loaded, so no mod content gets in:
+    // scripts/build-companion.sh, then
+    // PELICAN_TEST_GAME_DIR=<Contents/MacOS> PELICAN_TEST_CATALOG_DIR=src-tauri/resources/catalogs \
+    //   cargo test -- --ignored base_catalogs --nocapture
+    #[test]
+    #[ignore]
+    fn base_catalogs() {
+        use crate::launcher::{Launcher, LogLine, RunState, Sink, SmapiRun};
+        struct Quiet;
+        impl Sink for Quiet {
+            fn log(&self, _: &LogLine) {}
+            fn state(&self, _: &RunState) {}
+        }
+        let game = PathBuf::from(std::env::var("PELICAN_TEST_GAME_DIR").unwrap());
+        let out = PathBuf::from(std::env::var("PELICAN_TEST_CATALOG_DIR").unwrap());
+        std::fs::create_dir_all(&out).unwrap();
+        let built =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../companion/dist/PelicanCompanion");
+        let dir = tempfile::tempdir().unwrap();
+        let mods = dir.path().join("Mods");
+        std::fs::create_dir_all(&mods).unwrap();
+        std::os::unix::fs::symlink(built, mods.join("PelicanCompanion")).unwrap();
+        let home = PathBuf::from(std::env::var("HOME").unwrap());
+        let companion = Arc::new(Companion::new(dir.path()));
+        tauri::async_runtime::block_on(async {
+            tauri::async_runtime::spawn(companion.clone().serve(Arc::new(Recorder::default())));
+            while companion.url().is_none() {
+                tokio::time::sleep(Duration::from_millis(5)).await;
+            }
+            let launcher = Launcher::default();
+            launcher
+                .launch(
+                    &game,
+                    Some(SmapiRun {
+                        log: home.join(".config/StardewValley/ErrorLogs/SMAPI-latest.txt"),
+                        mods_path: Some(mods.clone()),
+                        env: vec![
+                            (URL_VAR.into(), companion.url().unwrap().into()),
+                            ("PELICAN_COMPANION_TEST".into(), "1".into()),
+                        ],
+                    }),
+                    Quiet,
+                )
+                .unwrap();
+            let result =
+                futures_util::FutureExt::catch_unwind(std::panic::AssertUnwindSafe(async {
+                    for _ in 0..300 {
+                        if companion.catalog().is_some() {
+                            break;
+                        }
+                        tokio::time::sleep(Duration::from_millis(200)).await;
+                    }
+                    let first = companion.catalog().expect("a catalog arrives");
+                    // the player's own language goes last so the game is left as it was
+                    let mut codes: Vec<String> = [
+                        "en", "ja", "ru", "zh", "pt", "es", "de", "th", "fr", "ko", "it", "tr",
+                        "hu",
+                    ]
+                    .map(String::from)
+                    .to_vec();
+                    codes.retain(|c| *c != first.language);
+                    codes.push(first.language.clone());
+                    for code in &codes {
+                        companion
+                            .send_raw(serde_json::json!({ "type": "testLocale", "text": code }));
+                        let mut got = None;
+                        for _ in 0..150 {
+                            got = companion.catalog().filter(|c| c.language == *code);
+                            if got.is_some() {
+                                break;
+                            }
+                            tokio::time::sleep(Duration::from_millis(200)).await;
+                        }
+                        let c = got.unwrap_or_else(|| panic!("a {code} catalog arrives"));
+                        eprintln!(
+                            "{code}: {} items, {} museum, {} achievements, e.g. {:?}",
+                            c.items.len(),
+                            c.museum.len(),
+                            c.achievements.len(),
+                            c.items.iter().find(|i| i.id == "24").map(|i| &i.name)
+                        );
+                        assert!(c.museum.len() == 95 && c.items.len() > 800);
+                        std::fs::write(
+                            out.join(format!("{code}.json")),
+                            serde_json::to_vec(&c).unwrap(),
+                        )
+                        .unwrap();
+                    }
+                }))
+                .await;
+            // the game must close even when an assert above failed
+            launcher.stop().unwrap();
+            for _ in 0..100 {
+                if matches!(launcher.state(), RunState::Exited { .. }) {
+                    break;
+                }
+                tokio::time::sleep(Duration::from_millis(100)).await;
+            }
+            if let Err(panic) = result {
+                std::panic::resume_unwind(panic);
+            }
+        });
+    }
+
     // opens an existing save (never saving it) and asks for the forecast and the items:
     // scripts/build-companion.sh, then
     // PELICAN_TEST_GAME_DIR=<Contents/MacOS> PELICAN_TEST_SAVE_NAME=<save folder name> \

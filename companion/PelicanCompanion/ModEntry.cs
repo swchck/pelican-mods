@@ -124,6 +124,13 @@ internal sealed class ModEntry : Mod
                     .GetMethod("exitActiveMenu", BindingFlags.Public | BindingFlags.Static)!
                     .Invoke(null, null);
                 break;
+            // tests only: switches the language so the launcher can record each language's
+            // base game lists; LocaleChanged then sends the catalog again
+            case "testLocale" when TestMode && command.Text is not null:
+                Type content = Type.GetType("StardewValley.LocalizedContentManager, Stardew Valley", throwOnError: true)!;
+                content.GetProperty("CurrentLanguageCode", BindingFlags.Public | BindingFlags.Static)!
+                    .SetValue(null, Enum.Parse(content.GetNestedType("LanguageCode")!, command.Text));
+                break;
         }
     }
 
