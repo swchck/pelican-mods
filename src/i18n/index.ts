@@ -1,13 +1,25 @@
 import { createI18n } from "vue-i18n";
 import ru from "./ru";
 import en from "./en";
+import de from "./de";
+import es from "./es";
+import fr from "./fr";
+import pt from "./pt";
+import it from "./it";
+import ja from "./ja";
+import ko from "./ko";
+import zh from "./zh";
+import tr from "./tr";
+import hu from "./hu";
 import { isAppError } from "@/lib/api";
 
-export const locales = ["ru", "en"] as const;
+// the game's own languages, so following the game's language always finds a match
+export const locales = ["ru", "en", "de", "es", "fr", "pt", "it", "ja", "ko", "zh", "tr", "hu"] as const;
 export type Locale = (typeof locales)[number];
 
 export function systemLocale(): Locale {
-  return navigator.language.toLowerCase().startsWith("ru") ? "ru" : "en";
+  const lang = navigator.language.toLowerCase().split("-")[0];
+  return locales.find((l) => l === lang) ?? "en";
 }
 
 // "1 мод, 2 мода, 5 модов, 21 мод": vue-i18n only knows the English two-form rule
@@ -24,7 +36,7 @@ export const i18n = createI18n<[typeof ru], Locale, false>({
   legacy: false,
   locale: systemLocale(),
   fallbackLocale: "en",
-  messages: { ru, en },
+  messages: { ru, en, de, es, fr, pt, it, ja, ko, zh, tr, hu },
   pluralRules: { ru: russianPlural },
 });
 

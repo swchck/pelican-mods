@@ -170,6 +170,16 @@ async function uninstall() {
           <SelectItem value="system">{{ t("settings.languageSystem") }}</SelectItem>
           <SelectItem value="ru">Русский</SelectItem>
           <SelectItem value="en">English</SelectItem>
+          <SelectItem value="de">Deutsch</SelectItem>
+          <SelectItem value="es">Español</SelectItem>
+          <SelectItem value="fr">Français</SelectItem>
+          <SelectItem value="pt">Português</SelectItem>
+          <SelectItem value="it">Italiano</SelectItem>
+          <SelectItem value="ja">日本語</SelectItem>
+          <SelectItem value="ko">한국어</SelectItem>
+          <SelectItem value="zh">中文</SelectItem>
+          <SelectItem value="tr">Türkçe</SelectItem>
+          <SelectItem value="hu">Magyar</SelectItem>
         </SelectContent>
       </Select>
     </section>
