@@ -18,18 +18,32 @@ import {
 import SmapiProgress from "@/components/SmapiProgress.vue";
 import NexusAccountCard from "@/components/NexusAccountCard.vue";
 import AboutCard from "@/components/AboutCard.vue";
-import { api } from "@/lib/api";
+import PixelToggle from "@/components/PixelToggle.vue";
+import { api, companion as companionApi } from "@/lib/api";
 import { errorText, setLocale } from "@/i18n";
 import { useGame } from "@/stores/game";
+import { useCompanion } from "@/stores/companion";
 
 const { t } = useI18n();
 const game = useGame();
 const locale = ref("system");
 const confirmUninstall = ref(false);
+const companion = useCompanion();
+const companionOn = ref(true);
 
 onMounted(async () => {
-  locale.value = (await api.settings()).locale ?? "system";
+  const s = await api.settings();
+  locale.value = s.locale ?? "system";
+  companionOn.value = !s.companionDisabled;
 });
+
+async function toggleCompanion() {
+  try {
+    companionOn.value = !(await companionApi.setEnabled(!companionOn.value)).companionDisabled;
+  } catch (e) {
+    toast.error(errorText(e));
+  }
+}
 
 async function changeLocale(value: unknown) {
   const next = value === "system" ? null : String(value);
@@ -98,6 +112,17 @@ async function uninstall() {
     </section>
 
     <NexusAccountCard />
+
+    <section v-if="companion.available" class="wood-panel flex flex-col gap-2 p-5">
+      <div class="flex items-center gap-3">
+        <h2 class="font-pixel text-wood-dark flex-1 text-xl font-bold">{{ t("settings.companion") }}</h2>
+        <PixelToggle :checked="companionOn" :label="t('settings.companion')" @toggle="toggleCompanion" />
+      </div>
+      <p class="text-muted-foreground text-sm leading-relaxed font-semibold">{{ t("settings.companionHint") }}</p>
+      <p v-if="game.running && companionOn" class="text-muted-foreground text-xs font-bold">
+        {{ companion.connected ? t("settings.companionConnected") : t("settings.companionWaiting") }}
+      </p>
+    </section>
 
     <section class="wood-panel flex items-center gap-3 p-5">
       <h2 class="font-pixel text-wood-dark flex-1 text-xl font-bold">{{ t("settings.language") }}</h2>

@@ -53,6 +53,8 @@ pub enum AppError {
     RosettaMissing,
     #[error("cancelled by the user")]
     Cancelled,
+    #[error("the game isn't connected to the launcher")]
+    CompanionOffline,
     #[error("file system error: {0}")]
     Io(#[from] std::io::Error),
 }
@@ -84,6 +86,7 @@ impl AppError {
             Self::BadConfig(_) => "bad_config",
             Self::RosettaMissing => "rosetta_missing",
             Self::Cancelled => "cancelled",
+            Self::CompanionOffline => "companion_offline",
             Self::Io(_) => "io",
         }
     }

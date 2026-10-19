@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# companion build output
+companion/**/bin
+companion/**/obj

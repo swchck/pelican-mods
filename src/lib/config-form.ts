@@ -1,4 +1,4 @@
-import type { SchemaField } from "./api";
+import type { GmcmMod, SchemaField } from "./api";
 
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
@@ -11,7 +11,7 @@ interface Common {
 export type Field = Common &
   (
     | { kind: "bool" }
-    | { kind: "number"; integer: boolean }
+    | { kind: "number"; integer: boolean; min?: number; max?: number; step?: number }
     | { kind: "text" }
     | { kind: "keybind" }
     | { kind: "choice"; options: string[]; multiple: boolean; optionLabels?: Record<string, string> }
@@ -125,6 +125,50 @@ export function schemaSections(schema: SchemaField[]): Section[] {
     out.set(key, [...(out.get(key) ?? []), field]);
   }
   return [...out].map(([title, fields]) => ({ title, fields }));
+}
+
+/**
+ * Builds a form in the order and grouping of the mod's own GMCM menu, with its names,
+ * tooltips, ranges and choices. Keys the menu doesn't cover follow under `otherTitle`.
+ */
+export function gmcmSections(gmcm: GmcmMod, values: { [key: string]: Json }, otherTitle: string): Section[] {
+  const out: Section[] = [];
+  const covered = new Set<string>();
+  for (const o of gmcm.options) {
+    if (!o.path || getAt(values, o.path) === null) continue;
+    covered.add(o.path.join("\u0000"));
+    const base = { path: o.path, label: o.name, description: o.tooltip ?? undefined };
+    const field: Field =
+      o.kind === "bool"
+        ? { ...base, kind: "bool" }
+        : o.kind === "int" || o.kind === "float"
+          ? {
+              ...base,
+              kind: "number",
+              integer: o.kind === "int",
+              min: o.min ?? undefined,
+              max: o.max ?? undefined,
+              step: o.interval ?? undefined,
+            }
+          : o.kind === "keybind"
+            ? { ...base, kind: "keybind" }
+            : o.kind === "choice" && o.choices
+              ? {
+                  ...base,
+                  kind: "choice",
+                  multiple: false,
+                  options: o.choices.map((c) => c.value),
+                  optionLabels: Object.fromEntries(o.choices.map((c) => [c.value, c.label])),
+                }
+              : { ...base, kind: "text" };
+    const last = out[out.length - 1];
+    if (last && last.title === o.section) last.fields.push(field);
+    else out.push({ title: o.section, fields: [field] });
+  }
+  const rest = inferSections(values)
+    .flatMap((s) => s.fields)
+    .filter((f) => !covered.has(f.path.join("\u0000")));
+  return rest.length ? [...out, { title: otherTitle, fields: rest }] : out;
 }
 
 export function getAt(obj: Json, path: string[]): Json {

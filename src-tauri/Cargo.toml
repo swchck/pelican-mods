@@ -21,8 +21,8 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 thiserror = "2"
 reqwest = { version = "0.13.5", default-features = false, features = ["json", "native-tls", "http2", "system-proxy", "stream"] }
-tokio = { version = "1.53.2", features = ["time", "sync", "process", "io-util", "fs", "macros"] }
-futures-util = { version = "0.3", default-features = false, features = ["std"] }
+tokio = { version = "1.53.2", features = ["time", "sync", "process", "io-util", "fs", "macros", "net"] }
+futures-util = { version = "0.3", default-features = false, features = ["std", "sink"] }
 zip = { version = "9", default-features = false, features = ["deflate"] }
 json5 = "1"
 keyring = { version = "3", features = ["apple-native"] }
@@ -34,8 +34,10 @@ sevenz-rust2 = "0.24"
 unrar = "0.5"
 url = "2"
 quick-xml = "0.42"
+tokio-tungstenite = { version = "0.30", default-features = false, features = ["handshake"] }
 
 [dev-dependencies]
+tokio-tungstenite = { version = "0.30", default-features = false, features = ["handshake", "connect"] }
 tempfile = "3.27.0"
 
 [profile.release]

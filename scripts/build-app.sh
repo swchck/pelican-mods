@@ -14,4 +14,7 @@ if [ -z "${TAURI_SIGNING_PRIVATE_KEY:-}" ] && [ -f "$KEY" ]; then
   export TAURI_SIGNING_PRIVATE_KEY="$KEY"
   export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$(cat "$KEY.password")"
 fi
-exec npx tauri build "$@"
+"$(dirname "$0")/build-companion.sh"
+# the companion ships as a resource only in real builds: tauri dev and cargo test would
+# otherwise need a .NET toolchain just to compile
+exec npx tauri build --config src-tauri/tauri.bundle.conf.json "$@"

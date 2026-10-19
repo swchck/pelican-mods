@@ -12,24 +12,26 @@
 
 ```
 ┌─────────────── Tauri app ───────────────┐        ┌──── Stardew Valley (SMAPI) ────┐
-│ Vue UI (shadcn-vue, pinia, vue-i18n)    │        │ Pelican.Companion (C# mod)     │
-│        │ invoke / events                │        │  - WebSocket 127.0.0.1:<port>  │
-│ Rust core                               │  WS    │  - состояние игры, прогресс    │
+│ Vue UI (shadcn-vue, pinia, vue-i18n)    │        │ PelicanCompanion (C# mod)      │
+│        │ invoke / events                │        │  - WS-клиент к ланчеру         │
+│ Rust core                               │  WS    │  - состояние игры              │
 │  game      поиск игры, запуск, SMAPI    │◄──────►│  - GMCM-схемы и live-apply     │
-│  mods      манифесты, профили, deps     │        │  - команды (reload config, …)  │
-│  sources   Nexus / GitHub / ModDrop /   │        │  - внутриигровое меню-оверлей  │
-│            CurseForge, smapi.io         │        └────────────────────────────────┘
+│  mods      манифесты, профили, deps     │        │  - HUD-уведомления             │
+│  sources   Nexus / GitHub / ModDrop,    │        └────────────────────────────────┘
+│            smapi.io                     │
 │  install   скачивание, распаковка, zip  │
 │  config    config.json + схемы          │
 │  saves     парсинг XML, бэкапы, zip     │
-│  companion WS-клиент, токен, протокол   │
+│  companion WS-сервер, токен, протокол   │
 │  db        SQLite (кэш, история, профили)│
 └─────────────────────────────────────────┘
 ```
 
 ### Ключевые решения
 
-- **Встраивание в игру** — свой SMAPI-мод `Pelican.Companion`, который ланчер ставит и обновляет сам. Мод поднимает WebSocket только на loopback с одноразовым токеном, который ланчер передаёт через env при запуске. Протокол — JSON-RPC 2.0, версионируется, схема лежит в `protocol/` и генерирует TS- и C#-типы.
+- **Встраивание в игру** — свой SMAPI-мод `PelicanCompanion`, который едет внутри приложения и линкуется в каждый профиль. Сервер WebSocket держит ланчер: случайный порт на loopback и токен, которые попадают в игру через `PELICAN_COMPANION_URL`; мод сам подключается и переподключается. Сообщения — JSON с полем `type`, версия протокола приходит в `hello`; формы описаны в `companion/PelicanCompanion/Protocol.cs` и `src-tauri/src/companion.rs` и меняются парой.
+- **Без ссылок на игру** — компаньон собирается только против `StardewModdingAPI.dll` и Newtonsoft из SMAPI, а состояние игры читает через рефлексию. Поэтому CI собирает его из релиза SMAPI (`scripts/smapi-refs.sh`), без установленной игры.
+- **GMCM изнутри** — схему настроек мод не отдаёт, поэтому компаньон читает внутренние классы GMCM по именам, а ключ `config.json` каждой опции восстанавливает по IL её геттера. Применение настроек повторяет кнопку «Сохранить» GMCM; для модов без GMCM конфиг перечитывается в живой объект мода.
 - **Обновления модов** — `UpdateKeys` из `manifest.json` → пакетный запрос к публичному `smapi.io/api/v3.0/mods` (покрывает Nexus/GitHub/ModDrop/CurseForge без ключей). Nexus API v1 — для деталей, файлов и changelog.
 - **Скачивание с Nexus** — регистрация обработчика `nxm://` (tauri-plugin-deep-link), API-ключ в Keychain. Premium — прямые ссылки из API, иначе через кнопку «Mod Manager Download» на сайте.
 - **Профили модов** — моды хранятся в собственном хранилище `~/Library/Application Support/Pelican/mods/<id>@<version>`, а в `Mods/` игры раскладываются симлинками активного профиля. Переключение профиля = пересборка симлинков, без копирования. SMAPI поддерживает `--mods-path`, так что игровую папку можно вообще не трогать: запуск идёт с `--mods-path <profile-dir>`.
@@ -42,8 +44,7 @@
 ```
 app/            Vue-фронтенд (src/, components/ui — shadcn-vue)
 src-tauri/      Rust core (crates по слоям выше)
-companion/      C# SMAPI-мод (net6.0, Pathoschild.Stardew.ModBuildConfig)
-protocol/       JSON-схема RPC → TS/C# типы
+companion/      C# SMAPI-мод (net6.0) и его xunit-тесты
 docs/
 ```
 

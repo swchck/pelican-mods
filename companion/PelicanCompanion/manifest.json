@@ -1,0 +1,10 @@
+{
+  "Name": "Pelican Mods Companion",
+  "Author": "swchck",
+  "Version": "1.0.0",
+  "Description": "Connects the game to the Pelican Mods launcher: live game state and applying mod settings without a restart.",
+  "UniqueID": "swchck.PelicanCompanion",
+  "EntryDll": "PelicanCompanion.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": []
+}

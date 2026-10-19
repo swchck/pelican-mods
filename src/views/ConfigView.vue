@@ -6,11 +6,12 @@ import { toast } from "vue-sonner";
 import { BracesIcon, FolderOpenIcon, Loader2Icon, RotateCcwIcon, SaveIcon, SparklesIcon } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import ConfigField from "@/components/config/ConfigField.vue";
-import { library, modConfig, type ModConfig } from "@/lib/api";
-import { applyLabels, getAt, inferSections, schemaSections, setAt, type Json } from "@/lib/config-form";
+import { companion as companionApi, library, modConfig, type ModConfig } from "@/lib/api";
+import { applyLabels, getAt, gmcmSections, inferSections, schemaSections, setAt, type Json } from "@/lib/config-form";
 import { errorText } from "@/i18n";
 import { useLibrary } from "@/stores/library";
 import { useGame } from "@/stores/game";
+import { useCompanion } from "@/stores/companion";
 import { hint, useShortcut } from "@/stores/shortcuts";
 
 const { t, locale } = useI18n();
@@ -18,6 +19,7 @@ const route = useRoute();
 const router = useRouter();
 const lib = useLibrary();
 const game = useGame();
+const companion = useCompanion();
 
 const cfg = ref<ModConfig | null>(null);
 const draft = ref<Record<string, Json> | null>(null);
@@ -44,13 +46,17 @@ const sections = computed(() => {
   if (!cfg.value) return [];
   const base = cfg.value.schema?.length
     ? schemaSections(cfg.value.schema)
-    : draft.value
-      ? inferSections(draft.value)
-      : [];
+    : draft.value && cfg.value.gmcm
+      ? gmcmSections(cfg.value.gmcm, draft.value, t("config.other"))
+      : draft.value
+        ? inferSections(draft.value)
+        : [];
   return applyLabels(base, cfg.value.labels ?? {});
 });
 // config files are plain JSON; structuredClone chokes on Vue's reactive proxies
 const cloneJson = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
+/** The running game has this mod loaded, so a save can apply in place. */
+const live = computed(() => (current.value ? companion.loaded(current.value.m.manifest.uniqueId) : false));
 const dirty = computed(() => JSON.stringify(draft.value) !== JSON.stringify(cfg.value?.values ?? null));
 
 async function load() {
@@ -112,7 +118,22 @@ function save() {
       return;
     }
   }
-  void run(() => modConfig.save(c.pkg, c.rel, values, locale.value), t("config.saved"));
+  void run(async () => {
+    const saved = await modConfig.save(c.pkg, c.rel, values, locale.value);
+    if (live.value) await applyLive(c.m.manifest.uniqueId, c.name, saved.values);
+    return saved;
+  }, t("config.saved"));
+}
+
+// the file is already saved; this only spares a restart, so failures are a note, not an error
+async function applyLive(uniqueId: string, name: string, values: unknown) {
+  try {
+    const r = await companionApi.apply(uniqueId, values, t("config.gameNotice", { name }));
+    if (r.ok) toast.success(t(r.method === "gmcm" ? "config.appliedLive" : "config.appliedReload"));
+    else if (r.error !== "not_loaded") toast.info(t("config.needsRestart"));
+  } catch {
+    toast.info(t("config.needsRestart"));
+  }
 }
 
 function createDefaults() {
@@ -135,6 +156,14 @@ useShortcut("page.save", () => {
   if (draft.value && !busy.value && (dirty.value || raw.value !== null)) save();
 });
 watch(current, load);
+// the game just described its GMCM menus; pick them up unless the user is mid-edit
+watch(
+  () => companion.gmcmSeen.at,
+  () => {
+    const id = current.value?.m.manifest.uniqueId.toLowerCase();
+    if (id && !dirty.value && companion.gmcmSeen.ids.some((x) => x.toLowerCase() === id)) void load();
+  },
+);
 watch(locale, load);
 onMounted(async () => {
   if (!lib.view) await lib.load();
@@ -172,7 +201,15 @@ onMounted(async () => {
         <div class="flex min-w-0 flex-1 flex-col">
           <h1 class="font-pixel text-wood-dark truncate text-3xl font-bold">{{ current.name }}</h1>
           <span class="text-muted-foreground text-[13px] font-bold">
-            {{ cfg?.schema?.length ? t("config.fromSchema") : cfg?.values ? t("config.fromFile") : "" }}
+            {{
+              cfg?.schema?.length
+                ? t("config.fromSchema")
+                : cfg?.gmcm && cfg.values
+                  ? t("config.fromGmcm")
+                  : cfg?.values
+                    ? t("config.fromFile")
+                    : ""
+            }}
           </span>
         </div>
         <Button v-if="cfg" variant="ghost" size="sm" @click="library.open(cfg.path.replace(/\/config\.json$/, ''))">
@@ -232,7 +269,10 @@ onMounted(async () => {
       </div>
 
       <footer v-if="draft" class="flex items-center gap-2.5">
-        <span class="text-muted-foreground flex-1 text-[13px] font-bold">
+        <span class="text-muted-foreground flex flex-1 items-center gap-2 text-[13px] font-bold">
+          <span v-if="live" class="bg-success-soft text-success rounded-full px-2 py-0.5 text-xs">
+            {{ t("config.liveBadge") }}
+          </span>
           {{ dirty || raw !== null ? t("config.unsaved") : "" }}
         </span>
         <Button variant="ghost" :disabled="busy || (!dirty && raw === null)" @click="load">

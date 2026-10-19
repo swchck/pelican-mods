@@ -127,7 +127,9 @@ function onChoice(option: string) {
         :id="id"
         :model-value="text"
         :type="field.kind === 'number' ? 'number' : 'text'"
-        :step="field.kind === 'number' && !field.integer ? 'any' : undefined"
+        :step="field.kind === 'number' ? (field.step ?? (field.integer ? undefined : 'any')) : undefined"
+        :min="field.kind === 'number' ? field.min : undefined"
+        :max="field.kind === 'number' ? field.max : undefined"
         class="bg-parchment border-input h-9 border-2"
         :class="{
           'font-mono': field.kind === 'keybind' || field.kind === 'number',
@@ -136,6 +138,12 @@ function onChoice(option: string) {
         @update:model-value="onText"
       />
       <span v-if="field.kind === 'list'" class="text-muted-foreground text-xs">{{ t("config.listHint") }}</span>
+      <span
+        v-else-if="field.kind === 'number' && field.min !== undefined && field.max !== undefined"
+        class="text-muted-foreground text-xs"
+      >
+        {{ t("config.range", { min: field.min, max: field.max }) }}
+      </span>
     </template>
   </div>
 </template>

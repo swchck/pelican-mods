@@ -11,9 +11,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useGame } from "@/stores/game";
 import { hint } from "@/stores/shortcuts";
+import { useCompanion } from "@/stores/companion";
+import { formatClock, seasonKey } from "@/lib/game-clock";
 
 const { t } = useI18n();
 const game = useGame();
+const companion = useCompanion();
+
+const live = computed(() => {
+  const s = companion.status.state;
+  if (!game.running || !s) return null;
+  const season = seasonKey(s.season);
+  return t("live.playing", {
+    season: season ? t(`live.seasons.${season}`) : s.season,
+    day: s.day,
+    time: formatClock(s.time),
+  });
+});
 
 const status = computed(() => {
   const r = game.run;
@@ -47,6 +61,7 @@ const status = computed(() => {
       }"
     >
       <span class="size-2 rounded-[2px] bg-current" />{{ status.text }}
+      <span v-if="live" class="text-muted-foreground ml-auto truncate">{{ live }}</span>
     </div>
 
     <Button

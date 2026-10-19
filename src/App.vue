@@ -12,6 +12,7 @@ import AppUpdateDialogs from "@/components/AppUpdateDialogs.vue";
 import ShortcutsDialog from "@/components/ShortcutsDialog.vue";
 import { useShortcut, useShortcuts } from "@/stores/shortcuts";
 import { useAppUpdate } from "@/stores/appUpdate";
+import { useCompanion } from "@/stores/companion";
 import { useGame } from "@/stores/game";
 import { useNexus } from "@/stores/nexus";
 
@@ -41,6 +42,7 @@ onMounted(() => {
   void game.init();
   void nexus.init();
   void useAppUpdate().init();
+  void useCompanion().init();
 });
 </script>
 

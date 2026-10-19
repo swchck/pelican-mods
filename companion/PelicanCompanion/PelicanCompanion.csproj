@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Builds against StardewModdingAPI.dll and SMAPI's Newtonsoft only, never the game's own
+    assemblies: CI has no game install, so game state is read through reflection.
+    SmapiDir is the game folder locally, or an unpacked SMAPI release in CI.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>PelicanCompanion</AssemblyName>
+    <RootNamespace>PelicanCompanion</RootNamespace>
+    <Version>1.0.0</Version>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <SmapiDir Condition="'$(SmapiDir)' == ''">/Applications/Stardew Valley.app/Contents/MacOS</SmapiDir>
+    <DistDir>$(MSBuildThisFileDirectory)../dist/PelicanCompanion</DistDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="StardewModdingAPI" HintPath="$(SmapiDir)/StardewModdingAPI.dll" Private="false" />
+    <Reference Include="SMAPI.Toolkit.CoreInterfaces" HintPath="$(SmapiDir)/smapi-internal/SMAPI.Toolkit.CoreInterfaces.dll" Private="false" />
+    <Reference Include="Newtonsoft.Json" HintPath="$(SmapiDir)/smapi-internal/Newtonsoft.Json.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PelicanCompanion.Tests" />
+  </ItemGroup>
+
+  <Target Name="CopyToDist" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <MakeDir Directories="$(DistDir)" />
+    <Copy SourceFiles="$(TargetPath);manifest.json" DestinationFolder="$(DistDir)" />
+  </Target>
+</Project>

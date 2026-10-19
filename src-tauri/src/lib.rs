@@ -1,6 +1,8 @@
 mod archive;
 mod backups;
 mod commands;
+mod companion;
+mod companion_commands;
 mod config_commands;
 mod deps;
 mod downloads;
@@ -41,6 +43,7 @@ pub fn run() {
             let data_dir = app.path().app_data_dir()?;
             let cache_dir = app.path().app_cache_dir()?;
             app.manage(commands::AppState::new(config_dir, data_dir, cache_dir));
+            companion_commands::start(app.handle());
 
             // Nexus' "Mod Manager Download" button opens nxm:// links; macOS hands them
             // to the running app, or launches it with the link
@@ -61,6 +64,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::settings_get,
             commands::settings_set_locale,
+            companion_commands::settings_set_companion,
+            companion_commands::companion_status,
+            companion_commands::companion_available,
+            companion_commands::companion_apply,
             commands::game_detect,
             commands::game_current,
             commands::game_set_path,

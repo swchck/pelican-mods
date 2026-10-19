@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { applyLabels, choiceValues, getAt, humanize, inferSections, schemaSections, setAt } from "./config-form";
+import type { GmcmMod, GmcmOption } from "./api";
+import {
+  applyLabels,
+  choiceValues,
+  getAt,
+  gmcmSections,
+  humanize,
+  inferSections,
+  schemaSections,
+  setAt,
+} from "./config-form";
 
 describe("humanize", () => {
   it("splits camel case and keeps acronyms", () => {
@@ -87,5 +97,59 @@ describe("applyLabels", () => {
     expect(out[0].fields[0]).toMatchObject({ label: "Show unknown gift tastes", description: "Even unlearned ones." });
     expect(out[1].title).toBe("Keybinds");
     expect(out[1].fields[0].label).toBe("Toggle lookup");
+  });
+});
+
+describe("gmcmSections", () => {
+  const option = (over: Partial<GmcmOption>): GmcmOption => ({
+    path: null,
+    name: "",
+    tooltip: null,
+    kind: "bool",
+    section: null,
+    min: null,
+    max: null,
+    interval: null,
+    choices: null,
+    ...over,
+  });
+  const gmcm: GmcmMod = {
+    id: "A.B",
+    titleScreenOnly: false,
+    options: [
+      option({ path: ["Enabled"], name: "Turn on", tooltip: "Does it" }),
+      option({ path: ["Tastes", "Loved"], name: "Loved gifts", section: "Gifts" }),
+      option({ path: ["Count"], name: "Count", kind: "int", section: "Gifts", min: 1, max: 9, interval: 1 }),
+      option({
+        path: ["Mode"],
+        name: "Mode",
+        kind: "choice",
+        section: "Look",
+        choices: [
+          { value: "A", label: "Alpha" },
+          { value: "B", label: "Beta" },
+        ],
+      }),
+      option({ path: null, name: "Unmapped" }),
+      option({ path: ["Gone"], name: "Not in the file" }),
+    ],
+  };
+  const values = { Enabled: true, Tastes: { Loved: true, Hated: false }, Count: 3, Mode: "A", Extra: "x" };
+
+  it("follows the menu and keeps leftovers", () => {
+    const s = gmcmSections(gmcm, values, "Other");
+    expect(s.map((x) => [x.title, x.fields.map((f) => f.label)])).toEqual([
+      [null, ["Turn on"]],
+      ["Gifts", ["Loved gifts", "Count"]],
+      ["Look", ["Mode"]],
+      ["Other", ["Extra", "Hated"]],
+    ]);
+    expect(s[0].fields[0].description).toBe("Does it");
+    expect(s[1].fields[1]).toMatchObject({ kind: "number", integer: true, min: 1, max: 9, step: 1 });
+    expect(s[2].fields[0]).toMatchObject({
+      kind: "choice",
+      options: ["A", "B"],
+      optionLabels: { A: "Alpha", B: "Beta" },
+    });
   });
 });

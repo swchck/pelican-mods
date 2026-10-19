@@ -159,7 +159,11 @@ fn build_view(state: &AppState) -> LibraryView {
 pub fn deploy_active(state: &AppState) -> AppResult<PathBuf> {
     let _guard = state.library_lock.lock().unwrap();
     let (bundled, _) = game_mods(state);
-    let bundled: Vec<(String, PathBuf)> = bundled.into_iter().map(|p| (p.id, p.path)).collect();
+    let mut bundled: Vec<(String, PathBuf)> = bundled.into_iter().map(|p| (p.id, p.path)).collect();
+    if state.companion_enabled() {
+        let dir = state.companion_dir.get().expect("enabled implies built");
+        bundled.push((crate::companion::FOLDER.to_owned(), dir.clone()));
+    }
     profiles::deploy(
         state.profiles.get().active(),
         &state.store_root,

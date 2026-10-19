@@ -140,6 +140,18 @@ const save = {
   modified: Math.floor(Date.now() / 1000) - 3600,
 };
 
+const gmcmOption = (path: string[], name: string, kind: string, section: string) => ({
+  path,
+  name,
+  tooltip: null,
+  kind,
+  section,
+  min: null,
+  max: null,
+  interval: null,
+  choices: null,
+});
+
 mockWindows("main");
 mockIPC(
   (cmd, payload) => {
@@ -148,7 +160,32 @@ mockIPC(
       case "plugin:app|version":
         return "0.1.0";
       case "settings_get":
-        return { gamePath: "/Applications/Stardew Valley.app/Contents/MacOS", locale: null };
+        return { gamePath: "/Applications/Stardew Valley.app/Contents/MacOS", locale: null, companionDisabled: false };
+      case "settings_set_companion":
+        return {
+          gamePath: "/Applications/Stardew Valley.app/Contents/MacOS",
+          locale: null,
+          companionDisabled: !a.enabled,
+        };
+      case "companion_available":
+        return true;
+      case "companion_status":
+        return {
+          connected: true,
+          hello: { protocol: 1, smapi: "4.5.2", game: "1.6.15", mods: ["Pathoschild.LookupAnything"] },
+          state: {
+            farmer: "Ася",
+            farm: "Пеликан",
+            season: "fall",
+            day: 12,
+            year: 2,
+            time: 1430,
+            money: 12345,
+            location: "Town",
+          },
+        };
+      case "companion_apply":
+        return { ok: true, method: "gmcm", error: null };
       case "game_current":
         return {
           path: "/Applications/Stardew Valley.app/Contents/MacOS",
@@ -201,6 +238,7 @@ mockIPC(
             path: "/mock/mods/ContentPatcher/config.json",
             values: null,
             labels: {},
+            gmcm: null,
             schema: [
               {
                 key: "EnableJohn",
@@ -248,6 +286,17 @@ mockIPC(
               values: {},
             },
             controls: { name: "Keybinds", description: null, values: {} },
+          },
+          gmcm: {
+            id: "Pathoschild.LookupAnything",
+            titleScreenOnly: false,
+            options: [
+              gmcmOption(["ShowUnknownGiftTastes"], "Show unknown gift tastes", "bool", "Progression mode"),
+              gmcmOption(["ShowDataMiningFields"], "Show data mining fields", "bool", "Advanced"),
+              { ...gmcmOption(["TableRows"], "Table rows", "int", "Advanced"), min: 5, max: 50, interval: 5 },
+              { ...gmcmOption(["Scale"], "Scale", "float", "Advanced"), min: 0.5, max: 2, interval: 0.25 },
+              gmcmOption(["Controls", "ToggleLookup"], "Toggle lookup", "keybind", "Controls"),
+            ],
           },
         };
       case "saves_list":

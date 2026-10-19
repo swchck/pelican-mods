@@ -45,6 +45,8 @@ pub struct ModConfig {
     /// Option names and descriptions from the mod's translations, keyed by
     /// [`label_key`] of the option name.
     pub labels: HashMap<String, Label>,
+    /// The mod's Generic Mod Config Menu, as the companion last saw it in a running game.
+    pub gmcm: Option<crate::companion::GmcmMod>,
 }
 
 /// Human text for one option, as the mod shows it in Generic Mod Config Menu.
@@ -84,6 +86,7 @@ pub fn load(mod_dir: &Path, locale: &str) -> AppResult<ModConfig> {
         values,
         schema,
         labels: labels(mod_dir, locale),
+        gmcm: None,
     })
 }
 

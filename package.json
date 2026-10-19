@@ -15,7 +15,9 @@
     "typecheck": "vue-tsc --noEmit",
     "lint": "eslint . && prettier --check . && cargo fmt --manifest-path src-tauri/Cargo.toml --check && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings",
     "format": "prettier --write . && cargo fmt --manifest-path src-tauri/Cargo.toml",
-    "check": "npm run typecheck && npm run lint && npm test && cargo test --manifest-path src-tauri/Cargo.toml"
+    "check": "npm run typecheck && npm run lint && npm test && cargo test --manifest-path src-tauri/Cargo.toml",
+    "companion:build": "scripts/build-companion.sh",
+    "companion:test": "DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet test companion/PelicanCompanion.Tests --nologo -v quiet"
   },
   "dependencies": {
     "@fontsource-variable/nunito": "^5.3.0",

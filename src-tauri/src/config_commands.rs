@@ -16,6 +16,15 @@ use crate::mods_commands::{blocking, deploy_active};
 /// How long a config-generating run may take to reach "Mods loaded and ready".
 const GENERATE_TIMEOUT: Duration = Duration::from_secs(90);
 
+/// Loads a mod's settings plus the GMCM menu the companion saw for it.
+fn load(s: &AppState, dir: &Path, locale: &str) -> AppResult<ModConfig> {
+    let mut config = mod_config::load(dir, locale)?;
+    config.gmcm = crate::manifest::read(dir)
+        .ok()
+        .and_then(|m| s.companion.schema(&m.unique_id));
+    Ok(config)
+}
+
 /// Resolves a mod folder inside a stored package, refusing paths that leave it.
 fn mod_dir(state: &AppState, package: &str, rel_path: &str) -> AppResult<PathBuf> {
     let root = library::package_path(&state.store_root, package)?;
@@ -38,7 +47,7 @@ pub async fn mod_config_get(
     locale: String,
 ) -> AppResult<ModConfig> {
     blocking(app, move |s| {
-        mod_config::load(&mod_dir(s, &package, &rel_path)?, &locale)
+        load(s, &mod_dir(s, &package, &rel_path)?, &locale)
     })
     .await
 }
@@ -54,7 +63,7 @@ pub async fn mod_config_save(
     blocking(app, move |s| {
         let dir = mod_dir(s, &package, &rel_path)?;
         mod_config::save(&dir, &values)?;
-        mod_config::load(&dir, &locale)
+        load(s, &dir, &locale)
     })
     .await
 }
@@ -70,12 +79,12 @@ pub async fn mod_config_defaults(
 ) -> AppResult<ModConfig> {
     blocking(app, move |s| {
         let dir = mod_dir(s, &package, &rel_path)?;
-        let cfg = mod_config::load(&dir, &locale)?;
+        let cfg = load(s, &dir, &locale)?;
         let schema = cfg
             .schema
             .ok_or_else(|| AppError::BadConfig("no ConfigSchema to take defaults from".into()))?;
         mod_config::save(&dir, &mod_config::defaults(&schema))?;
-        mod_config::load(&dir, &locale)
+        load(s, &dir, &locale)
     })
     .await
 }
@@ -90,6 +99,7 @@ pub async fn mods_generate_configs(app: AppHandle) -> AppResult<()> {
     state.launcher.launch(
         &game_dir,
         Some(SmapiRun {
+            env: Vec::new(),
             log: game_data_dir(&app)?.join("ErrorLogs/SMAPI-latest.txt"),
             mods_path: Some(mods_path),
         }),

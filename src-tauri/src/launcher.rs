@@ -78,6 +78,8 @@ pub struct SmapiRun {
     pub log: PathBuf,
     /// Passed as `--mods-path`; `None` keeps SMAPI's default `Mods` in the game folder.
     pub mods_path: Option<PathBuf>,
+    /// Extra environment for the game process.
+    pub env: Vec<(String, String)>,
 }
 
 #[derive(Default)]
@@ -167,8 +169,11 @@ impl Launcher {
         };
         let started = SystemTime::now();
         let mut cmd = Command::new(game_dir.join(exe));
-        if let Some(mods) = smapi.as_ref().and_then(|s| s.mods_path.as_ref()) {
-            cmd.arg("--mods-path").arg(mods);
+        if let Some(s) = &smapi {
+            if let Some(mods) = &s.mods_path {
+                cmd.arg("--mods-path").arg(mods);
+            }
+            cmd.envs(s.env.iter().map(|(k, v)| (k, v)));
         }
         let mut child = cmd
             .current_dir(game_dir)
@@ -539,6 +544,7 @@ mod tests {
                 .launch(
                     dir.path(),
                     Some(SmapiRun {
+                        env: Vec::new(),
                         log: log.clone(),
                         mods_path: Some("/profiles/p1/Mods".into()),
                     }),
@@ -573,6 +579,7 @@ mod tests {
         let res = Launcher::default().launch(
             dir.path(),
             Some(SmapiRun {
+                env: Vec::new(),
                 log: dir.path().join("log"),
                 mods_path: None,
             }),
@@ -595,6 +602,7 @@ mod tests {
                 .launch(
                     &game_dir,
                     Some(SmapiRun {
+                        env: Vec::new(),
                         log: path,
                         mods_path: None,
                     }),
@@ -675,6 +683,7 @@ mod tests {
                 .launch(
                     &game_dir,
                     Some(SmapiRun {
+                        env: Vec::new(),
                         log: home.join(".config/StardewValley/ErrorLogs/SMAPI-latest.txt"),
                         mods_path: Some(mods),
                     }),

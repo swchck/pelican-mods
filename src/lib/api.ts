@@ -15,6 +15,8 @@ export interface GameInstall {
 export interface Settings {
   gamePath: string | null;
   locale: string | null;
+  /** The companion mod is linked into the game unless this is set. */
+  companionDisabled: boolean;
 }
 
 export interface SmapiRelease {
@@ -350,7 +352,67 @@ export interface ModConfig {
   values: Record<string, import("./config-form").Json> | null;
   schema: SchemaField[] | null;
   labels: Record<string, import("./config-form").OptionLabel>;
+  /** The mod's Generic Mod Config Menu as the companion last saw it in a running game. */
+  gmcm: GmcmMod | null;
 }
+
+export interface GmcmMod {
+  id: string;
+  titleScreenOnly: boolean;
+  options: GmcmOption[];
+}
+
+export interface GmcmOption {
+  /** config.json key path; null when the mod's getter didn't reveal it. */
+  path: string[] | null;
+  name: string;
+  tooltip: string | null;
+  kind: "bool" | "int" | "float" | "string" | "keybind" | "choice";
+  section: string | null;
+  min: number | null;
+  max: number | null;
+  interval: number | null;
+  choices: { value: string; label: string }[] | null;
+}
+
+/** What the player is doing right now. */
+export interface GameSnapshot {
+  farmer: string;
+  farm: string;
+  season: string;
+  day: number;
+  year: number;
+  /** Game clock as HHMM, 600–2600. */
+  time: number;
+  money: number;
+  location: string | null;
+}
+
+export interface CompanionStatus {
+  connected: boolean;
+  hello: { protocol: number; smapi: string; game: string; mods: string[] } | null;
+  state: GameSnapshot | null;
+}
+
+export interface Applied {
+  ok: boolean;
+  /** "gmcm" when the mod's own save flow ran, "reload" when only its config object changed. */
+  method: "gmcm" | "reload" | null;
+  /** "not_loaded", "unsupported", or the game's exception message. */
+  error: string | null;
+}
+
+export const companion = {
+  status: () => invoke<CompanionStatus>("companion_status"),
+  available: () => invoke<boolean>("companion_available"),
+  setEnabled: (enabled: boolean) => invoke<Settings>("settings_set_companion", { enabled }),
+  apply: (uniqueId: string, values: unknown, notice: string | null) =>
+    invoke<Applied>("companion_apply", { uniqueId, values, notice }),
+  onStatus: (cb: (s: CompanionStatus) => void): Promise<UnlistenFn> =>
+    listen<CompanionStatus>("companion:status", (e) => cb(e.payload)),
+  onGmcm: (cb: (ids: string[]) => void): Promise<UnlistenFn> =>
+    listen<string[]>("companion:gmcm", (e) => cb(e.payload)),
+};
 
 export const modConfig = {
   get: (pkg: string, relPath: string, locale: string) =>

@@ -1,0 +1,7 @@
+{
+  "bundle": {
+    "resources": {
+      "../companion/dist/PelicanCompanion/": "companion/PelicanCompanion/"
+    }
+  }
+}

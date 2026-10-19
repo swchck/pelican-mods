@@ -5,6 +5,7 @@ import { FileTextIcon, FolderIcon, PackageIcon, SaveIcon } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import SmapiCard from "@/components/SmapiCard.vue";
 import RosettaBanner from "@/components/RosettaBanner.vue";
+import LiveGameCard from "@/components/LiveGameCard.vue";
 import { api, type Place } from "@/lib/api";
 import { errorText } from "@/i18n";
 import { useGame } from "@/stores/game";
@@ -48,6 +49,7 @@ async function openPlace(place: Place) {
       </dl>
     </section>
 
+    <LiveGameCard />
     <RosettaBanner v-if="game.install?.needsRosetta" />
     <SmapiCard />
 

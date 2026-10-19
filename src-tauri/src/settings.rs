@@ -15,6 +15,8 @@ pub struct Settings {
     pub game_path: Option<PathBuf>,
     /// UI language code; `None` follows the system language.
     pub locale: Option<String>,
+    /// Keeps the companion mod out of the game; it's on unless turned off.
+    pub companion_disabled: bool,
 }
 
 /// Settings plus the file they live in. Writes go straight to disk.

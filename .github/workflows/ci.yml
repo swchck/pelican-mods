@@ -25,6 +25,14 @@ jobs:
         with:
           workspaces: src-tauri
       - run: npm ci
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
       # clippy compiles the crate, and tauri-build checks frontendDist exists
       - run: npm run build
       - run: npm run check
+      - name: Companion mod builds and passes its tests
+        run: |
+          scripts/smapi-refs.sh "$RUNNER_TEMP/smapi"
+          SMAPI_DIR="$RUNNER_TEMP/smapi" scripts/build-companion.sh
+          npm run companion:test -- -p:SmapiDir="$RUNNER_TEMP/smapi"

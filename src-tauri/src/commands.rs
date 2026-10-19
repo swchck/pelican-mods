@@ -18,7 +18,7 @@ use crate::updates::UpdateReport;
 
 /// Shared backend state managed by Tauri.
 pub struct AppState {
-    settings: SettingsStore,
+    pub(crate) settings: SettingsStore,
     pub(crate) launcher: Launcher,
     pub(crate) http: reqwest::Client,
     pub(crate) work_dir: PathBuf,
@@ -41,6 +41,9 @@ pub struct AppState {
     pub(crate) profiles: ProfilesStore,
     /// Serializes store and profile changes; installs run on blocking threads in parallel.
     pub(crate) library_lock: Mutex<()>,
+    pub(crate) companion: std::sync::Arc<crate::companion::Companion>,
+    /// The built companion mod, linked into every profile; `None` when this build lacks it.
+    pub(crate) companion_dir: std::sync::OnceLock<PathBuf>,
 }
 
 impl AppState {
@@ -67,7 +70,16 @@ impl AppState {
             save_progress: Default::default(),
             profiles: ProfilesStore::load(config_dir.join("profiles.json")),
             library_lock: Mutex::new(()),
+            companion: std::sync::Arc::new(crate::companion::Companion::new(
+                cache_dir.join("gmcm.json"),
+            )),
+            companion_dir: std::sync::OnceLock::new(),
         }
+    }
+
+    /// Reports whether the companion mod ships with this build and the user keeps it on.
+    pub(crate) fn companion_enabled(&self) -> bool {
+        self.companion_dir.get().is_some() && !self.settings.get().companion_disabled
     }
 
     pub(crate) fn game_dir(&self) -> AppResult<PathBuf> {
@@ -191,7 +203,15 @@ pub async fn game_launch(
         let _ = app.emit("saves:backup-failed", &e);
     }
     let smapi = if modded {
+        let companion = state
+            .companion_enabled()
+            .then(|| state.companion.url())
+            .flatten();
         Some(SmapiRun {
+            env: companion
+                .map(|url| (crate::companion::URL_VAR.to_owned(), url.to_owned()))
+                .into_iter()
+                .collect(),
             log: game_data_dir(&app)?.join("ErrorLogs/SMAPI-latest.txt"),
             mods_path: Some(crate::mods_commands::deploy_active(&state)?),
         })
