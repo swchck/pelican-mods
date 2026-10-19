@@ -1,13 +1,18 @@
 import type { Issue, PackageView, UpdateReport } from "./api";
 import { compareVersions } from "./version";
 
+export type UpdateSource = "github" | "nexus" | "page";
+
 export type PackageStatus = "ok" | "off" | "issue" | "broken" | "update";
 
 export interface PackageUpdate {
   version: string;
   url: string;
-  /** The launcher can download it itself (GitHub releases); otherwise the page opens. */
-  direct: boolean;
+  /**
+   * Where the file comes from: GitHub releases install in place, Nexus files download
+   * through the queue (or the site's button without Premium), anything else opens the page.
+   */
+  via: UpdateSource;
 }
 
 /** Compatibility verdicts worth a warning; "Ok" and "Optional" are fine. */
@@ -42,10 +47,16 @@ export function packageUpdate(p: PackageView, report: UpdateReport | null): Pack
     const info = report.mods[m.manifest.uniqueId.toLowerCase()];
     // the report outlives the install it was made for; an update already applied drops out here
     if (info?.version && info.url && compareVersions(info.version, m.manifest.version) > 0) {
-      return { version: info.version, url: info.url, direct: info.url.startsWith("https://github.com/") };
+      return { version: info.version, url: info.url, via: updateSource(info.url) };
     }
   }
   return null;
+}
+
+function updateSource(url: string): UpdateSource {
+  if (url.startsWith("https://github.com/")) return "github";
+  if (/^https:\/\/(www\.)?nexusmods\.com\/stardewvalley\/mods\/\d+/i.test(url)) return "nexus";
+  return "page";
 }
 
 export function packageCompat(p: PackageView, report: UpdateReport | null): { status: string; summary: string } | null {

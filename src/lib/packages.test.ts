@@ -84,9 +84,10 @@ describe("packages", () => {
     expect(packageUpdate(p, nexus)).toEqual({
       version: "1.55.0",
       url: nexus.mods["pathoschild.lookup"].url,
-      direct: false,
+      via: "nexus",
     });
-    expect(packageUpdate(p, info("https://github.com/a/b/releases"))?.direct).toBe(true);
+    expect(packageUpdate(p, info("https://github.com/a/b/releases"))?.via).toBe("github");
+    expect(packageUpdate(p, info("https://www.moddrop.com/stardew-valley/mod/1"))?.via).toBe("page");
     expect(packageStatus(p, nexus)).toBe("update");
     expect(packageStatus(p, null)).toBe("off");
     expect(packageCompat(p, nexus)).toBeNull();

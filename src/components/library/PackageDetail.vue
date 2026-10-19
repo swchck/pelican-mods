@@ -54,6 +54,13 @@ const single = computed(() => (props.pkg.mods.length === 1 ? props.pkg.mods[0] :
 const description = computed(() => single.value?.manifest.description ?? "");
 const update = computed(() => packageUpdate(props.pkg, lib.report));
 const compat = computed(() => packageCompat(props.pkg, lib.report));
+const premium = computed(() => nx.account?.isPremium ?? false);
+// without Premium a Nexus update still lands in the app, via the site's "Mod Manager Download"
+const inApp = computed(() => update.value?.via === "github" || (update.value?.via === "nexus" && premium.value));
+const updateHint = computed(() => {
+  if (!update.value || inApp.value) return "";
+  return update.value.via === "nexus" ? t("updates.nexusManual") : t("updates.manual");
+});
 const busy = computed(() => lib.updating.has(props.pkg.id));
 const compatSegments = computed(() => (compat.value?.summary ? splitLinks(` ${compat.value.summary}`) : []));
 
@@ -138,12 +145,12 @@ async function remove() {
       class="border-border-soft bg-parchment flex flex-col gap-2 rounded-md border-2 border-dashed p-2.5 text-[13px]"
     >
       <span class="font-extrabold">{{ t("updates.available", { version: update.version }) }}</span>
-      <span v-if="!update.direct" class="text-muted-foreground text-xs font-semibold">{{ t("updates.manual") }}</span>
+      <span v-if="updateHint" class="text-muted-foreground text-xs font-semibold">{{ updateHint }}</span>
       <Button size="sm" class="self-start" :disabled="busy" @click="lib.update(pkg)">
         <Loader2Icon v-if="busy" class="animate-spin" />
-        <ArrowUpCircleIcon v-else-if="update.direct" />
+        <ArrowUpCircleIcon v-else-if="inApp" />
         <ExternalLinkIcon v-else />
-        {{ update.direct ? t("updates.update") : t("updates.openPage") }}
+        {{ inApp ? t("updates.update") : t("updates.openPage") }}
       </Button>
     </div>
 

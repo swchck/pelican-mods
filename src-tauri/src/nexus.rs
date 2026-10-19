@@ -459,6 +459,66 @@ pub fn file_page(mod_id: u64, file_id: u64) -> String {
     )
 }
 
+/// Extracts the mod id from a `nexusmods.com/stardewvalley/mods/<id>` page URL.
+pub fn mod_page_id(url: &str) -> Option<u64> {
+    let url = url::Url::parse(url).ok()?;
+    if !url.host_str()?.ends_with("nexusmods.com") {
+        return None;
+    }
+    let parts: Vec<&str> = url.path_segments()?.collect();
+    match parts.as_slice() {
+        [game, "mods", id, ..] if game.eq_ignore_ascii_case(GAME_DOMAIN) => id.parse().ok(),
+        _ => None,
+    }
+}
+
+/// Picks the file that carries `version` of the mod called `mod_name`.
+///
+/// Prefers MAIN files of exactly that version; when a mod ships several (one per
+/// mod in a pack, or per platform), the one whose name contains `mod_name` wins.
+pub fn pick_update_file<'a>(
+    files: &'a [ModFile],
+    version: &str,
+    mod_name: &str,
+) -> Option<&'a ModFile> {
+    let main = |f: &&ModFile| {
+        f.category
+            .as_deref()
+            .is_none_or(|c| c.eq_ignore_ascii_case("MAIN"))
+    };
+    let exact: Vec<&ModFile> = files
+        .iter()
+        .filter(main)
+        .filter(|f| {
+            f.version
+                .as_deref()
+                .is_some_and(|v| crate::version::compare(v, version).is_eq())
+        })
+        .collect();
+    // some authors never fill in a file's version; a lone MAIN file is still the one
+    let pool = if exact.is_empty() {
+        let mains: Vec<&ModFile> = files.iter().filter(main).collect();
+        if mains.len() != 1 {
+            return None;
+        }
+        mains
+    } else {
+        exact
+    };
+    let want = compact(mod_name);
+    pool.iter()
+        .find(|f| compact(&f.name).contains(&want))
+        .or_else(|| pool.first())
+        .copied()
+}
+
+fn compact(s: &str) -> String {
+    s.chars()
+        .filter(|c| c.is_alphanumeric())
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
 fn keyring() -> AppResult<keyring::Entry> {
     keyring::Entry::new(KEYRING_SERVICE, KEYRING_USER)
         .map_err(|e| AppError::Keychain(e.to_string()))
@@ -489,6 +549,76 @@ pub fn clear_key() -> AppResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn file(id: u64, name: &str, version: Option<&str>, category: &str) -> ModFile {
+        ModFile {
+            file_id: id,
+            name: name.into(),
+            version: version.map(Into::into),
+            category: Some(category.into()),
+            size_in_bytes: None,
+            date: 0,
+            description: None,
+        }
+    }
+
+    #[test]
+    fn picks_update_files() {
+        let files = [
+            file(5, "Lookup Anything", Some("1.55.0"), "MAIN"),
+            file(4, "Lookup Anything", Some("1.54.0"), "OLD_VERSION"),
+            file(3, "Extra assets", Some("1.55.0"), "OPTIONAL"),
+        ];
+        assert_eq!(
+            pick_update_file(&files, "1.55.0", "Lookup Anything")
+                .unwrap()
+                .file_id,
+            5
+        );
+        assert_eq!(pick_update_file(&files, "v1.55", "x").unwrap().file_id, 5);
+        let pack = [
+            file(9, "Content Patcher pack", Some("2.0.0"), "MAIN"),
+            file(8, "Farm Type Manager", Some("2.0.0"), "MAIN"),
+        ];
+        assert_eq!(
+            pick_update_file(&pack, "2.0.0", "Farm Type Manager")
+                .unwrap()
+                .file_id,
+            8
+        );
+        let unversioned = [
+            file(1, "Mod", None, "MAIN"),
+            file(2, "Old", None, "OLD_VERSION"),
+        ];
+        assert_eq!(
+            pick_update_file(&unversioned, "3.0.0", "Mod")
+                .unwrap()
+                .file_id,
+            1
+        );
+        let ambiguous = [file(1, "A", None, "MAIN"), file(2, "B", None, "MAIN")];
+        assert!(pick_update_file(&ambiguous, "3.0.0", "C").is_none());
+    }
+
+    #[test]
+    fn reads_mod_page_ids() {
+        assert_eq!(
+            mod_page_id("https://www.nexusmods.com/stardewvalley/mods/541"),
+            Some(541)
+        );
+        assert_eq!(
+            mod_page_id("https://www.nexusmods.com/stardewvalley/mods/541?tab=files"),
+            Some(541)
+        );
+        assert_eq!(
+            mod_page_id("https://www.nexusmods.com/skyrim/mods/541"),
+            None
+        );
+        assert_eq!(
+            mod_page_id("https://github.com/stardewvalley/mods/541"),
+            None
+        );
+    }
 
     #[test]
     fn parses_nxm_links() {
@@ -555,6 +685,9 @@ mod tests {
                     .any(|f| f.category.as_deref() == Some("MAIN"))
             );
             assert!(d.files.windows(2).all(|w| w[0].date >= w[1].date));
+            let latest = d.version.clone().unwrap();
+            let pick = pick_update_file(&d.files, &latest, "Lookup Anything").unwrap();
+            assert_eq!(pick.category.as_deref(), Some("MAIN"));
         });
     }
 

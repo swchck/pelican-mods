@@ -113,7 +113,8 @@ fn changed(app: &AppHandle) {
     );
 }
 
-fn start(app: AppHandle, mod_id: u64, file_id: u64, grant: Option<LinkGrant>) {
+/// Queues a Nexus file for download and install; progress goes out as `downloads:changed`.
+pub(crate) fn start(app: AppHandle, mod_id: u64, file_id: u64, grant: Option<LinkGrant>) {
     let id = app
         .state::<AppState>()
         .downloads

@@ -5,6 +5,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { library as api, type LibraryView, type PackageView, type UpdateReport } from "@/lib/api";
 import { packageUpdate } from "@/lib/packages";
 import { errorText, i18n } from "@/i18n";
+import { useNexus } from "./nexus";
 
 export const useLibrary = defineStore("library", () => {
   const view = ref<LibraryView | null>(null);
@@ -36,7 +37,14 @@ export const useLibrary = defineStore("library", () => {
   }
 
   const updatable = computed(() => packages.value.filter((p) => packageUpdate(p, report.value)));
-  const directUpdates = computed(() => updatable.value.filter((p) => packageUpdate(p, report.value)?.direct));
+  // what "Update all" can do without a browser: GitHub always, Nexus only with Premium
+  const directUpdates = computed(() => {
+    const premium = useNexus().account?.isPremium ?? false;
+    return updatable.value.filter((p) => {
+      const via = packageUpdate(p, report.value)?.via;
+      return via === "github" || (via === "nexus" && premium);
+    });
+  });
 
   async function checkUpdates(force: boolean) {
     checking.value = true;
@@ -56,18 +64,29 @@ export const useLibrary = defineStore("library", () => {
     return ok;
   }
 
-  /** Updates in place from GitHub, or opens the mod page where only a browser can download. */
+  /**
+   * Updates in place from GitHub, queues a Nexus download, or opens the page where
+   * only a browser can get the file.
+   */
   async function update(p: PackageView) {
     const u = packageUpdate(p, report.value);
     if (!u) return;
-    if (!u.direct) {
+    if (u.via === "page") {
       await openUrl(u.url);
       return;
     }
     updating.value = new Set(updating.value).add(p.id);
     try {
-      view.value = await api.update(p.id);
-      toast.success(i18n.global.t("updates.done", { name: p.id, version: u.version }));
+      const outcome = await api.update(p.id);
+      const vars = { name: p.id, version: u.version };
+      if (outcome.kind === "installed") {
+        view.value = outcome.view;
+        toast.success(i18n.global.t("updates.done", vars));
+      } else if (outcome.kind === "queued") {
+        toast.info(i18n.global.t("updates.queued", vars));
+      } else {
+        await openUrl(outcome.url);
+      }
     } catch (e) {
       toast.error(errorText(e), { duration: 10000 });
     } finally {

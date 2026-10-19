@@ -133,6 +133,9 @@ export default {
     update: "Обновить",
     openPage: "Открыть страницу",
     manual: "Скачайте файл на странице мода и перетащите его в окно.",
+    nexusManual:
+      "Без Premium Nexus отдаёт файл только через сайт: нажмите «Mod Manager Download», и обновление установится само.",
+    queued: "{name}: загружаем версию {version}",
     done: "{name} обновлён до {version}",
     rollback: "Откатить к {version}",
     compat: {

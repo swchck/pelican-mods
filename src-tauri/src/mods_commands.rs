@@ -17,6 +17,8 @@ use crate::game;
 use crate::library::{self, BrokenMod, Package};
 use crate::manifest::{self, Manifest};
 use crate::mod_config;
+use crate::nexus;
+use crate::nexus_commands;
 use crate::profiles::{self, Profiles};
 use crate::updates::{self, UpdateReport};
 
@@ -365,8 +367,20 @@ pub async fn updates_check(app: AppHandle, force: bool) -> AppResult<UpdateRepor
 
 /// Downloads and installs the suggested update of package `id`, when smapi.io points
 /// at a GitHub release. Other sites need a browser (or Nexus' nxm links) to download.
+/// How [`mod_update`] went: installed in place, queued as a download, or left for
+/// the browser because only the site can hand out the file.
+#[derive(Debug, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum UpdateOutcome {
+    Installed { view: LibraryView },
+    Queued,
+    OpenPage { url: String },
+}
+
+/// Updates package `id` to the version smapi.io suggested: GitHub releases install
+/// right away, Nexus files go through the download queue for Premium accounts.
 #[tauri::command]
-pub async fn mod_update(app: AppHandle, id: String) -> AppResult<LibraryView> {
+pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> {
     let state = app.state::<AppState>();
     let pkg = library::read_package(id.clone(), library::package_path(&state.store_root, &id)?)
         .ok_or_else(|| AppError::NotFound(id.clone()))?;
@@ -374,23 +388,51 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<LibraryView> {
         let report = state.updates.lock().unwrap();
         pkg.mods.iter().find_map(|m| {
             let info = report.mods.get(&m.manifest.unique_id.to_lowercase())?;
-            let repo = updates::github_repo(info.url.as_deref()?)?;
-            Some((m.manifest.name.clone(), info.version.clone()?, repo))
+            Some((
+                m.manifest.name.clone(),
+                info.version.clone()?,
+                info.url.clone()?,
+                info.nexus_id,
+            ))
         })
     };
-    let (name, version, repo) = found.ok_or_else(|| AppError::NoDownload(id.clone()))?;
-    let dir = state.work_dir.with_file_name("downloads");
-    let file = updates::download_github(&state.http, &repo, &name, &version, &dir).await?;
-    let view = blocking(app, move |s| {
-        let _guard = s.library_lock.lock().unwrap();
-        let installed = library::install_archive(&s.store_root, &s.backup_root, &file);
-        let _ = std::fs::remove_file(&file);
-        record_installs(s, &installed?)?;
-        drop(_guard);
-        Ok(build_view(s))
-    })
-    .await?;
-    Ok(view)
+    let (name, version, url, nexus_id) = found.ok_or_else(|| AppError::NoDownload(id.clone()))?;
+    if let Some(repo) = updates::github_repo(&url) {
+        let dir = state.work_dir.with_file_name("downloads");
+        let file = updates::download_github(&state.http, &repo, &name, &version, &dir).await?;
+        let view = blocking(app, move |s| {
+            let _guard = s.library_lock.lock().unwrap();
+            let installed = library::install_archive(&s.store_root, &s.backup_root, &file);
+            let _ = std::fs::remove_file(&file);
+            record_installs(s, &installed?)?;
+            drop(_guard);
+            Ok(build_view(s))
+        })
+        .await?;
+        return Ok(UpdateOutcome::Installed { view });
+    }
+    let Some(mod_id) =
+        nexus::mod_page_id(&url).or(nexus_id.filter(|_| url.contains("nexusmods.com")))
+    else {
+        return Ok(UpdateOutcome::OpenPage { url });
+    };
+    let details = nexus::details(&state.http, mod_id).await?;
+    let Some(file) = nexus::pick_update_file(&details.files, &version, &name) else {
+        return Ok(UpdateOutcome::OpenPage { url });
+    };
+    let premium = nexus_commands::nexus_account(app.clone())
+        .await
+        .ok()
+        .flatten()
+        .is_some_and(|a| a.is_premium);
+    if !premium {
+        // "Mod Manager Download" on this page sends an nxm link back, which installs it
+        return Ok(UpdateOutcome::OpenPage {
+            url: nexus::file_page(mod_id, file.file_id),
+        });
+    }
+    nexus_commands::start(app, mod_id, file.file_id, None);
+    Ok(UpdateOutcome::Queued)
 }
 
 /// Restores the newest backup of the mod `unique_id`; the current version is backed up.

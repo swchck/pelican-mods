@@ -134,6 +134,9 @@ export interface UpdateInfo {
   errors: string[];
 }
 
+export type UpdateOutcome =
+  { kind: "installed"; view: LibraryView } | { kind: "queued" } | { kind: "openPage"; url: string };
+
 export interface UpdateReport {
   /** Unix seconds; 0 means never checked. */
   checkedAt: number;
@@ -170,7 +173,7 @@ export const library = {
   deleteProfile: (id: string) => invoke<LibraryView>("profile_delete", { id }),
   activateProfile: (id: string) => invoke<LibraryView>("profile_activate", { id }),
   checkUpdates: (force: boolean) => invoke<UpdateReport>("updates_check", { force }),
-  update: (id: string) => invoke<LibraryView>("mod_update", { id }),
+  update: (id: string) => invoke<UpdateOutcome>("mod_update", { id }),
   rollback: (uniqueId: string) => invoke<LibraryView>("mod_rollback", { uniqueId }),
 };
 

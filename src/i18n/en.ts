@@ -136,6 +136,9 @@ export default {
     update: "Update",
     openPage: "Open page",
     manual: "Download the file on the mod page and drop it on the window.",
+    nexusManual:
+      'Without Premium, Nexus hands out files only through its site: click "Mod Manager Download" and the update installs itself.',
+    queued: "{name}: downloading version {version}",
     done: "{name} updated to {version}",
     rollback: "Roll back to {version}",
     compat: {
