@@ -226,4 +226,29 @@ mod tests {
         .unwrap();
         assert!(read(&file).is_err());
     }
+
+    // round trip over a real library, read-only:
+    // PELICAN_TEST_STORE=<app data>/mods cargo test -- --ignored real_list_round_trip --nocapture
+    #[test]
+    #[ignore]
+    fn real_list_round_trip() {
+        let packages =
+            crate::library::scan(Path::new(&std::env::var("PELICAN_TEST_STORE").unwrap()));
+        let enabled: Vec<String> = packages.iter().map(|p| p.id.clone()).collect();
+        let list = build("Mine", &packages, &enabled, &BTreeMap::new(), None, None);
+        let dir = tempfile::tempdir().unwrap();
+        let file = dir.path().join("mine.json");
+        std::fs::write(&file, serde_json::to_vec_pretty(&list).unwrap()).unwrap();
+        let view = status(read(&file).unwrap(), &packages, &enabled);
+        let missing = view.mods.iter().filter(|m| m.installed.is_none()).count();
+        eprintln!(
+            "{} mods listed, {} bytes, {} missing, {} extra",
+            view.mods.len(),
+            std::fs::metadata(&file).unwrap().len(),
+            missing,
+            view.extra.len()
+        );
+        assert_eq!(missing, 0);
+        assert!(view.extra.is_empty());
+    }
 }

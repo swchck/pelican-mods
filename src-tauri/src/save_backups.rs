@@ -311,4 +311,31 @@ mod tests {
         mirror(&folder, &saves, 2).unwrap();
         assert_eq!(list(&folder, "Farm_1").len(), 2);
     }
+
+    // copies real saves (pass copies) into a temp folder and imports one back:
+    // PELICAN_TEST_SAVES=<Saves copy> cargo test -- --ignored real_mirror --nocapture
+    #[test]
+    #[ignore]
+    fn real_mirror() {
+        let saves = std::path::PathBuf::from(std::env::var("PELICAN_TEST_SAVES").unwrap());
+        let tmp = tempfile::tempdir().unwrap();
+        let folder = tmp.path().join("iCloud");
+        std::fs::create_dir_all(&folder).unwrap();
+        let started = std::time::Instant::now();
+        let n = mirror(&folder, &saves, 10).unwrap();
+        eprintln!("copied {n} saves in {:?}", started.elapsed());
+        assert_eq!(mirror(&folder, &saves, 10).unwrap(), 0);
+        let first = crate::saves::list(&saves).into_iter().next().unwrap();
+        let copy = list(&folder, &first.id).into_iter().next().unwrap();
+        eprintln!(
+            "{} → {} ({} bytes)",
+            first.id,
+            copy.file.display(),
+            copy.size
+        );
+        let back = tmp.path().join("Restored");
+        let id = import(&tmp.path().join("b"), &back, &copy.file).unwrap();
+        assert_eq!(id, first.id);
+        assert!(back.join(&id).join(&id).is_file());
+    }
 }
