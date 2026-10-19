@@ -10,12 +10,12 @@ import {
   TriangleAlertIcon,
 } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
-import type { LogReport, PackageView, SkippedMod } from "@/lib/api";
+import type { Crash, LogReport, PackageView, SkippedMod } from "@/lib/api";
 import { packageUpdate } from "@/lib/packages";
 import { relativeTime } from "@/lib/time";
 import { useLibrary } from "@/stores/library";
 
-const props = defineProps<{ report: LogReport }>();
+const props = defineProps<{ report: LogReport; crash?: Crash | null }>();
 const { t, locale } = useI18n();
 const lib = useLibrary();
 const open = ref<string | null>(null);
@@ -51,6 +51,23 @@ async function updateAll() {
       <p class="text-muted-foreground text-xs font-bold">
         {{ t("logReport.from", { time: relativeTime(new Date(report.written * 1000), new Date(), locale) }) }}
       </p>
+
+      <section
+        v-if="crash"
+        class="bg-warning-soft text-destructive flex flex-col gap-1.5 rounded-md border-2 border-[#d98b76] p-3.5"
+      >
+        <b class="flex items-center gap-2"
+          ><TriangleAlertIcon class="size-5" />{{
+            crash.suspect ? t("crash.titleMod", { mod: crash.suspect }) : t("crash.title", { source: crash.source })
+          }}</b
+        >
+        <span class="text-sm font-semibold break-words select-text">{{ crash.message }}</span>
+        <pre
+          v-if="crash.details.length"
+          class="overflow-auto text-[11px] leading-snug whitespace-pre-wrap select-text"
+          >{{ crash.details.join("\n") }}</pre>
+        <span class="text-xs font-semibold">{{ t("crash.hint") }}</span>
+      </section>
 
       <section
         v-if="report.lostLocations.length"

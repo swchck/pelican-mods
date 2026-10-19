@@ -427,6 +427,8 @@ mockIPC(
         return { source: "github", versions: [{ version: "1.55.0", lines: ["## What's Changed", "* Fixed a crash"] }] };
       case "library_conflicts":
         return [];
+      case "game_crash":
+        return null;
       case "game_preflight":
         return null;
       case "game_catalog":

@@ -64,6 +64,7 @@ export const api = {
   gameLanguage: () => invoke<string | null>("game_language"),
   logReport: () => invoke<LogReport>("smapi_log_report"),
   preflight: () => invoke<Preflight | null>("game_preflight"),
+  crash: () => invoke<Crash | null>("game_crash"),
   gameCatalog: () => invoke<GameCatalog>("game_catalog"),
   setWiki: (wiki: string) => invoke<Settings>("settings_set_wiki", { wiki }),
   setBackupFolder: (folder: string | null) => invoke<Settings>("settings_set_backup_folder", { folder }),
@@ -703,4 +704,12 @@ export interface Conflict {
 export interface Changelog {
   source: "github" | "nexus";
   versions: { version: string; lines: string[] }[];
+}
+
+/** The error a session ended on, and the mod its stack points at. */
+export interface Crash {
+  source: string;
+  message: string;
+  details: string[];
+  suspect: string | null;
 }

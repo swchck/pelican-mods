@@ -223,6 +223,79 @@ fn clock(line: &str) -> Option<u32> {
     Some(parts.next()?? * 3600 + parts.next()?? * 60 + parts.next()??)
 }
 
+/// The error a session ended on, and the mod its stack points at.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Crash {
+    /// Who logged it: a mod's name, "SMAPI" or "game".
+    pub source: String,
+    pub message: String,
+    /// The lines after it, usually the stack trace.
+    pub details: Vec<String>,
+    /// The mod whose code is highest in the stack, when that differs from `source`.
+    pub suspect: Option<String>,
+}
+
+/// Lines of a stack trace kept; the frames past these are the game's own plumbing.
+const CRASH_DETAILS: usize = 14;
+
+/// Finds the last error in `text` that isn't SMAPI's skipped-mods list, and names the
+/// mod in its stack from `assemblies` (assembly or root namespace → mod name).
+pub fn last_error(text: &str, assemblies: &[(String, String)]) -> Option<Crash> {
+    let mut last: Option<Crash> = None;
+    let mut open = false;
+    for line in text.lines() {
+        match stamp(line) {
+            Some((level, source, msg)) => {
+                open = false;
+                if level != "ERROR" {
+                    continue;
+                }
+                let m = msg.trim();
+                let frame = source == "SMAPI"
+                    && (skipped(msg).is_some()
+                        || m.is_empty()
+                        || m == "Skipped mods"
+                        || m.starts_with("---")
+                        || m.starts_with("These mods"));
+                if frame || m.contains("Galaxy auth failure") {
+                    continue;
+                }
+                last = Some(Crash {
+                    source: source.to_owned(),
+                    message: m.to_owned(),
+                    details: Vec::new(),
+                    suspect: None,
+                });
+                open = true;
+            }
+            None if open => {
+                if let Some(c) = last
+                    .as_mut()
+                    .filter(|c| c.details.len() < CRASH_DETAILS && !line.trim().is_empty())
+                {
+                    c.details.push(line.trim().to_owned());
+                }
+            }
+            None => {}
+        }
+    }
+    let mut crash = last?;
+    // "at SpaceCore.Patches.Foo.Bar()" → the first frame whose namespace is a mod's
+    crash.suspect = crash
+        .details
+        .iter()
+        .filter_map(|l| l.strip_prefix("at "))
+        .find_map(|frame| {
+            assemblies
+                .iter()
+                .find(|(asm, _)| frame.starts_with(&format!("{asm}.")))
+                .map(|(_, name)| name.clone())
+        })
+        .filter(|name| *name != crash.source);
+    Some(crash)
+}
+
 // "[12:21:28 ERROR Content Patcher] message" → ("ERROR", "Content Patcher", " message")
 fn stamp(line: &str) -> Option<(&str, &str, &str)> {
     let rest = line.strip_prefix('[')?;
@@ -302,6 +375,27 @@ mod tests {
 [12:22:01 WARN  game] Ignored unknown location 'Custom_JenkinsHouse' in save data, including NPCs 'Olivia', 'Victor'.
 [12:22:01 WARN  game] Ignored unknown location 'Custom_WillyRoom' in save data.
 ";
+
+    #[test]
+    fn finds_the_crash_and_its_mod() {
+        let log = "\
+[10:00:00 ERROR SMAPI]       - Json Assets 1.11.8 because it needs the 'SpaceCore' mod.
+[10:05:00 ERROR game] An error occurred in the base update loop: System.NullReferenceException
+   at SpaceCore.Patches.FarmerPatcher.After_Update(Farmer __instance)
+   at StardewValley.Farmer.Update(GameTime time)
+[10:05:00 TRACE SMAPI] Shutting down.
+";
+        let assemblies = [("SpaceCore".to_owned(), "SpaceCore".to_owned())];
+        let c = last_error(log, &assemblies).unwrap();
+        assert_eq!(c.source, "game");
+        assert!(
+            c.message
+                .starts_with("An error occurred in the base update loop")
+        );
+        assert_eq!(c.details.len(), 2);
+        assert_eq!(c.suspect.as_deref(), Some("SpaceCore"));
+        assert!(last_error("[10:00:00 INFO  SMAPI] hi\n", &assemblies).is_none());
+    }
 
     #[test]
     fn times_the_startup() {

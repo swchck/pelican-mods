@@ -69,6 +69,13 @@ export default {
     tabLog: "Log",
     tabReport: "Report",
   },
+  crash: {
+    toast: "The game crashed with an error ({source})",
+    toastMod: "The game crashed, apparently because of {mod}",
+    title: "The game crashed: an error from {source}",
+    titleMod: "The game crashed with {mod} in the stack",
+    hint: "Update that mod or turn it off for now and start again. If that doesn't help, send the log to the mod's author.",
+  },
   conflicts: {
     title: "{n} mod conflicts",
     both: "both replace {target}, so Content Patcher loads neither",

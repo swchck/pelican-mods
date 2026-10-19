@@ -7,6 +7,7 @@ import {
   isAppError,
   saves,
   type GameInstall,
+  type Crash,
   type LogLine,
   type Preflight,
   type RunState,
@@ -57,6 +58,9 @@ export const useGame = defineStore("game", () => {
         run.value = s;
         if (s.state === "exited") {
           refresh().catch((e) => toast.error(errorText(e)));
+          // a stop from the app also ends with a non-zero code; only the game's own exit counts
+          if (s.code !== 0 && !stopping) void explainCrash();
+          stopping = false;
           void warnFromLog();
           saves.mirror().catch((e) => toast.error(errorText(e)));
         }
@@ -76,6 +80,22 @@ export const useGame = defineStore("game", () => {
     }
     phase.value = install.value ? "ready" : "setup";
     await checkSmapi();
+  }
+
+  /** The error the last session died on; cleared by the next launch. */
+  const crash = ref<Crash | null>(null);
+  let stopping = false;
+
+  async function explainCrash() {
+    const c = await api.crash().catch(() => null);
+    if (!c) return;
+    crash.value = c;
+    const { t } = i18n.global;
+    toast.error(c.suspect ? t("crash.toastMod", { mod: c.suspect }) : t("crash.toast", { source: c.source }), {
+      description: c.message.slice(0, 160),
+      duration: 30000,
+      action: { label: t("logReport.open"), onClick: () => void router.push("/console?tab=report") },
+    });
   }
 
   /** Points at the log report when the session that just ended skipped mods or lost save data. */
@@ -145,6 +165,7 @@ export const useGame = defineStore("game", () => {
 
   async function launch(modded: boolean, checked = false) {
     preflight.value = null;
+    crash.value = null;
     if (modded && !checked) {
       const found = await api.preflight().catch(() => null);
       if (found) {
@@ -161,6 +182,7 @@ export const useGame = defineStore("game", () => {
   }
 
   async function stop() {
+    stopping = true;
     try {
       await api.stop();
     } catch (e) {
@@ -169,6 +191,7 @@ export const useGame = defineStore("game", () => {
   }
 
   return {
+    crash,
     preflight,
     phase,
     install,

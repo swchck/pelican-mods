@@ -111,6 +111,7 @@ pub fn run() {
             mods_commands::mod_install_dependency,
             mods_commands::mod_save_usage,
             mods_commands::game_preflight,
+            mods_commands::game_crash,
             mods_commands::library_conflicts,
             mods_commands::mod_changelog,
             mods_commands::modlist_export,

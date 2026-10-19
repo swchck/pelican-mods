@@ -139,7 +139,7 @@ async function send() {
       </TabsContent>
 
       <TabsContent value="report" class="min-h-0 flex-1 overflow-auto">
-        <LogReportView v-if="report" :report="report" />
+        <LogReportView v-if="report" :report="report" :crash="game.crash" />
       </TabsContent>
     </Tabs>
   </div>

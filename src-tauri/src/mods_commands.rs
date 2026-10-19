@@ -679,6 +679,40 @@ pub async fn library_conflicts(app: AppHandle) -> AppResult<Vec<crate::conflicts
     .await
 }
 
+/// The error the last session ended on, from SMAPI's crash log when it wrote one.
+#[tauri::command]
+pub async fn game_crash(app: AppHandle) -> AppResult<Option<crate::smapi_log::Crash>> {
+    let logs = crate::commands::game_data_dir(&app)?.join("ErrorLogs");
+    blocking(app, move |s| {
+        let modified = |f: &str| {
+            std::fs::metadata(logs.join(f))
+                .and_then(|m| m.modified())
+                .ok()
+        };
+        // SMAPI copies the log to SMAPI-crash.txt when the game dies; an older copy is
+        // from some earlier crash
+        let file = match (modified("SMAPI-crash.txt"), modified("SMAPI-latest.txt")) {
+            (Some(crash), Some(latest)) if crash >= latest => "SMAPI-crash.txt",
+            (Some(_), None) => "SMAPI-crash.txt",
+            _ => "SMAPI-latest.txt",
+        };
+        let Ok(text) = std::fs::read_to_string(logs.join(file)) else {
+            return Ok(None);
+        };
+        let assemblies: Vec<(String, String)> = library::scan(&s.store_root)
+            .iter()
+            .flat_map(|p| &p.mods)
+            .filter_map(|m| {
+                let dll = m.manifest.entry_dll.as_deref()?;
+                let stem = dll.strip_suffix(".dll").unwrap_or(dll);
+                Some((stem.to_owned(), m.manifest.name.clone()))
+            })
+            .collect();
+        Ok(crate::smapi_log::last_error(&text, &assemblies))
+    })
+    .await
+}
+
 /// What the last played save would lose if the game started now with the active profile.
 #[tauri::command]
 pub async fn game_preflight(app: AppHandle) -> AppResult<Option<crate::save_usage::Preflight>> {
