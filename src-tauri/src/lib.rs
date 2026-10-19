@@ -105,6 +105,7 @@ pub fn run() {
             nexus_commands::nexus_download,
             nexus_commands::nexus_file_page,
             nexus_commands::nxm_open,
+            nexus_commands::nxm_take_pending,
             nexus_commands::downloads_list,
             nexus_commands::downloads_clear,
             saves_commands::saves_list,

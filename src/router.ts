@@ -1,25 +1,19 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-import HomeView from "@/views/HomeView.vue";
 import LibraryView from "@/views/LibraryView.vue";
-import BrowseView from "@/views/BrowseView.vue";
-import SavesView from "@/views/SavesView.vue";
-import ProgressView from "@/views/ProgressView.vue";
-import HelpersView from "@/views/HelpersView.vue";
-import ConfigView from "@/views/ConfigView.vue";
-import ConsoleView from "@/views/ConsoleView.vue";
-import SettingsView from "@/views/SettingsView.vue";
 
+// the library is the start page; the rest load on first visit, so the webview parses and
+// keeps only what was opened
 export const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     { path: "/", component: LibraryView },
-    { path: "/browse", component: BrowseView },
-    { path: "/saves", component: SavesView },
-    { path: "/progress", component: ProgressView },
-    { path: "/helpers", component: HelpersView },
-    { path: "/config", component: ConfigView },
-    { path: "/game", component: HomeView },
-    { path: "/console", component: ConsoleView },
-    { path: "/settings", component: SettingsView },
+    { path: "/browse", component: () => import("@/views/BrowseView.vue") },
+    { path: "/saves", component: () => import("@/views/SavesView.vue") },
+    { path: "/progress", component: () => import("@/views/ProgressView.vue") },
+    { path: "/helpers", component: () => import("@/views/HelpersView.vue") },
+    { path: "/config", component: () => import("@/views/ConfigView.vue") },
+    { path: "/game", component: () => import("@/views/HomeView.vue") },
+    { path: "/console", component: () => import("@/views/ConsoleView.vue") },
+    { path: "/settings", component: () => import("@/views/SettingsView.vue") },
   ],
 });

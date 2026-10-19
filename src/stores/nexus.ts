@@ -143,6 +143,16 @@ export const useNexus = defineStore("nexus", () => {
     }
   }
 
+  async function collectLinks() {
+    try {
+      for (const link of await nexus.takePendingNxm()) {
+        if (!incoming.value.some((l) => l.url === link.url)) incoming.value = [...incoming.value, link];
+      }
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  }
+
   async function init() {
     const library = useLibrary();
     await Promise.all([
@@ -157,10 +167,11 @@ export const useNexus = defineStore("nexus", () => {
       }),
       nexusEvents.libraryChanged(() => void library.load()),
       nexusEvents.nxmError((e) => toast.error(errorText(e))),
-      nexusEvents.nxmPending((link) => {
-        if (!incoming.value.some((l) => l.url === link.url)) incoming.value = [...incoming.value, link];
-      }),
+      // the event is only a nudge; the backend keeps the links until collected
+      nexusEvents.nxmPending(() => void collectLinks()),
     ]);
+    // links that arrived before this listener, such as the one that launched the app
+    await collectLinks();
     // listeners first: a failed fetch must not leave downloads and nxm errors unheard
     try {
       downloads.value = await nexus.downloads();

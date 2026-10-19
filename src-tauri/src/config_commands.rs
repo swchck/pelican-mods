@@ -103,7 +103,7 @@ pub async fn mods_generate_configs(app: AppHandle) -> AppResult<()> {
             log: game_data_dir(&app)?.join("ErrorLogs/SMAPI-latest.txt"),
             mods_path: Some(mods_path),
         }),
-        EventSink(app.clone()),
+        EventSink::new(app.clone()),
     )?;
     let started = std::time::Instant::now();
     let ready = loop {

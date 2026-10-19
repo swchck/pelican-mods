@@ -186,21 +186,25 @@ fn install_staged(
         for old in &replaced {
             carry_configs(old, &pkg)?;
         }
-        // the new package goes in before the old ones leave: if stashing fails both are
-        // installed, which is untidy but loses nothing
-        let target = free_name(root, &sanitize(&name));
-        std::fs::rename(&path, root.join(&target))?;
-        let mut stashed = Vec::new();
+        // the new package enters the store under a hidden name before the old ones leave,
+        // so a failed stash loses nothing; it takes its real name after, which is then the
+        // old folder's name again instead of "Foo (2)"
+        let staging_name = staging.file_name().unwrap_or_default().to_string_lossy();
+        let incoming = root.join(format!("{staging_name}-in-{}", out.len()));
+        std::fs::rename(&path, &incoming)?;
         let mut failure = None;
-        for old in replaced {
-            match backups::stash(backups, &old) {
-                Ok(()) => stashed.push(old.id),
-                Err(e) => failure = Some(e),
+        for old in &replaced {
+            if let Err(e) = backups::stash(backups, old) {
+                failure = Some(e);
             }
         }
+        let target = free_name(root, &sanitize(&name));
+        std::fs::rename(&incoming, root.join(&target))?;
+        // every old package counts as replaced, stashed or not: the profile must switch to
+        // the new one rather than load two copies of the same UniqueID
         out.push(Installed {
             id: target,
-            replaced: stashed,
+            replaced: replaced.into_iter().map(|p| p.id).collect(),
         });
         if let Some(e) = failure {
             return Err(e);
@@ -479,6 +483,12 @@ mod tests {
         assert_eq!(saved[0].version, "1.0.0");
         let cfg = std::fs::read_to_string(root.join("Lookup Anything/config.json")).unwrap();
         assert!(cfg.contains("F2"));
+
+        // reinstalling over a folder of the same name keeps that name, not "… (2)"
+        let again = install_archive(&root, &dir.path().join("backups"), &v2).unwrap();
+        assert_eq!(again[0].id, "Lookup Anything");
+        assert_eq!(again[0].replaced, ["Lookup Anything"]);
+        assert_eq!(scan(&root).len(), 1);
     }
 
     #[test]

@@ -1,4 +1,4 @@
-import { computed, ref } from "vue";
+import { computed, ref, shallowRef } from "vue";
 import { defineStore } from "pinia";
 import { toast } from "vue-sonner";
 import {
@@ -23,7 +23,8 @@ export const useGame = defineStore("game", () => {
   const latest = ref<SmapiRelease | null>(null);
   const progress = ref<SmapiProgress | null>(null);
   const run = ref<RunState>({ state: "idle" });
-  const log = ref<LogLine[]>([]);
+  // shallow: only ever replaced whole, and 2000 deep proxies cost memory for nothing
+  const log = shallowRef<LogLine[]>([]);
 
   const running = computed(() => run.value.state === "running");
   const busy = computed(() => progress.value !== null);
@@ -44,9 +45,10 @@ export const useGame = defineStore("game", () => {
 
   async function init() {
     await Promise.all([
-      events.log((l) => {
-        log.value.push(l);
-        if (log.value.length > LOG_LIMIT) log.value.splice(0, log.value.length - LOG_LIMIT);
+      events.log((lines) => {
+        // one reactive write per batch, trimmed in the same step
+        const next = log.value.concat(lines);
+        log.value = next.length > LOG_LIMIT ? next.slice(next.length - LOG_LIMIT) : next;
       }),
       events.state((s) => {
         run.value = s;

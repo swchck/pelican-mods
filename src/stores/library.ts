@@ -21,20 +21,25 @@ export const useLibrary = defineStore("library", () => {
   const profiles = computed(() => view.value?.profiles ?? null);
   const activeProfile = computed(() => profiles.value?.profiles.find((p) => p.id === profiles.value?.active) ?? null);
 
-  let started = 0;
-  let applied = 0;
+  // results of changes applied so far; a reload that saw fewer is stale
+  let changes = 0;
   let inFlight = 0;
 
-  /** Runs a library command, swapping in the view it returns; failures become toasts. */
-  async function run(op: () => Promise<LibraryView>): Promise<boolean> {
-    const seq = ++started;
+  /**
+   * Runs a library command, swapping in the view it returns; failures become toasts.
+   * `read` marks a plain reload: its view is dropped if a change landed meanwhile, since
+   * the reload may have read the store before that change committed.
+   */
+  async function run(op: () => Promise<LibraryView>, read = false): Promise<boolean> {
+    const seen = changes;
     inFlight++;
     working.value = true;
     try {
       const next = await op();
-      // a reload that started before a toggle can answer after it; keep the newer view
-      if (seq > applied) {
-        applied = seq;
+      if (!read) {
+        changes++;
+        view.value = next;
+      } else if (seen === changes) {
         view.value = next;
       }
       if (selectedId.value && !packages.value.some((p) => p.id === selectedId.value)) selectedId.value = null;
@@ -70,7 +75,7 @@ export const useLibrary = defineStore("library", () => {
   }
 
   async function load() {
-    const ok = await run(api.get);
+    const ok = await run(api.get, true);
     if (ok) void checkUpdates(false);
     return ok;
   }
@@ -91,6 +96,7 @@ export const useLibrary = defineStore("library", () => {
       const outcome = await api.update(p.id);
       const vars = { name: p.id, version: u.version };
       if (outcome.kind === "installed") {
+        changes++;
         view.value = outcome.view;
         toast.success(i18n.global.t("updates.done", vars));
       } else if (outcome.kind === "queued") {

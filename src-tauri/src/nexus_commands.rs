@@ -126,12 +126,24 @@ pub fn handle_nxm(app: &AppHandle, url: &str) -> AppResult<()> {
     if asked {
         start(app.clone(), link.mod_id, link.file_id, link.grant);
     } else {
-        let _ = app.emit(
-            "nxm:pending",
-            serde_json::json!({ "url": url, "modId": link.mod_id, "fileId": link.file_id }),
-        );
+        let pending =
+            serde_json::json!({ "url": url, "modId": link.mod_id, "fileId": link.file_id });
+        // kept as well as emitted: a link that launched the app arrives before the UI
+        // listens, and the event alone would be lost
+        app.state::<AppState>()
+            .nxm_pending
+            .lock()
+            .unwrap()
+            .push(pending.clone());
+        let _ = app.emit("nxm:pending", pending);
     }
     Ok(())
+}
+
+/// Hands the UI the nxm links waiting for confirmation and forgets them here.
+#[tauri::command]
+pub fn nxm_take_pending(app: AppHandle) -> Vec<serde_json::Value> {
+    std::mem::take(&mut *app.state::<AppState>().nxm_pending.lock().unwrap())
 }
 
 #[tauri::command]

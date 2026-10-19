@@ -166,11 +166,16 @@ internal sealed class Gmcm
         return token is not null && Agrees(token, Safe(() => Get(option, "Value"))) ? path : null;
     }
 
+    private static bool Near(double a, double b) => Math.Abs(a - b) <= 1e-5 * Math.Max(1, Math.Max(Math.Abs(a), Math.Abs(b)));
+
     private static bool Agrees(JToken token, object? value) => value switch
     {
         bool b => token.Type == JTokenType.Boolean && token.Value<bool>() == b,
+        // relative: a float widened to double drifts in the low digits (123456.79f ≠ 123456.79)
         int or long or float or double or decimal => token.Type is JTokenType.Integer or JTokenType.Float
-            && Math.Abs(token.Value<double>() - ((IConvertible)value).ToDouble(null)) < 1e-6,
+            && Near(token.Value<double>(), ((IConvertible)value).ToDouble(null)),
+        // mods with their own serializer may store an enum as its number
+        Enum e when token.Type == JTokenType.Integer => token.Value<long>() == System.Convert.ToInt64(e),
         string or Enum => string.Equals(token.ToString(), value.ToString(), StringComparison.OrdinalIgnoreCase),
         // keybinds, colours and other objects: no cheap comparison, trust the IL
         _ => true,

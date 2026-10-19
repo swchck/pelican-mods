@@ -46,6 +46,8 @@ pub struct AppState {
     /// Nexus files the app sent the user to fetch, with when; their nxm links install
     /// without a second question.
     pub(crate) nxm_expected: Mutex<std::collections::HashMap<(u64, u64), std::time::Instant>>,
+    /// Unconfirmed nxm links the UI hasn't collected yet.
+    pub(crate) nxm_pending: Mutex<Vec<serde_json::Value>>,
     /// The built companion mod, linked into every profile; `None` when this build lacks it.
     pub(crate) companion_dir: std::sync::OnceLock<PathBuf>,
 }
@@ -82,6 +84,7 @@ impl AppState {
             companion: std::sync::Arc::new(crate::companion::Companion::new(&cache_dir)),
             companion_dir: std::sync::OnceLock::new(),
             nxm_expected: Mutex::new(Default::default()),
+            nxm_pending: Mutex::new(Vec::new()),
         }
     }
 
@@ -98,14 +101,52 @@ impl AppState {
     }
 }
 
-pub(crate) struct EventSink(pub(crate) AppHandle);
+/// Sends console lines to the UI in batches: SMAPI writes thousands of lines while it
+/// loads, and one IPC event plus one re-render per line kept the webview busy.
+pub(crate) struct EventSink {
+    app: AppHandle,
+    batch: std::sync::Arc<Mutex<Vec<LogLine>>>,
+}
+
+/// How long lines collect before they go out together.
+const LOG_BATCH: std::time::Duration = std::time::Duration::from_millis(80);
+
+impl EventSink {
+    pub(crate) fn new(app: AppHandle) -> Self {
+        Self {
+            app,
+            batch: Default::default(),
+        }
+    }
+
+    fn flush(app: &AppHandle, batch: &Mutex<Vec<LogLine>>) {
+        let lines = std::mem::take(&mut *batch.lock().unwrap());
+        if !lines.is_empty() {
+            let _ = app.emit("game:log", lines);
+        }
+    }
+}
 
 impl Sink for EventSink {
     fn log(&self, line: &LogLine) {
-        let _ = self.0.emit("game:log", line);
+        let first = {
+            let mut batch = self.batch.lock().unwrap();
+            batch.push(line.clone());
+            batch.len() == 1
+        };
+        if first {
+            let (app, batch) = (self.app.clone(), self.batch.clone());
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(LOG_BATCH).await;
+                Self::flush(&app, &batch);
+            });
+        }
     }
+
     fn state(&self, state: &RunState) {
-        let _ = self.0.emit("game:state", state);
+        // lines first: the UI treats "exited" as the end of the output
+        Self::flush(&self.app, &self.batch);
+        let _ = self.app.emit("game:state", state);
     }
 }
 
@@ -226,7 +267,7 @@ pub async fn game_launch(
     } else {
         None
     };
-    state.launcher.launch(&game_dir, smapi, EventSink(app))
+    state.launcher.launch(&game_dir, smapi, EventSink::new(app))
 }
 
 #[tauri::command]

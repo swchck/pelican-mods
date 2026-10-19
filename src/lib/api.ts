@@ -72,7 +72,8 @@ export const api = {
 };
 
 export const events = {
-  log: (cb: (l: LogLine) => void): Promise<UnlistenFn> => listen<LogLine>("game:log", (e) => cb(e.payload)),
+  /** Console lines arrive in batches of whatever was printed in the last ~80 ms. */
+  log: (cb: (lines: LogLine[]) => void): Promise<UnlistenFn> => listen<LogLine[]>("game:log", (e) => cb(e.payload)),
   state: (cb: (s: RunState) => void): Promise<UnlistenFn> => listen<RunState>("game:state", (e) => cb(e.payload)),
   smapiProgress: (cb: (p: SmapiProgress) => void): Promise<UnlistenFn> =>
     listen<SmapiProgress>("smapi:progress", (e) => cb(e.payload)),
@@ -268,6 +269,7 @@ export const nexus = {
   download: (modId: number, fileId: number) => invoke<void>("nexus_download", { modId, fileId }),
   filePage: (modId: number, fileId: number) => invoke<string>("nexus_file_page", { modId, fileId }),
   openNxm: (url: string) => invoke<void>("nxm_open", { url }),
+  takePendingNxm: () => invoke<NxmLink[]>("nxm_take_pending"),
   downloads: () => invoke<Download[]>("downloads_list"),
   clearDownloads: () => invoke<Download[]>("downloads_clear"),
 };
@@ -277,9 +279,8 @@ export const nexusEvents = {
     listen<Download[]>("downloads:changed", (e) => cb(e.payload)),
   libraryChanged: (cb: () => void): Promise<UnlistenFn> => listen("library:changed", () => cb()),
   nxmError: (cb: (e: AppError) => void): Promise<UnlistenFn> => listen<AppError>("nxm:error", (e) => cb(e.payload)),
-  /** An nxm link from outside the app, waiting for the user to confirm it. */
-  nxmPending: (cb: (link: NxmLink) => void): Promise<UnlistenFn> =>
-    listen<NxmLink>("nxm:pending", (e) => cb(e.payload)),
+  /** An nxm link from outside the app is waiting; collect it with `takePendingNxm`. */
+  nxmPending: (cb: () => void): Promise<UnlistenFn> => listen("nxm:pending", () => cb()),
 };
 
 export interface Skills {

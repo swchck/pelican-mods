@@ -96,6 +96,8 @@ pub fn list(saves_dir: &Path) -> Vec<SaveSummary> {
         .into_iter()
         .flatten()
         .flatten()
+        // dot folders are the launcher's own staging and swap leftovers, never saves
+        .filter(|e| !e.file_name().to_string_lossy().starts_with('.'))
         .filter(|e| e.path().join(INFO_FILE).is_file())
         .filter_map(|e| summary(&e.path()).ok())
         .collect();
