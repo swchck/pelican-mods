@@ -423,6 +423,8 @@ mockIPC(
             locationCount: 120,
           },
         ];
+      case "library_conflicts":
+        return [];
       case "game_preflight":
         return null;
       case "game_catalog":

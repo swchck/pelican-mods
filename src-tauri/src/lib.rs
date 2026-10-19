@@ -5,6 +5,7 @@ mod commands;
 mod companion;
 mod companion_commands;
 mod config_commands;
+mod conflicts;
 mod deps;
 mod downloads;
 mod error;
@@ -110,6 +111,7 @@ pub fn run() {
             mods_commands::mod_install_dependency,
             mods_commands::mod_save_usage,
             mods_commands::game_preflight,
+            mods_commands::library_conflicts,
             mods_commands::modlist_export,
             mods_commands::modlist_read,
             mods_commands::modlist_profile,

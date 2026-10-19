@@ -69,6 +69,12 @@ export default {
     tabLog: "Log",
     tabReport: "Report",
   },
+  conflicts: {
+    title: "{n} mod conflicts",
+    both: "both replace {target}, so Content Patcher loads neither",
+    maybe: "both may replace {target}; when their conditions meet, Content Patcher loads neither",
+    hint: "Turn off one mod of each pair.",
+  },
   preflight: {
     title: "The save is missing mods",
     text: "The last played save, {save}, uses mods that won't load right now:",

@@ -202,6 +202,7 @@ export const library = {
   readList: (file: string) => invoke<ModListView>("modlist_read", { file }),
   profileFromList: (name: string, uniqueIds: string[]) => invoke<LibraryView>("modlist_profile", { name, uniqueIds }),
   saveUsage: (id: string) => invoke<SaveUsage[]>("mod_save_usage", { id }),
+  conflicts: () => invoke<Conflict[]>("library_conflicts"),
 };
 
 export type NexusSort = "endorsements" | "downloads" | "updated" | "created";
@@ -679,4 +680,12 @@ export interface Preflight {
     /** Off in the active profile; otherwise SMAPI skipped it last session. */
     disabled: boolean;
   }[];
+}
+
+/** Content packs loading the same asset exclusively; the game drops all of them. */
+export interface Conflict {
+  target: string;
+  packages: string[];
+  /** Some patches apply only under conditions, so the packs may never meet. */
+  conditional: boolean;
 }

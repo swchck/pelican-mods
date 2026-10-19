@@ -576,6 +576,18 @@ async fn fetch_and_install(app: AppHandle, w: Wanted) -> AppResult<UpdateOutcome
     Ok(UpdateOutcome::Queued)
 }
 
+/// Content packs in the active profile that load the same asset exclusively.
+#[tauri::command]
+pub async fn library_conflicts(app: AppHandle) -> AppResult<Vec<crate::conflicts::Conflict>> {
+    blocking(app, |s| {
+        Ok(crate::conflicts::find(
+            &library::scan(&s.store_root),
+            &s.profiles.get().active().enabled,
+        ))
+    })
+    .await
+}
+
 /// What the last played save would lose if the game started now with the active profile.
 #[tauri::command]
 pub async fn game_preflight(app: AppHandle) -> AppResult<Option<crate::save_usage::Preflight>> {

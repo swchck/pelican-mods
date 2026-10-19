@@ -42,6 +42,7 @@
 
 - Before the game starts, the last played save is checked against the mods that will load: if it uses mods that are off in the profile or that SMAPI skipped last time, the app says what the save would lose and offers to turn them on first.
 - Before a mod is removed, the app checks which saves still use it, by its items and data or by the locations it adds, warns what the game would drop, and backs those saves up first unless told not to.
+- The library warns about content packs that replace the same asset exclusively, which makes Content Patcher load neither, before the game finds out.
 - Turning a mod off asks first when saves still use it, the same way removing it does.
 - Removing a mod also sends the copy in the game's Mods folder to the Trash, so it doesn't come back as importable or load when the game starts without the launcher.
 - Saves can be copied to a folder of your choice, such as iCloud Drive, after each session; the 10 newest copies of each save are kept and import back as saves.

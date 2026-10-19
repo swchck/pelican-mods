@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import DisableWarning from "@/components/library/DisableWarning.vue";
 import { onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "vue-sonner";
@@ -14,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import PackageTable from "@/components/library/PackageTable.vue";
 import PackageDetail from "@/components/library/PackageDetail.vue";
 import ProfileSwitcher from "@/components/library/ProfileSwitcher.vue";
+import ConflictBanner from "@/components/library/ConflictBanner.vue";
+import DisableWarning from "@/components/library/DisableWarning.vue";
 import { useLibrary } from "@/stores/library";
 import { hint, useShortcut } from "@/stores/shortcuts";
 import { matchesFilter } from "@/lib/packages";
@@ -138,6 +139,8 @@ onUnmounted(() => {
         <DownloadIcon /><span class="hidden @2xl:inline">{{ t("library.installZip") }}</span>
       </Button>
     </header>
+
+    <ConflictBanner />
 
     <div
       v-if="lib.view?.importable.length"
