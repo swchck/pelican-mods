@@ -60,7 +60,7 @@ const status = computed(() => {
         'text-muted-foreground': status.tone === 'muted',
       }"
     >
-      <span class="size-2 rounded-[2px] bg-current" />{{ status.text }}
+      <span class="size-2 shrink-0 rounded-[2px] bg-current" /><span class="shrink-0">{{ status.text }}</span>
       <span v-if="live" class="text-muted-foreground ml-auto truncate">{{ live }}</span>
     </div>
 
@@ -68,7 +68,7 @@ const status = computed(() => {
       v-if="game.running"
       variant="destructive"
       size="xl"
-      class="w-full"
+      class="font-pixel w-full min-w-0 px-3 text-xl"
       :title="`${t('play.stop')} (${hint('game.stop')})`"
       @click="game.stop()"
     >
@@ -78,7 +78,7 @@ const status = computed(() => {
       <Button
         variant="play"
         size="xl"
-        class="flex-1 rounded-r-none"
+        class="min-w-0 flex-1 rounded-r-none px-3 text-xl"
         :disabled="game.busy || !game.install?.smapiVersion || game.install.needsRosetta"
         :title="`${t('play.play')} (${hint('game.play')})`"
         @click="game.launch(true)"
