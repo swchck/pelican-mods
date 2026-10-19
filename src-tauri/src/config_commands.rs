@@ -19,9 +19,14 @@ const GENERATE_TIMEOUT: Duration = Duration::from_secs(90);
 /// Loads a mod's settings plus the GMCM menu the companion saw for it.
 fn load(s: &AppState, dir: &Path, locale: &str) -> AppResult<ModConfig> {
     let mut config = mod_config::load(dir, locale)?;
-    config.gmcm = crate::manifest::read(dir)
-        .ok()
+    let manifest = crate::manifest::read(dir).ok();
+    config.gmcm = manifest
+        .as_ref()
         .and_then(|m| s.companion.schema(&m.unique_id));
+    config.defaults = match &config.schema {
+        Some(schema) => Some(mod_config::defaults(schema)),
+        None => manifest.and_then(|m| s.companion.config_defaults(&m.unique_id)),
+    };
     Ok(config)
 }
 

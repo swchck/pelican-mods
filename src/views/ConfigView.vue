@@ -143,6 +143,23 @@ async function applyLive(uniqueId: string, name: string, values: unknown) {
   }
 }
 
+const changedCount = computed(() => {
+  const d = cfg.value?.defaults;
+  if (!d || !draft.value) return 0;
+  return sections.value
+    .flatMap((s) => s.fields)
+    .filter((f) => {
+      const def = getAt(d, f.path);
+      return def !== undefined && JSON.stringify(getAt(draft.value!, f.path)) !== JSON.stringify(def);
+    }).length;
+});
+
+// keys the defaults lack (older options, other mods' additions) stay as they are
+function resetAll() {
+  const d = cfg.value?.defaults;
+  if (d && draft.value) draft.value = { ...draft.value, ...cloneJson(d) };
+}
+
 function createDefaults() {
   const c = current.value;
   if (c) void run(() => modConfig.defaults(c.pkg, c.rel, locale.value), t("config.created"));
@@ -269,6 +286,7 @@ onMounted(async () => {
                 :key="f.path.join('.')"
                 :field="f"
                 :value="getAt(draft, f.path)"
+                :default-value="cfg?.defaults ? getAt(cfg.defaults, f.path) : undefined"
                 @change="(v) => change(f.path, v)"
               />
             </div>
@@ -282,11 +300,12 @@ onMounted(async () => {
             {{ t("config.liveBadge") }}
           </span>
           {{ dirty || raw !== null ? t("config.unsaved") : "" }}
+          <span v-if="changedCount" class="text-gold-shade">{{ t("config.changedCount", { n: changedCount }) }}</span>
         </span>
         <Button variant="ghost" :disabled="busy || (!dirty && raw === null)" @click="load">
           <RotateCcwIcon />{{ t("config.revert") }}
         </Button>
-        <Button v-if="cfg?.schema?.length" variant="outline" :disabled="busy" @click="createDefaults">
+        <Button v-if="cfg?.defaults" variant="outline" :disabled="busy || !changedCount" @click="resetAll">
           {{ t("config.resetDefaults") }}
         </Button>
         <Button variant="outline" :aria-pressed="raw !== null" @click="toggleRaw"><BracesIcon />JSON</Button>

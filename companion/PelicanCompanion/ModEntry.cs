@@ -28,6 +28,7 @@ internal sealed class ModEntry : Mod
     private bool Launched;
     private bool LocaleDirty;
     private CatalogMessage? CachedCatalog;
+    private ConfigDefaultsMessage? CachedDefaults;
     private string? CachedLanguage;
 
     public override void Entry(IModHelper helper)
@@ -79,6 +80,7 @@ internal sealed class ModEntry : Mod
             }
             this.Describe();
             this.SendCatalog();
+            this.SendConfigDefaults();
             this.SendState(force: true);
         }
         while (bridge.Inbox.TryDequeue(out Command? command))
@@ -182,6 +184,20 @@ internal sealed class ModEntry : Mod
         catch (Exception ex)
         {
             this.Monitor.Log($"couldn't read GMCM menus: {ex}", LogLevel.Trace);
+        }
+    }
+
+    private void SendConfigDefaults()
+    {
+        try
+        {
+            // the mods' assemblies don't change during a session
+            this.CachedDefaults ??= new ConfigDefaultsMessage(ConfigDefaults.Collect(this.Helper, this.Monitor));
+            this.Bridge!.Send(this.CachedDefaults);
+        }
+        catch (Exception ex)
+        {
+            this.Monitor.Log($"couldn't work out config defaults: {ex}", LogLevel.Trace);
         }
     }
 

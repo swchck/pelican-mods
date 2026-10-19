@@ -466,6 +466,8 @@ export interface ModConfig {
   labels: Record<string, import("./config-form").OptionLabel>;
   /** The mod's Generic Mod Config Menu as the companion last saw it in a running game. */
   gmcm: GmcmMod | null;
+  /** The untouched config: schema defaults, or what a fresh C# mod instance writes. */
+  defaults: Record<string, import("./config-form").Json> | null;
 }
 
 export interface GmcmMod {

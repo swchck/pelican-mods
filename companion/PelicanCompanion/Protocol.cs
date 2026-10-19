@@ -65,6 +65,12 @@ internal record GmcmOption(
 
 internal record GmcmChoice(string Value, string Label);
 
+/// <summary>Each C# mod's config as a fresh instance writes it, by UniqueID.</summary>
+internal record ConfigDefaultsMessage(Dictionary<string, JToken> Mods)
+{
+    public string Type => "configDefaults";
+}
+
 internal record CatalogMessage(
     string Game,
     string Language,

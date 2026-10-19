@@ -13,6 +13,10 @@
 
 - Forecasts in the spirit of Stardew Predictor: night events for the next four weeks (meteorite, fairy, witch, owl, capsule, earthquake and more), the bookseller's days this season, the traveling cart's stock on cart days, and the next mystery boxes alongside the geodes. All of it comes from the game's own code with your mods loaded.
 
+### Mod settings
+
+- The settings editor knows each mod's defaults: a content pack's from its schema, a C# mod's from what a fresh copy writes, seen by the companion in the game. Changed fields are marked with their default value and a reset, and everything resets at once.
+
 ### Console
 
 - A Report tab sums up the last session's SMAPI log: mods SMAPI skipped and why, save locations and villagers the game dropped because their mod didn't load, and each mod's errors and warnings with repeats folded. After a session that skipped mods or lost save data, the app points to it.

@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { choiceValues, type Field, type Json } from "@/lib/config-form";
 
-const props = defineProps<{ field: Field; value: Json }>();
+/** `defaultValue` is undefined when the mod's defaults aren't known. */
+const props = defineProps<{ field: Field; value: Json; defaultValue?: Json }>();
 const emit = defineEmits<{ change: [value: Json] }>();
 const { t } = useI18n();
 
@@ -18,6 +19,16 @@ const text = computed(() => {
   return v === null || v === undefined ? "" : String(v);
 });
 const selected = computed(() => choiceValues(props.value));
+const changed = computed(
+  () => props.defaultValue !== undefined && JSON.stringify(props.value) !== JSON.stringify(props.defaultValue),
+);
+const shownDefault = computed(() => {
+  const d = props.defaultValue;
+  if (typeof d === "boolean") return d ? t("config.on") : t("config.off");
+  if (Array.isArray(d)) return d.join(", ") || "—";
+  if (d !== null && typeof d === "object") return "{…}";
+  return d === null || d === undefined || d === "" ? "—" : String(d);
+});
 
 function onText(raw: string | number) {
   const s = String(raw);
@@ -145,5 +156,16 @@ function onChoice(option: string) {
         {{ t("config.range", { min: field.min, max: field.max }) }}
       </span>
     </template>
+    <div v-if="changed" class="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold">
+      <span class="bg-gold size-1.5 shrink-0 rounded-full" />
+      <span class="min-w-0 truncate">{{ t("config.defaultIs", { value: shownDefault }) }}</span>
+      <button
+        type="button"
+        class="shrink-0 underline decoration-dotted underline-offset-2"
+        @click="emit('change', JSON.parse(JSON.stringify(defaultValue)) as Json)"
+      >
+        {{ t("config.resetField") }}
+      </button>
+    </div>
   </div>
 </template>

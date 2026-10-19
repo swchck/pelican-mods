@@ -136,6 +136,9 @@ enum Incoming {
         mods: Vec<GmcmMod>,
     },
     Catalog(Box<Catalog>),
+    ConfigDefaults {
+        mods: HashMap<String, Value>,
+    },
     /// Answers to requests: `result` for applyConfig, `reply` for data requests.
     #[serde(alias = "reply")]
     Result {
@@ -170,6 +173,9 @@ pub struct Companion {
     schemas_file: PathBuf,
     catalog: Mutex<Option<Catalog>>,
     catalog_file: PathBuf,
+    /// Each C# mod's config as a fresh instance writes it, by lowercased UniqueID.
+    defaults: Mutex<HashMap<String, Value>>,
+    defaults_file: PathBuf,
 }
 
 impl Companion {
@@ -178,6 +184,11 @@ impl Companion {
     pub fn new(cache_dir: &std::path::Path) -> Self {
         let schemas_file = cache_dir.join("gmcm.json");
         let catalog_file = cache_dir.join("catalog.json");
+        let defaults_file = cache_dir.join("config-defaults.json");
+        let defaults = std::fs::read(&defaults_file)
+            .ok()
+            .and_then(|b| serde_json::from_slice(&b).ok())
+            .unwrap_or_default();
         let catalog = std::fs::read(&catalog_file)
             .ok()
             .and_then(|b| serde_json::from_slice(&b).ok());
@@ -196,7 +207,18 @@ impl Companion {
             schemas_file,
             catalog: Mutex::new(catalog),
             catalog_file,
+            defaults: Mutex::new(defaults),
+            defaults_file,
         }
+    }
+
+    /// The config a fresh copy of C# mod `unique_id` writes, from the last game that ran it.
+    pub fn config_defaults(&self, unique_id: &str) -> Option<Value> {
+        self.defaults
+            .lock()
+            .unwrap()
+            .get(&unique_id.to_lowercase())
+            .cloned()
     }
 
     /// The URL to hand the game, once the server is listening.
@@ -418,6 +440,18 @@ impl Companion {
                     eprintln!("companion: couldn't save GMCM menus: {e}");
                 }
                 events.gmcm(&ids);
+            }
+            Incoming::ConfigDefaults { mods } => {
+                let snapshot = {
+                    let mut defaults = self.defaults.lock().unwrap();
+                    for (id, v) in mods {
+                        defaults.insert(id.to_lowercase(), v);
+                    }
+                    defaults.clone()
+                };
+                if let Err(e) = save_json(&self.defaults_file, &snapshot) {
+                    eprintln!("companion: couldn't save config defaults: {e}");
+                }
             }
             Incoming::Catalog(catalog) => {
                 if let Err(e) = save_json(&self.catalog_file, &*catalog) {

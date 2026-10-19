@@ -47,6 +47,9 @@ pub struct ModConfig {
     pub labels: HashMap<String, Label>,
     /// The mod's Generic Mod Config Menu, as the companion last saw it in a running game.
     pub gmcm: Option<crate::companion::GmcmMod>,
+    /// What the config holds untouched: a content pack's schema defaults, or for a C#
+    /// mod what the companion saw a fresh instance write.
+    pub defaults: Option<Value>,
 }
 
 /// Human text for one option, as the mod shows it in Generic Mod Config Menu.
@@ -87,6 +90,7 @@ pub fn load(mod_dir: &Path, locale: &str) -> AppResult<ModConfig> {
         schema,
         labels: labels(mod_dir, locale),
         gmcm: None,
+        defaults: None,
     })
 }
 
