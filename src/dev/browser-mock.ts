@@ -195,6 +195,20 @@ mockIPC(
           weatherTomorrow: "Rain",
           islandWeatherTomorrow: "Sun",
           geodesCracked: 41,
+          mysteryBoxesOpened: 3,
+          mysteryBoxes: [
+            g("(O)MysteryBox", "Таинственная коробка", ["Тотем-телепорт: Горы", "Кофейные зёрна", "Бомба"]),
+            g("(O)GoldenMysteryBox", "Золотая таинственная коробка", ["Призматический осколок", "Книга тайн", "Алмаз"]),
+          ],
+          nights: [
+            { day: 9, season: 2, year: 1, event: "meteor" },
+            { day: 21, season: 2, year: 1, event: "fairy" },
+          ],
+          bookseller: [4, 19],
+          cart: [
+            { id: "(O)266", name: "Красная капуста", price: 780, stock: 1 },
+            { id: "(F)1226", name: "Картина «Мост»", price: 1800, stock: 1 },
+          ],
           geodes: [
             g("(O)535", "Жеода", ["Медная руда", "Кварц", "Аметист", "Глина", "Тигровый глаз"]),
             g("(O)536", "Замёрзшая жеода", ["Кварц", "Аквамарин", "Медная руда", "Лёд", "Кварц"]),

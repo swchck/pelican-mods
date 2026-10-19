@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Newtonsoft.Json.Linq;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -111,6 +112,17 @@ internal sealed class ModEntry : Mod
                 break;
             case "items":
                 this.Answer(command.Id, Helpers.Items);
+                break;
+            // tests only: opens an existing save for the forecast checks; nothing is written
+            // unless a day ends, and the tests stop the game long before that
+            case "testLoad" when TestMode && command.Text is not null && !Context.IsWorldReady:
+                // as LoadGameMenu's slot does: start loading, then close the title menu
+                Type.GetType("StardewValley.SaveGame, Stardew Valley", throwOnError: true)!
+                    .GetMethod("Load", new[] { typeof(string) })!
+                    .Invoke(null, new object[] { command.Text });
+                Type.GetType("StardewValley.Game1, Stardew Valley", throwOnError: true)!
+                    .GetMethod("exitActiveMenu", BindingFlags.Public | BindingFlags.Static)!
+                    .Invoke(null, null);
                 break;
         }
     }

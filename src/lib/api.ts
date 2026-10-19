@@ -490,7 +490,24 @@ export interface Forecast {
   weatherTomorrow: string | null;
   islandWeatherTomorrow: string | null;
   geodesCracked: number;
-  geodes: { id: string; name: string; next: { id: string; name: string; stack: number }[] }[];
+  geodes: TreasureSeries[];
+  mysteryBoxesOpened: number;
+  mysteryBoxes: TreasureSeries[];
+  /** Nights with a random event in the next four weeks; quiet nights are left out. */
+  nights: { day: number; season: number; year: number; event: NightEvent }[];
+  /** The bookseller's days this season. */
+  bookseller: number[] | null;
+  /** The traveling cart's stock when it's in the forest today, else null. */
+  cart: { id: string; name: string; price: number; stock: number }[] | null;
+}
+
+export type NightEvent = "fairy" | "witch" | "meteor" | "owl" | "capsule" | "raccoonTree" | "qiPlane" | "earthquake";
+
+/** What a geode or box will give, for the next openings in order. */
+export interface TreasureSeries {
+  id: string;
+  name: string;
+  next: { id: string; name: string; stack: number }[];
 }
 
 export interface NxmLink {

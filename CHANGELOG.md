@@ -7,6 +7,10 @@
 - A detailed save report in the spirit of Stardew Checkup: achievements, skills and mastery, Community Center bundles item by item, the museum with what's found but not donated, friendship with every villager, collections and polyculture, quests and special orders, Monster Slayer, the island and its upgrades, books, powers and secret notes, Grandpa's evaluation, money.
 - Names come from your modded game in its language; the rules come from the 1.6 game code.
 
+### Helpers
+
+- Forecasts in the spirit of Stardew Predictor: night events for the next four weeks (meteorite, fairy, witch, owl, capsule, earthquake and more), the bookseller's days this season, the traveling cart's stock on cart days, and the next mystery boxes alongside the geodes. All of it comes from the game's own code with your mods loaded.
+
 ## 0.2.0 — 2026-10-19
 
 ### Game link

@@ -5,6 +5,7 @@ import { toast } from "vue-sonner";
 import { CloudSunIcon, GemIcon, Loader2Icon, RefreshCwIcon, StoreIcon } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import TreasureTable from "@/components/helpers/TreasureTable.vue";
 import { companion as api, isAppError, type Forecast } from "@/lib/api";
 import { bestGrange, grangeScore, itemPoints, place, SLOTS, type GrangeItem } from "@/lib/grange";
 import { errorText } from "@/i18n";
@@ -51,6 +52,9 @@ const luck = computed(() => {
   if (l > 0.02) return "good";
   return l < 0 ? "meh" : "fine";
 });
+const SEASONS = ["spring", "summer", "fall", "winter"] as const;
+const dateText = (d: { day: number; season: number }) =>
+  t("helpers.date", { day: d.day, season: t(`live.seasons.${SEASONS[d.season]}`) });
 const weather = (w: string | null) => (w && te(`helpers.weather.${w}`) ? t(`helpers.weather.${w}`) : (w ?? "—"));
 
 /** Candidate items for the grange, best first; one row per stack. */
@@ -133,41 +137,53 @@ watch([tab, ready], load, { immediate: true });
               </span>
             </section>
           </div>
-          <section class="wood-panel flex flex-col gap-2 p-4">
-            <h2 class="font-pixel text-wood-dark text-xl font-bold">{{ t("helpers.geodes") }}</h2>
-            <p class="text-muted-foreground text-xs font-semibold">
-              {{ t("helpers.geodesHint", { n: forecast.geodesCracked }) }}
-            </p>
-            <div class="overflow-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="text-muted-foreground text-left text-xs">
-                    <th class="py-1 pr-3 font-bold">#</th>
-                    <th v-for="g in forecast.geodes" :key="g.id" class="py-1 pr-3 font-bold">{{ g.name }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(_, row) in forecast.geodes[0]?.next ?? []"
-                    :key="row"
-                    class="border-border-soft border-t border-dashed"
-                  >
-                    <td class="text-muted-foreground py-1 pr-3 font-mono text-xs">
-                      {{ forecast.geodesCracked + row + 1 }}
-                    </td>
-                    <td v-for="g in forecast.geodes" :key="g.id" class="py-1 pr-3 font-semibold">
-                      <template v-if="g.next[row]">
-                        {{ g.next[row].name
-                        }}<span v-if="g.next[row].stack > 1" class="text-muted-foreground">
-                          ×{{ g.next[row].stack }}</span
-                        >
-                      </template>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
+          <div class="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
+            <section class="wood-panel flex flex-col gap-1.5 p-4">
+              <h2 class="font-pixel text-wood-dark text-xl font-bold">{{ t("helpers.nights") }}</h2>
+              <p class="text-muted-foreground text-xs font-semibold">{{ t("helpers.nightsHint") }}</p>
+              <ul v-if="forecast.nights.length" class="flex flex-col gap-1 text-sm">
+                <li
+                  v-for="night in forecast.nights"
+                  :key="`${night.year}-${night.season}-${night.day}`"
+                  class="flex gap-2"
+                >
+                  <span class="text-muted-foreground w-28 shrink-0 font-semibold">{{ dateText(night) }}</span>
+                  <span class="font-extrabold">{{ t(`helpers.nightEvents.${night.event}`) }}</span>
+                </li>
+              </ul>
+              <p v-else class="text-sm font-semibold">{{ t("helpers.quietNights") }}</p>
+            </section>
+            <section v-if="forecast.bookseller?.length" class="wood-panel flex flex-col gap-1 p-4">
+              <span class="text-muted-foreground text-xs font-bold">{{ t("helpers.bookseller") }}</span>
+              <span class="font-pixel text-wood-dark text-xl font-bold">
+                {{ forecast.bookseller.map((d) => t("helpers.dayOf", { day: d })).join(", ") }}
+              </span>
+            </section>
+            <section v-if="forecast.cart" class="wood-panel flex flex-col gap-1.5 p-4">
+              <h2 class="font-pixel text-wood-dark text-xl font-bold">{{ t("helpers.cart") }}</h2>
+              <ul class="flex flex-col gap-0.5 text-sm">
+                <li v-for="c in forecast.cart" :key="c.id" class="flex gap-2">
+                  <span class="truncate font-semibold">{{ c.name }}</span>
+                  <span class="text-muted-foreground ml-auto shrink-0 font-mono text-xs">
+                    {{ t("live.gold", { amount: n(c.price) }) }}
+                  </span>
+                </li>
+              </ul>
+            </section>
+          </div>
+          <TreasureTable
+            :title="t('helpers.geodes')"
+            :hint="t('helpers.geodesHint', { n: forecast.geodesCracked })"
+            :opened="forecast.geodesCracked"
+            :series="forecast.geodes"
+          />
+          <TreasureTable
+            v-if="forecast.mysteryBoxes.length"
+            :title="t('helpers.mysteryBoxes')"
+            :hint="t('helpers.mysteryBoxesHint', { n: forecast.mysteryBoxesOpened })"
+            :opened="forecast.mysteryBoxesOpened"
+            :series="forecast.mysteryBoxes"
+          />
         </div>
       </TabsContent>
 

@@ -273,6 +273,13 @@ impl Companion {
         }
     }
 
+    #[cfg(test)]
+    fn send_raw(&self, msg: Value) {
+        if let Some(out) = &self.link.lock().unwrap().out {
+            let _ = out.send(msg.to_string());
+        }
+    }
+
     /// Shows `text` in the game's HUD; silently dropped while no game is connected.
     pub fn notify(&self, text: &str) {
         let link = self.link.lock().unwrap();
@@ -618,7 +625,7 @@ mod tests {
                 }
                 tokio::time::sleep(Duration::from_millis(200)).await;
             }
-            let result = async {
+            let result = futures_util::FutureExt::catch_unwind(std::panic::AssertUnwindSafe(async {
                 let schema = schema.expect("Lookup Anything's GMCM menu arrives");
                 let status = companion.status();
                 eprintln!(
@@ -687,8 +694,9 @@ mod tests {
                 let written: Value =
                     serde_json::from_str(&std::fs::read_to_string(&file).unwrap()).unwrap();
                 assert_eq!(written["ShowPuzzleSolutions"], Value::Bool(flipped));
-            }
+            }))
             .await;
+            // the game must close even when an assert above failed
             launcher.stop().unwrap();
             for _ in 0..100 {
                 if matches!(launcher.state(), RunState::Exited { .. }) {
@@ -696,7 +704,103 @@ mod tests {
                 }
                 tokio::time::sleep(Duration::from_millis(100)).await;
             }
-            result
+            if let Err(panic) = result {
+                std::panic::resume_unwind(panic);
+            }
+        });
+    }
+
+    // opens an existing save (never saving it) and asks for the forecast and the items:
+    // scripts/build-companion.sh, then
+    // PELICAN_TEST_GAME_DIR=<Contents/MacOS> PELICAN_TEST_SAVE_NAME=<save folder name> \
+    //   cargo test -- --ignored forecast_on_real_save --nocapture
+    #[test]
+    #[ignore]
+    fn forecast_on_real_save() {
+        use crate::launcher::{Launcher, LogLine, RunState, Sink, SmapiRun};
+        struct Quiet;
+        impl Sink for Quiet {
+            fn log(&self, _: &LogLine) {}
+            fn state(&self, _: &RunState) {}
+        }
+        let game = PathBuf::from(std::env::var("PELICAN_TEST_GAME_DIR").unwrap());
+        let save = std::env::var("PELICAN_TEST_SAVE_NAME").unwrap();
+        let built =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../companion/dist/PelicanCompanion");
+        let dir = tempfile::tempdir().unwrap();
+        let mods = dir.path().join("Mods");
+        std::fs::create_dir_all(&mods).unwrap();
+        std::os::unix::fs::symlink(built, mods.join("PelicanCompanion")).unwrap();
+        let home = PathBuf::from(std::env::var("HOME").unwrap());
+        let companion = Arc::new(Companion::new(dir.path()));
+        tauri::async_runtime::block_on(async {
+            tauri::async_runtime::spawn(companion.clone().serve(Arc::new(Recorder::default())));
+            while companion.url().is_none() {
+                tokio::time::sleep(Duration::from_millis(5)).await;
+            }
+            let launcher = Launcher::default();
+            launcher
+                .launch(
+                    &game,
+                    Some(SmapiRun {
+                        log: home.join(".config/StardewValley/ErrorLogs/SMAPI-latest.txt"),
+                        mods_path: Some(mods.clone()),
+                        env: vec![
+                            (URL_VAR.into(), companion.url().unwrap().into()),
+                            ("PELICAN_COMPANION_TEST".into(), "1".into()),
+                        ],
+                    }),
+                    Quiet,
+                )
+                .unwrap();
+            let result =
+                futures_util::FutureExt::catch_unwind(std::panic::AssertUnwindSafe(async {
+                    for _ in 0..300 {
+                        if companion.status().hello.is_some() {
+                            break;
+                        }
+                        tokio::time::sleep(Duration::from_millis(200)).await;
+                    }
+                    assert!(companion.status().hello.is_some(), "companion connects");
+                    tokio::time::sleep(Duration::from_secs(2)).await;
+                    companion.send_raw(serde_json::json!({ "type": "testLoad", "text": save }));
+                    for _ in 0..600 {
+                        if companion.status().state.is_some() {
+                            break;
+                        }
+                        tokio::time::sleep(Duration::from_millis(200)).await;
+                    }
+                    eprintln!("state: {:?}", companion.status().state);
+                    assert!(companion.status().state.is_some(), "the save loads");
+                    let f = companion.query("forecast").await.unwrap();
+                    eprintln!(
+                        "luck {} tomorrow {} bookseller {}",
+                        f["luck"], f["weatherTomorrow"], f["bookseller"]
+                    );
+                    eprintln!("geode #1 {}", f["geodes"][0]["next"][0]);
+                    eprintln!(
+                        "mystery boxes opened {}: {}",
+                        f["mysteryBoxesOpened"], f["mysteryBoxes"][0]["next"][0]
+                    );
+                    eprintln!("nights {}", f["nights"]);
+                    eprintln!("cart {}", f["cart"]);
+                    let items = companion.query("items").await.unwrap();
+                    let list = items.as_array().unwrap();
+                    eprintln!("items {}: first {:?}", list.len(), list.first());
+                    assert!(!list.is_empty());
+                }))
+                .await;
+            // the game must close even when an assert above failed
+            launcher.stop().unwrap();
+            for _ in 0..100 {
+                if matches!(launcher.state(), RunState::Exited { .. }) {
+                    break;
+                }
+                tokio::time::sleep(Duration::from_millis(100)).await;
+            }
+            if let Err(panic) = result {
+                std::panic::resume_unwind(panic);
+            }
         });
     }
 }
