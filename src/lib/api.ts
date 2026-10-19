@@ -126,6 +126,8 @@ export interface ModView {
   github: string | null;
   /** Whether `github` is one the user attached. */
   githubCustom: boolean;
+  /** The game's language code when the mod has translations but none in it. */
+  missingTranslation: string | null;
 }
 
 export interface PackageView {

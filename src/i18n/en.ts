@@ -165,6 +165,8 @@ export default {
     removeTitle: "Remove “{name}”?",
     removeText:
       "The mod folder and its settings are removed from the library in every profile. A copy in the game's Mods folder, if any, goes to the Trash.",
+    noTranslation: "The mod has translations, but none into {language}",
+    findTranslation: "Find a translation",
     usageChecking: "Checking saves…",
     usageTitle: "Saves use this mod",
     usageLocations: "{n} of its locations ({list})",

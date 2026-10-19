@@ -9,6 +9,8 @@ import {
   ExternalLinkIcon,
   FolderIcon,
   GitBranchIcon,
+  LanguagesIcon,
+  SearchIcon,
   Loader2Icon,
   SlidersHorizontalIcon,
   Trash2Icon,
@@ -42,7 +44,7 @@ import { errorText } from "@/i18n";
 import { useLibrary } from "@/stores/library";
 
 const props = defineProps<{ pkg: PackageView }>();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const lib = useLibrary();
 const confirmRemove = ref(false);
 
@@ -109,6 +111,16 @@ const tags = computed(() => {
   for (const key of m?.updateKeys ?? []) out.push({ text: key, tone: "clay" });
   return out;
 });
+
+// a mod that translates into some languages but not the game's; packs check their parts
+const missingLanguage = computed(() => props.pkg.mods.find((m) => m.missingTranslation)?.missingTranslation ?? null);
+const languageName = (code: string, in_: string) => new Intl.DisplayNames([in_], { type: "language" }).of(code) ?? code;
+function findTranslation() {
+  if (!missingLanguage.value) return;
+  // translations on Nexus are named "<Mod> - Russian" or "<Mod> Russian Translation"
+  nx.query = `${packageTitle(props.pkg)} ${languageName(missingLanguage.value, "en")}`;
+  void router.push("/browse");
+}
 
 function issueText(i: Issue): string {
   if (i.kind === "missingDependency")
@@ -182,6 +194,19 @@ async function remove() {
       >
         {{ tag.text }}
       </span>
+    </div>
+
+    <div
+      v-if="missingLanguage"
+      class="border-border-soft bg-parchment flex items-center gap-2 rounded-md border-2 border-dashed p-2.5 text-[13px]"
+    >
+      <LanguagesIcon class="text-muted-foreground size-4 shrink-0" />
+      <span class="flex-1 font-semibold">{{
+        t("library.noTranslation", { language: languageName(missingLanguage, locale) })
+      }}</span>
+      <Button size="xs" variant="outline" @click="findTranslation"
+        ><SearchIcon />{{ t("library.findTranslation") }}</Button
+      >
     </div>
 
     <div

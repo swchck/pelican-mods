@@ -20,6 +20,7 @@ function pkg(id: string, uniqueId: string, name: string, version: string, enable
         hasSchema: false,
         github: null,
         githubCustom: false,
+        missingTranslation: null,
         manifest: {
           name,
           author: "",

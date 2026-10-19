@@ -20,6 +20,7 @@ function mod(name: string, id: string, extra: Partial<ModView> = {}): ModView {
     hasSchema: false,
     github: null,
     githubCustom: false,
+    missingTranslation: null,
     manifest: {
       name,
       author: "Pathoschild",

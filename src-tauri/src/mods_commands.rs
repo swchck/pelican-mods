@@ -64,6 +64,8 @@ pub struct ModView {
     pub github: Option<String>,
     /// Whether `github` is one the user attached.
     pub github_custom: bool,
+    /// The game's language code when the mod has translations but none in it.
+    pub missing_translation: Option<String>,
 }
 
 // SMAPI's own mods ("SMAPI.ConsoleCommands", …) come with the installer and update with it
@@ -87,6 +89,10 @@ fn build_view(state: &AppState) -> LibraryView {
     let packages = library::scan(&state.store_root);
     let profiles = state.profiles.get();
     let repos = state.settings.get().github_repos;
+    let language = std::env::var_os("HOME")
+        .map(|h| std::path::PathBuf::from(h).join(".config/StardewValley"))
+        .and_then(|d| crate::perfection::game_language(&d))
+        .filter(|l| l != "en");
     let (bundled, others) = game_mods(state);
     let install = state.game_dir().ok().and_then(|d| game::inspect(&d).ok());
     let enabled = &profiles.active().enabled;
@@ -140,6 +146,11 @@ fn build_view(state: &AppState) -> LibraryView {
                     && mod_config::declares_schema(&p.path.join(&m.rel_path)),
                 source: manifest::source(&m.manifest),
                 github_custom: repos.contains_key(&m.manifest.unique_id.to_lowercase()),
+                missing_translation: language.clone().filter(|l| {
+                    // only a mod that translates at all can be missing a language
+                    let i18n = p.path.join(&m.rel_path).join("i18n");
+                    i18n.is_dir() && !i18n.join(format!("{l}.json")).is_file()
+                }),
                 github: repos
                     .get(&m.manifest.unique_id.to_lowercase())
                     .cloned()
