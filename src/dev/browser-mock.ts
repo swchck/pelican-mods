@@ -452,6 +452,9 @@ mockIPC(
           ],
           lostLocations: ["Custom_AndyHouse", "Custom_SophiaHouse"],
           lostNpcs: ["Andy", "Sophia"],
+          startupSecs: 48,
+          slow: [{ name: "Stardew Valley Expanded", secs: 9 }],
+          heavy: [{ name: "Content Patcher", assets: 412 }],
           mods: [
             {
               source: "Content Patcher",

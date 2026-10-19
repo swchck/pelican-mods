@@ -27,6 +27,32 @@ pub struct LogReport {
     pub lost_npcs: Vec<String>,
     /// Mods with errors or warnings, most errors first.
     pub mods: Vec<ModProblems>,
+    /// Seconds from the game starting to SMAPI's console being ready.
+    pub startup_secs: Option<u32>,
+    /// Mods the load paused on for [`SLOW_SECS`] or more, slowest first.
+    pub slow: Vec<SlowMod>,
+    /// Mods loading or editing the most game assets, most first.
+    pub heavy: Vec<HeavyMod>,
+}
+
+/// SMAPI stamps lines to the second, so a shorter pause can't be told from noise.
+pub const SLOW_SECS: u32 = 2;
+/// Mods listed as asset-heavy.
+const HEAVY_SHOWN: usize = 8;
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct SlowMod {
+    pub name: String,
+    pub secs: u32,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct HeavyMod {
+    pub name: String,
+    /// Assets it loaded or edited during the session.
+    pub assets: u32,
 }
 
 /// A mod SMAPI refused to load.
@@ -82,10 +108,44 @@ pub fn read(file: &Path) -> AppResult<LogReport> {
 pub fn parse(text: &str) -> LogReport {
     let mut report = LogReport::default();
     let mut by_mod: BTreeMap<String, ModProblems> = BTreeMap::new();
+    let mut first: Option<u32> = None;
+    // the mod SMAPI is loading and when it started; the next line ends its turn
+    let mut loading: Option<(String, u32)> = None;
+    let mut assets: BTreeMap<String, u32> = BTreeMap::new();
     for line in text.lines() {
         let Some((level, source, msg)) = stamp(line) else {
             continue;
         };
+        let now = clock(line);
+        if first.is_none() {
+            first = now;
+        }
+        if source == "SMAPI" {
+            let m = msg.trim();
+            if let Some(now) = now {
+                let next = m
+                    .split_once(" (from Mods/")
+                    .map(|(name, _)| name.to_owned());
+                if next.is_some() || m.starts_with("Launching mods") {
+                    if let Some((name, at)) = loading.take() {
+                        let secs = now.saturating_sub(at);
+                        if secs >= SLOW_SECS {
+                            report.slow.push(SlowMod { name, secs });
+                        }
+                    }
+                    loading = next.map(|n| (n, now));
+                }
+                if m.starts_with("Type 'help' for help") && report.startup_secs.is_none() {
+                    report.startup_secs = first.map(|f| now.saturating_sub(f));
+                }
+            }
+            if let Some((name, _)) = m
+                .split_once(" loaded asset '")
+                .or_else(|| m.split_once(" edited asset '"))
+            {
+                *assets.entry(name.to_owned()).or_default() += 1;
+            }
+        }
         if level != "ERROR" && level != "WARN" {
             continue;
         }
@@ -145,7 +205,22 @@ pub fn parse(text: &str) -> LogReport {
         .sort_by(|a, b| b.errors.cmp(&a.errors).then(b.warnings.cmp(&a.warnings)));
     report.lost_npcs.sort();
     report.lost_npcs.dedup();
+    report.slow.sort_by_key(|m| std::cmp::Reverse(m.secs));
+    let mut heavy: Vec<HeavyMod> = assets
+        .into_iter()
+        .map(|(name, assets)| HeavyMod { name, assets })
+        .collect();
+    heavy.sort_by_key(|m| std::cmp::Reverse(m.assets));
+    heavy.truncate(HEAVY_SHOWN);
+    report.heavy = heavy;
     report
+}
+
+// "[12:21:28 …" → seconds since midnight
+fn clock(line: &str) -> Option<u32> {
+    let t = line.get(1..9)?;
+    let mut parts = t.split(':').map(|p| p.parse::<u32>().ok());
+    Some(parts.next()?? * 3600 + parts.next()?? * 60 + parts.next()??)
 }
 
 // "[12:21:28 ERROR Content Patcher] message" → ("ERROR", "Content Patcher", " message")
@@ -227,6 +302,44 @@ mod tests {
 [12:22:01 WARN  game] Ignored unknown location 'Custom_JenkinsHouse' in save data, including NPCs 'Olivia', 'Victor'.
 [12:22:01 WARN  game] Ignored unknown location 'Custom_WillyRoom' in save data.
 ";
+
+    #[test]
+    fn times_the_startup() {
+        let log = "\
+[10:00:00 INFO  SMAPI] SMAPI 4.5.2
+[10:00:02 DEBUG SMAPI] Loading mods...
+[10:00:02 TRACE SMAPI]    Fast (from Mods/Fast/Fast.dll, ID: a.Fast, assembly version: 1.0.0)...
+[10:00:03 TRACE SMAPI]    Slow Expansion (from Mods/SVE/content.json, ID: a.Sve)...
+[10:00:09 TRACE SMAPI]    Last (from Mods/Last/Last.dll, ID: a.Last)...
+[10:00:12 DEBUG SMAPI] Launching mods...
+[10:00:13 TRACE SMAPI] Content Patcher edited asset 'Data/Objects'.
+[10:00:13 TRACE SMAPI] Content Patcher edited asset 'Maps/Town'.
+[10:00:13 TRACE SMAPI] Lookup Anything loaded asset 'Mods/x'.
+[10:00:20 INFO  SMAPI] Type 'help' for help, or 'help <cmd>' for a command's usage
+";
+        let r = parse(log);
+        assert_eq!(r.startup_secs, Some(20));
+        assert_eq!(
+            r.slow,
+            [
+                SlowMod {
+                    name: "Slow Expansion".into(),
+                    secs: 6
+                },
+                SlowMod {
+                    name: "Last".into(),
+                    secs: 3
+                },
+            ]
+        );
+        assert_eq!(
+            r.heavy[0],
+            HeavyMod {
+                name: "Content Patcher".into(),
+                assets: 2
+            }
+        );
+    }
 
     #[test]
     fn reads_a_session() {

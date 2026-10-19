@@ -24,6 +24,7 @@
 
 ### Console
 
+- The report also times the game's startup, names the mods it paused on, and lists the mods loading and editing the most game assets.
 - A Report tab sums up the last session's SMAPI log: mods SMAPI skipped and why, save locations and villagers the game dropped because their mod didn't load, and each mod's errors and warnings with repeats folded. Skipped incompatible mods show the update that fixes them, and one button updates them all; the mods waiting on them then load by themselves. After a session that skipped mods or lost save data, the app points to it.
 
 ### Updates

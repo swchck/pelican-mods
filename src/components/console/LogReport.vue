@@ -99,6 +99,24 @@ async function updateAll() {
         </ul>
       </section>
 
+      <section v-if="report.startupSecs !== null" class="wood-panel flex flex-col gap-1.5 p-3.5 text-sm">
+        <h2 class="font-extrabold">{{ t("logReport.startup", { n: report.startupSecs }) }}</h2>
+        <template v-if="report.slow.length">
+          <span class="text-muted-foreground text-xs font-semibold">{{ t("logReport.slowHint") }}</span>
+          <span v-for="s in report.slow" :key="s.name" class="flex justify-between gap-2">
+            <span class="font-semibold">{{ s.name }}</span>
+            <span class="text-muted-foreground font-mono text-xs">{{ t("logReport.secs", { n: s.secs }) }}</span>
+          </span>
+        </template>
+        <template v-if="report.heavy.length">
+          <span class="text-muted-foreground mt-1 text-xs font-semibold">{{ t("logReport.heavyHint") }}</span>
+          <span v-for="h in report.heavy" :key="h.name" class="flex justify-between gap-2">
+            <span class="font-semibold">{{ h.name }}</span>
+            <span class="text-muted-foreground font-mono text-xs">{{ t("logReport.assets", { n: h.assets }) }}</span>
+          </span>
+        </template>
+      </section>
+
       <section v-for="m in report.mods" :key="m.source" class="wood-panel flex flex-col gap-2 p-3.5">
         <button
           type="button"

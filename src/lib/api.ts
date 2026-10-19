@@ -596,6 +596,12 @@ export interface LogReport {
   lostLocations: string[];
   lostNpcs: string[];
   mods: ModProblems[];
+  /** Seconds from the game starting to SMAPI being ready. */
+  startupSecs: number | null;
+  /** Mods the load paused on for 2 seconds or more, slowest first. */
+  slow: { name: string; secs: number }[];
+  /** Mods loading or editing the most game assets. */
+  heavy: { name: string; assets: number }[];
 }
 
 export interface SkippedMod {
