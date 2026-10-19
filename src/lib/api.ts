@@ -445,6 +445,16 @@ export interface Applied {
   error: string | null;
 }
 
+export interface Forecast {
+  /** Today's daily luck, about -0.1 to 0.1. */
+  luck: number;
+  /** "Sun", "Rain", "Storm", "Snow", "Wind", "GreenRain", "Festival", "Wedding"… */
+  weatherTomorrow: string | null;
+  islandWeatherTomorrow: string | null;
+  geodesCracked: number;
+  geodes: { id: string; name: string; next: { id: string; name: string; stack: number }[] }[];
+}
+
 export const companion = {
   status: () => invoke<CompanionStatus>("companion_status"),
   available: () => invoke<boolean>("companion_available"),
@@ -456,6 +466,8 @@ export const companion = {
   onGmcm: (cb: (ids: string[]) => void): Promise<UnlistenFn> =>
     listen<string[]>("companion:gmcm", (e) => cb(e.payload)),
   onCatalog: (cb: () => void): Promise<UnlistenFn> => listen("companion:catalog", () => cb()),
+  forecast: () => invoke<Forecast>("companion_forecast"),
+  items: () => invoke<import("./grange").GrangeItem[]>("companion_items"),
 };
 
 export const modConfig = {

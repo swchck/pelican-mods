@@ -75,6 +75,20 @@ pub fn settings_set_companion(app: AppHandle, enabled: bool) -> AppResult<Settin
         .update(|s| s.companion_disabled = !enabled)
 }
 
+/// Luck, tomorrow's weather and the next geodes, from the loaded save.
+#[tauri::command]
+pub async fn companion_forecast(app: AppHandle) -> AppResult<Value> {
+    let companion = app.state::<AppState>().companion.clone();
+    companion.query("forecast").await
+}
+
+/// Objects in the inventory, chests and fridges, with their sell prices, for the grange.
+#[tauri::command]
+pub async fn companion_items(app: AppHandle) -> AppResult<Value> {
+    let companion = app.state::<AppState>().companion.clone();
+    companion.query("items").await
+}
+
 /// Loads `values` into mod `unique_id` in the running game and, when that worked,
 /// shows `notice` in the game's HUD.
 #[tauri::command]

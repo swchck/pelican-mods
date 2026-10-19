@@ -184,6 +184,55 @@ mockIPC(
             location: "Town",
           },
         };
+      case "companion_forecast": {
+        const g = (id: string, name: string, next: string[]) => ({
+          id,
+          name,
+          next: next.map((n, i) => ({ id: `(O)${i}`, name: n, stack: n === "Медная руда" ? 10 : 1 })),
+        });
+        return {
+          luck: 0.054,
+          weatherTomorrow: "Rain",
+          islandWeatherTomorrow: "Sun",
+          geodesCracked: 41,
+          geodes: [
+            g("(O)535", "Жеода", ["Медная руда", "Кварц", "Аметист", "Глина", "Тигровый глаз"]),
+            g("(O)536", "Замёрзшая жеода", ["Кварц", "Аквамарин", "Медная руда", "Лёд", "Кварц"]),
+            g("(O)537", "Магматическая жеода", ["Огненный кварц", "Золотая руда", "Обсидиан", "Кварц", "Рубин"]),
+            g("(O)749", "Всежеода", ["Призматический осколок", "Кварц", "Бирюза", "Огненный опал", "Нефрит"]),
+            g("(O)275", "Сокровищница", ["Древний меч", "Кукла", "Наконечник", "Чаша", "Монета"]),
+            g("(O)791", "Золотой кокос", ["Банан", "Манго", "Кокос", "Банан", "Манго"]),
+          ],
+        };
+      }
+      case "companion_items": {
+        const it = (
+          name: string,
+          category: number,
+          quality: number,
+          price: number,
+          stack: number,
+          where = "inventory",
+        ) => ({
+          id: name,
+          name,
+          category,
+          quality,
+          price,
+          stack,
+          where,
+        });
+        return [
+          it("Тыква", -75, 2, 480, 6),
+          it("Карамбола", -79, 1, 937, 3, "Ферма"),
+          it("Большое яйцо", -5, 2, 142, 4),
+          it("Сардина", -4, 0, 40, 2),
+          it("Аметист", -2, 0, 100, 1, "Ферма"),
+          it("Порей", -81, 1, 75, 3),
+          it("Вино", -26, 2, 1050, 2, "Подвал"),
+          it("Пастернак", -75, 0, 35, 20),
+        ];
+      }
       case "companion_apply":
         return { ok: true, method: "gmcm", error: null };
       case "game_current":

@@ -90,6 +90,12 @@ internal record CatalogVillager(string Key, string Name, bool Romance);
 /// <summary>A Monster Slayer goal: <see cref="Count"/> kills among <see cref="Targets"/>.</summary>
 internal record CatalogGoal(string Key, string Name, int Count, List<string> Targets);
 
+/// <summary>The answer to a launcher request that asked for data.</summary>
+internal record Reply(long Id, object? Data, string? Error = null)
+{
+    public string Type => "reply";
+}
+
 internal record Result(long Id, bool Ok, string? Method = null, string? Error = null)
 {
     public string Type => "result";

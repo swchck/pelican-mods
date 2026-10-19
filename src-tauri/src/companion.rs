@@ -33,7 +33,8 @@ pub const URL_VAR: &str = "PELICAN_COMPANION_URL";
 /// The companion's folder name inside Mods.
 pub const FOLDER: &str = "PelicanCompanion";
 
-const APPLY_TIMEOUT: Duration = Duration::from_secs(5);
+// a forecast runs the geode code 60 times and lists every chest; still well under this
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 
 /// What the player is doing right now.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -125,17 +126,20 @@ pub struct Status {
 #[serde(tag = "type", rename_all = "camelCase")]
 enum Incoming {
     Hello(Hello),
-    State { state: Option<GameSnapshot> },
-    Gmcm { mods: Vec<GmcmMod> },
+    State {
+        state: Option<GameSnapshot>,
+    },
+    Gmcm {
+        mods: Vec<GmcmMod>,
+    },
     Catalog(Box<Catalog>),
-    Result(ResultMsg),
-}
-
-#[derive(Deserialize)]
-struct ResultMsg {
-    id: u64,
-    #[serde(flatten)]
-    applied: Applied,
+    /// Answers to requests: `result` for applyConfig, `reply` for data requests.
+    #[serde(alias = "reply")]
+    Result {
+        id: u64,
+        #[serde(flatten)]
+        body: Value,
+    },
 }
 
 /// Where the companion reports to; implemented over Tauri events in the app.
@@ -151,7 +155,7 @@ struct Link {
     generation: u64,
     out: Option<mpsc::UnboundedSender<String>>,
     status: Status,
-    pending: HashMap<u64, oneshot::Sender<Applied>>,
+    pending: HashMap<u64, oneshot::Sender<Value>>,
 }
 
 /// The server and what the connected game last reported.
@@ -228,22 +232,40 @@ impl Companion {
 
     /// Asks the game to load `config` into mod `unique_id` without a restart.
     pub async fn apply(&self, unique_id: &str, config: &Value) -> AppResult<Applied> {
+        let body = self
+            .request(serde_json::json!({
+                "type": "applyConfig", "modId": unique_id, "config": config,
+            }))
+            .await?;
+        serde_json::from_value(body).map_err(|_| AppError::CompanionOffline)
+    }
+
+    /// Asks the game for data: `kind` is "forecast" or "items". The game answers only
+    /// with a save loaded; otherwise this fails with [`AppError::NoWorld`].
+    pub async fn query(&self, kind: &str) -> AppResult<Value> {
+        let mut body = self.request(serde_json::json!({ "type": kind })).await?;
+        match body.get("error").and_then(Value::as_str) {
+            Some("no_world") => Err(AppError::NoWorld),
+            Some(e) => Err(AppError::CompanionFailed(e.to_owned())),
+            None => Ok(body.get_mut("data").map(Value::take).unwrap_or_default()),
+        }
+    }
+
+    async fn request(&self, mut msg: Value) -> AppResult<Value> {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
+        msg["id"] = id.into();
         let (tx, rx) = oneshot::channel();
         {
             let mut link = self.link.lock().unwrap();
             let out = link.out.as_ref().ok_or(AppError::CompanionOffline)?;
-            let msg = serde_json::json!({
-                "type": "applyConfig", "id": id, "modId": unique_id, "config": config,
-            });
             out.send(msg.to_string())
                 .map_err(|_| AppError::CompanionOffline)?;
             link.pending.insert(id, tx);
         }
-        let result = tokio::time::timeout(APPLY_TIMEOUT, rx).await;
+        let result = tokio::time::timeout(REQUEST_TIMEOUT, rx).await;
         self.link.lock().unwrap().pending.remove(&id);
         match result {
-            Ok(Ok(applied)) => Ok(applied),
+            Ok(Ok(body)) => Ok(body),
             _ => Err(AppError::CompanionOffline),
         }
     }
@@ -377,9 +399,9 @@ impl Companion {
                 *self.catalog.lock().unwrap() = Some(*catalog);
                 events.catalog();
             }
-            Incoming::Result(r) => {
-                if let Some(tx) = self.link.lock().unwrap().pending.remove(&r.id) {
-                    let _ = tx.send(r.applied);
+            Incoming::Result { id, body } => {
+                if let Some(tx) = self.link.lock().unwrap().pending.remove(&id) {
+                    let _ = tx.send(body);
                 }
             }
         }
@@ -556,7 +578,10 @@ mod tests {
                     Some(SmapiRun {
                         log: home.join(".config/StardewValley/ErrorLogs/SMAPI-latest.txt"),
                         mods_path: Some(mods.clone()),
-                        env: vec![(URL_VAR.into(), companion.url().unwrap().into())],
+                        env: vec![
+                            (URL_VAR.into(), companion.url().unwrap().into()),
+                            ("PELICAN_COMPANION_TEST".into(), "1".into()),
+                        ],
                     }),
                     Quiet,
                 )
@@ -604,6 +629,17 @@ mod tests {
                 eprintln!("  e.g. {:?} / {:?} / {:?}", c.fish.first(), c.villagers.first(), c.monsters.first());
                 assert!(c.shipping.len() > 100 && c.fish.len() > 50 && c.cooking.len() > 70);
                 assert!(c.crafting.len() > 100 && c.villagers.len() > 25 && c.monsters.len() > 8);
+
+                let forecast = companion.query("forecast").await.unwrap();
+                let geodes = forecast["geodes"].as_array().unwrap();
+                eprintln!(
+                    "forecast: luck {}, tomorrow {}, {} geode types, first {}",
+                    forecast["luck"], forecast["weatherTomorrow"], geodes.len(), geodes[0]["next"][0]
+                );
+                assert_eq!(geodes.len(), 6);
+                assert_eq!(geodes[0]["next"].as_array().unwrap().len(), 10);
+                let items = companion.query("items").await.unwrap();
+                eprintln!("items on the title screen: {}", items.as_array().unwrap().len());
 
                 let file = lookup.join("config.json");
                 let mut config: Value =

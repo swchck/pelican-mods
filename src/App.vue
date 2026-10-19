@@ -29,6 +29,7 @@ useShortcut("nav.library", go("/"));
 useShortcut("nav.browse", go("/browse"));
 useShortcut("nav.saves", go("/saves"));
 useShortcut("nav.progress", go("/progress"));
+useShortcut("nav.helpers", go("/helpers"));
 useShortcut("nav.game", go("/game"));
 useShortcut("nav.console", go("/console"));
 useShortcut("nav.settings", go("/settings"));

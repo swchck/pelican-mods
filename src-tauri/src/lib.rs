@@ -69,6 +69,8 @@ pub fn run() {
             companion_commands::companion_status,
             companion_commands::companion_available,
             companion_commands::companion_apply,
+            companion_commands::companion_forecast,
+            companion_commands::companion_items,
             commands::game_detect,
             commands::game_current,
             commands::game_set_path,

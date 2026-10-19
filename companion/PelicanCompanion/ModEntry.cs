@@ -16,6 +16,10 @@ internal sealed class ModEntry : Mod
 {
     private const string UrlVariable = "PELICAN_COMPANION_URL";
 
+    // the launcher's tests have no save to load; the title screen's placeholder player
+    // is enough to check that the reflection still binds
+    private static readonly bool TestMode = Environment.GetEnvironmentVariable("PELICAN_COMPANION_TEST") == "1";
+
     private Bridge? Bridge;
     private Gmcm? Gmcm;
     private GameSnapshot? LastState;
@@ -83,6 +87,30 @@ internal sealed class ModEntry : Mod
             case "describe":
                 this.Describe();
                 break;
+            case "forecast":
+                this.Answer(command.Id, () => Helpers.Forecast(count: 10));
+                break;
+            case "items":
+                this.Answer(command.Id, Helpers.Items);
+                break;
+        }
+    }
+
+    private void Answer(long id, Func<object> build)
+    {
+        if (!Context.IsWorldReady && !TestMode)
+        {
+            this.Bridge!.Send(new Reply(id, null, Error: "no_world"));
+            return;
+        }
+        try
+        {
+            this.Bridge!.Send(new Reply(id, build()));
+        }
+        catch (Exception ex)
+        {
+            this.Monitor.Log($"couldn't answer the launcher: {ex}", LogLevel.Warn);
+            this.Bridge!.Send(new Reply(id, null, Error: ex.GetBaseException().Message));
         }
     }
 

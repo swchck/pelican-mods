@@ -55,6 +55,10 @@ pub enum AppError {
     Cancelled,
     #[error("the game isn't connected to the launcher")]
     CompanionOffline,
+    #[error("no save is loaded in the game")]
+    NoWorld,
+    #[error("the game couldn't answer: {0}")]
+    CompanionFailed(String),
     #[error("file system error: {0}")]
     Io(#[from] std::io::Error),
 }
@@ -87,6 +91,8 @@ impl AppError {
             Self::RosettaMissing => "rosetta_missing",
             Self::Cancelled => "cancelled",
             Self::CompanionOffline => "companion_offline",
+            Self::NoWorld => "no_world",
+            Self::CompanionFailed(_) => "companion_failed",
             Self::Io(_) => "io",
         }
     }
@@ -104,7 +110,8 @@ impl AppError {
             | Self::BadSave(s)
             | Self::BadConfig(s)
             | Self::Keychain(s)
-            | Self::BadProfileName(s) => Some(s.clone()),
+            | Self::BadProfileName(s)
+            | Self::CompanionFailed(s) => Some(s.clone()),
             Self::Io(e) => Some(e.to_string()),
             _ => None,
         }
