@@ -33,6 +33,8 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .setup(|app| {
             let config_dir = app.path().app_config_dir()?;
             let data_dir = app.path().app_data_dir()?;
@@ -70,6 +72,7 @@ pub fn run() {
             commands::game_console,
             commands::open_place,
             commands::rosetta_install,
+            commands::app_changelog,
             mods_commands::library_get,
             mods_commands::library_install,
             mods_commands::library_import,

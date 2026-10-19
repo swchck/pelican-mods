@@ -2,6 +2,7 @@
 import { useI18n } from "vue-i18n";
 import { GamepadIcon, LibraryIcon, SaveIcon, SearchIcon, SettingsIcon, TerminalIcon } from "@lucide/vue";
 import DownloadsCard from "@/components/DownloadsCard.vue";
+import AppUpdateCard from "@/components/AppUpdateCard.vue";
 import AppLogo from "@/components/AppLogo.vue";
 import PlayCard from "@/components/PlayCard.vue";
 import { onMounted } from "vue";
@@ -50,6 +51,7 @@ const links = [
       </span>
     </RouterLink>
     <div class="flex-1" data-tauri-drag-region />
+    <AppUpdateCard />
     <DownloadsCard />
     <PlayCard />
   </nav>

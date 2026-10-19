@@ -28,6 +28,8 @@ json5 = "1"
 keyring = { version = "3", features = ["apple-native"] }
 tauri-plugin-deep-link = "2"
 tauri-plugin-clipboard-manager = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
 sevenz-rust2 = "0.24"
 unrar = "0.5"
 url = "2"

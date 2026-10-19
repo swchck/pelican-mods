@@ -145,6 +145,8 @@ mockIPC(
   (cmd, payload) => {
     const a = (payload ?? {}) as Args;
     switch (cmd) {
+      case "plugin:app|version":
+        return "0.1.0";
       case "settings_get":
         return { gamePath: "/Applications/Stardew Valley.app/Contents/MacOS", locale: null };
       case "game_current":
@@ -198,6 +200,7 @@ mockIPC(
           return {
             path: "/mock/mods/ContentPatcher/config.json",
             values: null,
+            labels: {},
             schema: [
               {
                 key: "EnableJohn",
@@ -233,6 +236,19 @@ mockIPC(
             HideOnKeyUp: true,
           },
           schema: null,
+          labels: {
+            showunknowngifttastes: {
+              name: "Show unknown gift tastes",
+              description: "Whether to show gift tastes you haven't learned about in-game yet.",
+              values: {},
+            },
+            togglelookup: {
+              name: "Toggle lookup",
+              description: "Shows the lookup for whatever is under the cursor.",
+              values: {},
+            },
+            controls: { name: "Keybinds", description: null, values: {} },
+          },
         };
       case "saves_list":
         return [save];

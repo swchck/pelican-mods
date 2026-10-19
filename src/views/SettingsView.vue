@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import SmapiProgress from "@/components/SmapiProgress.vue";
 import NexusAccountCard from "@/components/NexusAccountCard.vue";
+import AboutCard from "@/components/AboutCard.vue";
 import { api } from "@/lib/api";
 import { errorText, setLocale } from "@/i18n";
 import { useGame } from "@/stores/game";
@@ -111,6 +112,8 @@ async function uninstall() {
         </SelectContent>
       </Select>
     </section>
+
+    <AboutCard />
 
     <Dialog v-model:open="confirmUninstall">
       <DialogContent>

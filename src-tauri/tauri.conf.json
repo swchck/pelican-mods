@@ -63,7 +63,8 @@
     "macOS": {
       "signingIdentity": "-",
       "minimumSystemVersion": "11.0"
-    }
+    },
+    "createUpdaterArtifacts": true
   },
   "plugins": {
     "deep-link": {
@@ -72,6 +73,12 @@
           "nxm"
         ]
       }
+    },
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk5NjgwOTJGMTEyNTJCOUQKUldTZEt5VVJMd2xvbVpuZmh5c0xEWXlZSmxrcG9VNHo1bUtGWUZ4Q2Erbll2dStHNzVLM28rUlcK",
+      "endpoints": [
+        "https://github.com/swchck/pelican-mods/releases/latest/download/latest.json"
+      ]
     }
   }
 }

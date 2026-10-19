@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, nextTick, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import PixelToggle from "@/components/PixelToggle.vue";
 import type { PackageView } from "@/lib/api";
@@ -40,21 +40,29 @@ const pill: Record<string, string> = {
   update: "bg-gold border-[#b57f17] text-[#4e2c14]",
 };
 
+watch(
+  () => lib.selectedId,
+  async () => {
+    await nextTick();
+    document.querySelector('[role="option"][aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
+  },
+);
+
 function select(p: PackageView) {
   lib.selectedId = p.id;
 }
 </script>
 
 <template>
-  <section :aria-label="t('library.title')" class="wood-panel flex min-w-0 flex-1 flex-col overflow-hidden">
+  <section :aria-label="t('library.title')" class="wood-panel @container flex min-w-0 flex-1 flex-col overflow-hidden">
     <div
-      class="text-muted-foreground border-border-soft grid grid-cols-[52px_minmax(0,1fr)_112px_124px_84px] gap-2 border-b-2 border-dashed px-4 pt-3 pb-2.5 text-xs font-extrabold tracking-wider uppercase"
+      class="text-muted-foreground border-border-soft grid grid-cols-[44px_minmax(0,1fr)_96px_112px] @xl:grid-cols-[52px_minmax(0,1fr)_112px_124px_84px] gap-2 border-b-2 border-dashed px-4 pt-3 pb-2.5 text-xs font-extrabold tracking-wider uppercase"
     >
       <span>{{ t("library.columns.on") }}</span>
       <span>{{ t("library.columns.mod") }}</span>
       <span>{{ t("library.columns.version") }}</span>
       <span>{{ t("library.columns.status") }}</span>
-      <span>{{ t("library.columns.source") }}</span>
+      <span class="hidden @xl:block">{{ t("library.columns.source") }}</span>
     </div>
 
     <p v-if="!lib.packages.length" class="text-muted-foreground p-6 text-sm font-semibold">{{ t("library.empty") }}</p>
@@ -69,7 +77,7 @@ function select(p: PackageView) {
         role="option"
         :aria-selected="lib.selectedId === r.pkg.id"
         tabindex="0"
-        class="grid cursor-default grid-cols-[52px_minmax(0,1fr)_112px_124px_84px] items-center gap-2 border-b border-[#ebd3a8] px-4 py-2 outline-none focus-visible:bg-[#fbe3a8]/60"
+        class="grid cursor-default grid-cols-[44px_minmax(0,1fr)_96px_112px] @xl:grid-cols-[52px_minmax(0,1fr)_112px_124px_84px] items-center gap-2 border-b border-[#ebd3a8] px-4 py-2 outline-none focus-visible:bg-[#fbe3a8]/60"
         :class="lib.selectedId === r.pkg.id ? 'bg-accent' : 'hover:bg-[#fbefd4]'"
         @click="select(r.pkg)"
         @keydown.enter="select(r.pkg)"
@@ -97,7 +105,7 @@ function select(p: PackageView) {
               : t(`library.status.${r.status}`)
           }}
         </span>
-        <span class="text-muted-foreground text-xs font-bold">{{ r.source ?? "—" }}</span>
+        <span class="text-muted-foreground hidden text-xs font-bold @xl:block">{{ r.source ?? "—" }}</span>
       </div>
     </div>
   </section>

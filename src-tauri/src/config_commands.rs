@@ -35,9 +35,10 @@ pub async fn mod_config_get(
     app: AppHandle,
     package: String,
     rel_path: String,
+    locale: String,
 ) -> AppResult<ModConfig> {
     blocking(app, move |s| {
-        mod_config::load(&mod_dir(s, &package, &rel_path)?)
+        mod_config::load(&mod_dir(s, &package, &rel_path)?, &locale)
     })
     .await
 }
@@ -48,11 +49,12 @@ pub async fn mod_config_save(
     package: String,
     rel_path: String,
     values: Value,
+    locale: String,
 ) -> AppResult<ModConfig> {
     blocking(app, move |s| {
         let dir = mod_dir(s, &package, &rel_path)?;
         mod_config::save(&dir, &values)?;
-        mod_config::load(&dir)
+        mod_config::load(&dir, &locale)
     })
     .await
 }
@@ -64,15 +66,16 @@ pub async fn mod_config_defaults(
     app: AppHandle,
     package: String,
     rel_path: String,
+    locale: String,
 ) -> AppResult<ModConfig> {
     blocking(app, move |s| {
         let dir = mod_dir(s, &package, &rel_path)?;
-        let cfg = mod_config::load(&dir)?;
+        let cfg = mod_config::load(&dir, &locale)?;
         let schema = cfg
             .schema
             .ok_or_else(|| AppError::BadConfig("no ConfigSchema to take defaults from".into()))?;
         mod_config::save(&dir, &mod_config::defaults(&schema))?;
-        mod_config::load(&dir)
+        mod_config::load(&dir, &locale)
     })
     .await
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { choiceValues, getAt, humanize, inferSections, schemaSections, setAt } from "./config-form";
+import { applyLabels, choiceValues, getAt, humanize, inferSections, schemaSections, setAt } from "./config-form";
 
 describe("humanize", () => {
   it("splits camel case and keeps acronyms", () => {
@@ -74,5 +74,18 @@ describe("paths", () => {
     expect(choiceValues("spring, fall")).toEqual(["spring", "fall"]);
     expect(choiceValues(true)).toEqual(["true"]);
     expect(choiceValues(null)).toEqual([]);
+  });
+});
+
+describe("applyLabels", () => {
+  it("uses the mod's own names and descriptions", () => {
+    const sections = inferSections({ ShowUnknownGiftTastes: false, Controls: { ToggleLookup: "F1" } });
+    const out = applyLabels(sections, {
+      showunknowngifttastes: { name: "Show unknown gift tastes", description: "Even unlearned ones.", values: {} },
+      controls: { name: "Keybinds", description: null, values: {} },
+    });
+    expect(out[0].fields[0]).toMatchObject({ label: "Show unknown gift tastes", description: "Even unlearned ones." });
+    expect(out[1].title).toBe("Keybinds");
+    expect(out[1].fields[0].label).toBe("Toggle lookup");
   });
 });

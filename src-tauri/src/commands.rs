@@ -260,3 +260,34 @@ pub(crate) fn game_data_dir(app: &AppHandle) -> AppResult<PathBuf> {
         .map_err(|e| AppError::Io(std::io::Error::other(e)))?;
     Ok(home.join(".config/StardewValley"))
 }
+
+/// Fetches the changelog as published with release `version`, so an older app can show
+/// what a newer one brings. `locale` "ru" picks the Russian file.
+#[tauri::command]
+pub async fn app_changelog(
+    state: State<'_, AppState>,
+    version: String,
+    locale: String,
+) -> AppResult<String> {
+    let valid = !version.is_empty()
+        && version
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '+'));
+    if !valid {
+        return Err(AppError::NotFound(version));
+    }
+    let file = if locale == "ru" {
+        "CHANGELOG.ru.md"
+    } else {
+        "CHANGELOG.md"
+    };
+    let url = format!("https://raw.githubusercontent.com/{RELEASE_REPO}/v{version}/{file}");
+    let resp = state.http.get(url).send().await?;
+    if resp.status() == reqwest::StatusCode::NOT_FOUND {
+        return Err(AppError::NotFound(format!("changelog for {version}")));
+    }
+    Ok(resp.error_for_status()?.text().await?)
+}
+
+/// Repository whose releases feed the updater; must match `plugins.updater.endpoints`.
+const RELEASE_REPO: &str = "swchck/pelican-mods";

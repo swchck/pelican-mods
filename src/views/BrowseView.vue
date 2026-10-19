@@ -12,6 +12,7 @@ import type { NexusSort } from "@/lib/api";
 import { installedNexusIds } from "@/lib/nexus-ids";
 import { useNexus } from "@/stores/nexus";
 import { useLibrary } from "@/stores/library";
+import { useShortcut } from "@/stores/shortcuts";
 
 const { t, locale } = useI18n();
 const nx = useNexus();
@@ -41,6 +42,18 @@ const endorsementsModel = computed({
   },
 });
 
+const searchInput = ref<HTMLInputElement>();
+function move(delta: number) {
+  const list = visible.value;
+  if (!list.length) return;
+  const i = list.findIndex((m) => m.modId === nx.selectedId);
+  const next = i === -1 ? 0 : Math.min(list.length - 1, Math.max(0, i + delta));
+  void nx.select(list[next].modId);
+}
+useShortcut("page.search", () => searchInput.value?.focus());
+useShortcut("list.up", () => move(-1));
+useShortcut("list.down", () => move(1));
+
 function reset() {
   nx.resetFilters();
   void nx.search();
@@ -68,6 +81,7 @@ onMounted(() => {
       >
         <SearchIcon class="text-muted-foreground size-4.5" />
         <input
+          ref="searchInput"
           v-model="nx.query"
           type="search"
           :placeholder="t('nexus.search')"

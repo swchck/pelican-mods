@@ -2,14 +2,50 @@ import type { SchemaField } from "./api";
 
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
-export type Field =
-  | { kind: "bool"; path: string[]; label: string; description?: string }
-  | { kind: "number"; path: string[]; label: string; integer: boolean }
-  | { kind: "text"; path: string[]; label: string; description?: string }
-  | { kind: "keybind"; path: string[]; label: string }
-  | { kind: "choice"; path: string[]; label: string; options: string[]; multiple: boolean; description?: string }
-  | { kind: "list"; path: string[]; label: string }
-  | { kind: "json"; path: string[]; label: string };
+interface Common {
+  path: string[];
+  label: string;
+  description?: string;
+}
+
+export type Field = Common &
+  (
+    | { kind: "bool" }
+    | { kind: "number"; integer: boolean }
+    | { kind: "text" }
+    | { kind: "keybind" }
+    | { kind: "choice"; options: string[]; multiple: boolean; optionLabels?: Record<string, string> }
+    | { kind: "list" }
+    | { kind: "json" }
+  );
+
+export interface OptionLabel {
+  name: string | null;
+  description: string | null;
+  values: Record<string, string>;
+}
+
+/** Same normalization as the backend: "ShowUnknownGiftTastes" ≡ "show-unknown-gift-tastes". */
+export function labelKey(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/** Replaces generated labels with the mod's own texts where its translations have them. */
+export function applyLabels(sections: Section[], labels: Record<string, OptionLabel>): Section[] {
+  const find = (key: string | undefined) => (key ? labels[labelKey(key)] : undefined);
+  return sections.map((s) => {
+    const sectionKey = s.fields[0]?.path.length === 2 ? s.fields[0].path[0] : undefined;
+    return {
+      title: find(sectionKey)?.name ?? s.title,
+      fields: s.fields.map((f) => {
+        const l = find(f.path[f.path.length - 1]);
+        if (!l) return f;
+        const next = { ...f, label: l.name ?? f.label, description: l.description ?? f.description };
+        return next.kind === "choice" && Object.keys(l.values).length ? { ...next, optionLabels: l.values } : next;
+      }),
+    };
+  });
+}
 
 export interface Section {
   title: string | null;

@@ -7,12 +7,13 @@ import { BracesIcon, FolderOpenIcon, Loader2Icon, RotateCcwIcon, SaveIcon, Spark
 import { Button } from "@/components/ui/button";
 import ConfigField from "@/components/config/ConfigField.vue";
 import { library, modConfig, type ModConfig } from "@/lib/api";
-import { getAt, inferSections, schemaSections, setAt, type Json } from "@/lib/config-form";
+import { applyLabels, getAt, inferSections, schemaSections, setAt, type Json } from "@/lib/config-form";
 import { errorText } from "@/i18n";
 import { useLibrary } from "@/stores/library";
 import { useGame } from "@/stores/game";
+import { hint, useShortcut } from "@/stores/shortcuts";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const lib = useLibrary();
@@ -41,8 +42,12 @@ const current = computed(() => {
 });
 const sections = computed(() => {
   if (!cfg.value) return [];
-  if (cfg.value.schema?.length) return schemaSections(cfg.value.schema);
-  return draft.value ? inferSections(draft.value) : [];
+  const base = cfg.value.schema?.length
+    ? schemaSections(cfg.value.schema)
+    : draft.value
+      ? inferSections(draft.value)
+      : [];
+  return applyLabels(base, cfg.value.labels ?? {});
 });
 // config files are plain JSON; structuredClone chokes on Vue's reactive proxies
 const cloneJson = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
@@ -56,7 +61,7 @@ async function load() {
   if (!c) return;
   loading.value = true;
   try {
-    cfg.value = await modConfig.get(c.pkg, c.rel);
+    cfg.value = await modConfig.get(c.pkg, c.rel, locale.value);
     draft.value = cfg.value.values ? cloneJson(cfg.value.values) : null;
   } catch (e) {
     toast.error(errorText(e));
@@ -107,12 +112,12 @@ function save() {
       return;
     }
   }
-  void run(() => modConfig.save(c.pkg, c.rel, values), t("config.saved"));
+  void run(() => modConfig.save(c.pkg, c.rel, values, locale.value), t("config.saved"));
 }
 
 function createDefaults() {
   const c = current.value;
-  if (c) void run(() => modConfig.defaults(c.pkg, c.rel), t("config.created"));
+  if (c) void run(() => modConfig.defaults(c.pkg, c.rel, locale.value), t("config.created"));
 }
 
 function generate() {
@@ -126,7 +131,11 @@ function toggleRaw() {
   raw.value = raw.value === null ? JSON.stringify(draft.value ?? {}, null, 2) : null;
 }
 
+useShortcut("page.save", () => {
+  if (draft.value && !busy.value && (dirty.value || raw.value !== null)) save();
+});
 watch(current, load);
+watch(locale, load);
 onMounted(async () => {
   if (!lib.view) await lib.load();
   if (!current.value && entries.value[0]) select(entries.value[0].pkg, entries.value[0].rel);
@@ -241,6 +250,7 @@ onMounted(async () => {
           @click="save"
         >
           <SaveIcon />{{ t("config.save") }}
+          <kbd class="ml-1 text-xs opacity-80">{{ hint("page.save") }}</kbd>
         </Button>
       </footer>
     </section>

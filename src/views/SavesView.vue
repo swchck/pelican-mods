@@ -18,6 +18,7 @@ import { api, saves, type SaveProgress, type SaveSummary, type Snapshot } from "
 import { relativeTime } from "@/lib/time";
 import { errorText } from "@/i18n";
 import { useGame } from "@/stores/game";
+import { useShortcut } from "@/stores/shortcuts";
 
 const { t, locale } = useI18n();
 const game = useGame();
@@ -123,6 +124,7 @@ async function restore() {
 }
 
 onMounted(load);
+useShortcut("page.install", () => void importSave());
 </script>
 
 <template>

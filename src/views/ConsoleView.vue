@@ -10,12 +10,15 @@ import { Label } from "@/components/ui/label";
 import { api, type LogLevel } from "@/lib/api";
 import { errorText } from "@/i18n";
 import { useGame } from "@/stores/game";
+import { useShortcut } from "@/stores/shortcuts";
 
 const { t } = useI18n();
 const game = useGame();
 const box = ref<HTMLElement>();
 const follow = ref(true);
 const command = ref("");
+const commandInput = ref<InstanceType<typeof Input>>();
+useShortcut("page.search", () => (commandInput.value?.$el as HTMLInputElement | undefined)?.focus());
 
 // SMAPI's own console hides TRACE too; it is most of the file
 const showTrace = ref(false);
@@ -80,6 +83,7 @@ async function send() {
 
     <form class="flex gap-2" @submit.prevent="send">
       <Input
+        ref="commandInput"
         v-model="command"
         class="bg-card border-input h-10 border-2 font-mono"
         :placeholder="t('console.placeholder')"

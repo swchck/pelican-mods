@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useGame } from "@/stores/game";
+import { hint } from "@/stores/shortcuts";
 
 const { t } = useI18n();
 const game = useGame();
@@ -48,7 +49,14 @@ const status = computed(() => {
       <span class="size-2 rounded-[2px] bg-current" />{{ status.text }}
     </div>
 
-    <Button v-if="game.running" variant="destructive" size="xl" class="w-full" @click="game.stop()">
+    <Button
+      v-if="game.running"
+      variant="destructive"
+      size="xl"
+      class="w-full"
+      :title="`${t('play.stop')} (${hint('game.stop')})`"
+      @click="game.stop()"
+    >
       <SquareIcon />{{ t("play.stop") }}
     </Button>
     <div v-else class="flex">
@@ -57,6 +65,7 @@ const status = computed(() => {
         size="xl"
         class="flex-1 rounded-r-none"
         :disabled="game.busy || !game.install?.smapiVersion || game.install.needsRosetta"
+        :title="`${t('play.play')} (${hint('game.play')})`"
         @click="game.launch(true)"
       >
         <PlayIcon class="fill-current" />{{ t("play.play") }}

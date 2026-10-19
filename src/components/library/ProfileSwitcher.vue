@@ -67,9 +67,9 @@ async function submit() {
     <Select v-model="active" :disabled="game.running || lib.working">
       <SelectTrigger
         :aria-label="t('profiles.label')"
-        class="bg-card border-input h-9 min-w-40 border-2 font-extrabold"
+        class="bg-card border-input h-9 min-w-32 border-2 font-extrabold"
       >
-        <span class="text-muted-foreground text-xs font-bold">{{ t("profiles.label") }}</span>
+        <span class="text-muted-foreground hidden text-xs font-bold @4xl:inline">{{ t("profiles.label") }}</span>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

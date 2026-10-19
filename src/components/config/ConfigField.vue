@@ -78,7 +78,7 @@ function onChoice(option: string) {
 
     <template v-else>
       <label :for="id" class="text-sm font-extrabold">{{ field.label }}</label>
-      <span v-if="'description' in field && field.description" class="text-muted-foreground -mt-1 text-xs">
+      <span v-if="field.description" class="text-muted-foreground -mt-1 text-xs leading-snug">
         {{ field.description }}
       </span>
 
@@ -97,7 +97,7 @@ function onChoice(option: string) {
           :class="selected.includes(o) ? 'bg-gold border-wood-dark' : 'bg-parchment border-[#a0703f]'"
           @click="onChoice(o)"
         >
-          {{ o }}
+          {{ field.optionLabels?.[o] ?? o }}
         </button>
       </div>
       <Select
@@ -109,7 +109,7 @@ function onChoice(option: string) {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem v-for="o in field.options" :key="o" :value="o">{{ o }}</SelectItem>
+          <SelectItem v-for="o in field.options" :key="o" :value="o">{{ field.optionLabels?.[o] ?? o }}</SelectItem>
         </SelectContent>
       </Select>
 

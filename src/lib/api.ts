@@ -346,12 +346,15 @@ export interface ModConfig {
   /** null before the mod has written config.json. */
   values: Record<string, import("./config-form").Json> | null;
   schema: SchemaField[] | null;
+  labels: Record<string, import("./config-form").OptionLabel>;
 }
 
 export const modConfig = {
-  get: (pkg: string, relPath: string) => invoke<ModConfig>("mod_config_get", { package: pkg, relPath }),
-  save: (pkg: string, relPath: string, values: unknown) =>
-    invoke<ModConfig>("mod_config_save", { package: pkg, relPath, values }),
-  defaults: (pkg: string, relPath: string) => invoke<ModConfig>("mod_config_defaults", { package: pkg, relPath }),
+  get: (pkg: string, relPath: string, locale: string) =>
+    invoke<ModConfig>("mod_config_get", { package: pkg, relPath, locale }),
+  save: (pkg: string, relPath: string, values: unknown, locale: string) =>
+    invoke<ModConfig>("mod_config_save", { package: pkg, relPath, values, locale }),
+  defaults: (pkg: string, relPath: string, locale: string) =>
+    invoke<ModConfig>("mod_config_defaults", { package: pkg, relPath, locale }),
   generate: () => invoke<void>("mods_generate_configs"),
 };

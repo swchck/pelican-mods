@@ -1,0 +1,108 @@
+name: Release
+
+# Bump the version in package.json, src-tauri/Cargo.toml and src-tauri/tauri.conf.json,
+# add a section for it to CHANGELOG.md and CHANGELOG.ru.md, then push a matching tag:
+# git tag v0.2.0 && git push origin v0.2.0
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  # one draft created up front; builds that each find-or-create it race into duplicates
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      id: ${{ steps.draft.outputs.id }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Tag matches every version field and the changelogs
+        run: node .github/release-check.mjs
+      - id: draft
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # the create response carries the id; listing releases right after creating lags
+        run: |
+          node .github/release-notes.mjs > "$RUNNER_TEMP/notes.md"
+          id=$(gh api -X POST "repos/$GITHUB_REPOSITORY/releases" \
+            -f tag_name="$GITHUB_REF_NAME" -f name="Pelican Mods $GITHUB_REF_NAME" \
+            -F draft=true -F body=@"$RUNNER_TEMP/notes.md" --jq .id)
+          test -n "$id"
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [aarch64-apple-darwin, x86_64-apple-darwin]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: lts/*
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: ${{ matrix.target }}
+      - run: npm ci
+
+      # a stable self-signed identity, unlike ad-hoc signing, gives every version the same
+      # designated requirement, so the Keychain keeps trusting the app across updates;
+      # imported by hand because tauri's own import only accepts certificates macOS trusts
+      - name: Import the code signing certificate
+        env:
+          CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          password=$(openssl rand -base64 24)
+          echo "$CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/signing.p12"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          security import "$RUNNER_TEMP/signing.p12" -k "$keychain" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$password" "$keychain"
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          rm "$RUNNER_TEMP/signing.p12"
+
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_SIGNING_IDENTITY: Pelican Mods Self-Signed
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          releaseId: ${{ needs.create-release.outputs.id }}
+          args: --target ${{ matrix.target }}
+          # two parallel jobs merging one latest.json lose a platform; publish writes it once
+          uploadUpdaterJson: false
+
+      - name: Check the app is signed with the stable identity
+        run: |
+          app=$(find src-tauri/target -maxdepth 6 -path '*/bundle/macos/*.app' | head -1)
+          codesign -dvv "$app" 2>&1 | tee /dev/stderr | grep -q "Authority=Pelican Mods Self-Signed"
+
+  publish:
+    needs: [create-release, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Upload latest.json for the in-app updater
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ needs.create-release.outputs.id }}
+        run: node .github/updater-manifest.mjs
+      - name: Publish the draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/${{ needs.create-release.outputs.id }}" \
+            -F draft=false -f make_latest=true
