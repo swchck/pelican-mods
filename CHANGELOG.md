@@ -13,6 +13,10 @@
 
 - Forecasts in the spirit of Stardew Predictor: night events for the next four weeks (meteorite, fairy, witch, owl, capsule, earthquake and more), the bookseller's days this season, the traveling cart's stock on cart days, and the next mystery boxes alongside the geodes. All of it comes from the game's own code with your mods loaded.
 
+### Updates
+
+- Mods that list a GitHub repo update from its releases first, even when the newest version was found on Nexus, so they update in one click without a Nexus Premium account.
+
 ### Settings
 
 - The app's language follows the game's (Russian or English) unless you pick one; other game languages fall back to the system's.

@@ -398,8 +398,6 @@ pub async fn updates_check(app: AppHandle, force: bool) -> AppResult<UpdateRepor
     Ok(report)
 }
 
-/// Downloads and installs the suggested update of package `id`, when smapi.io points
-/// at a GitHub release. Other sites need a browser (or Nexus' nxm links) to download.
 /// How [`mod_update`] went: installed in place, queued as a download, or left for
 /// the browser because only the site can hand out the file.
 #[derive(Debug, Serialize)]
@@ -412,6 +410,8 @@ pub enum UpdateOutcome {
 
 /// Updates package `id` to the version smapi.io suggested: GitHub and ModDrop files
 /// install right away, Nexus files go through the download queue for Premium accounts.
+/// A mod that also names a GitHub repo is fetched from its releases first, wherever
+/// smapi.io pointed.
 #[tauri::command]
 pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> {
     let state = app.state::<AppState>();
@@ -426,13 +426,25 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> 
                 info.version.clone()?,
                 info.url.clone()?,
                 info.nexus_id,
+                updates::github_key(&m.manifest.update_keys),
             ))
         })
     };
-    let (name, version, url, nexus_id) = found.ok_or_else(|| AppError::NoDownload(id.clone()))?;
+    let (name, version, url, nexus_id, github) =
+        found.ok_or_else(|| AppError::NoDownload(id.clone()))?;
     let dir = state.work_dir.with_file_name("downloads");
-    let file = if let Some(repo) = updates::github_repo(&url) {
-        Some(updates::download_github(&state.http, &repo, &name, &version, &dir).await?)
+    let mut file = None;
+    if let Some(repo) = updates::github_repo(&url) {
+        file = Some(updates::download_github(&state.http, &repo, &name, &version, &dir).await?);
+    } else if let Some(repo) = github {
+        // some authors release on Nexus only and keep the repo for code; then the
+        // suggested site still has the file
+        file = updates::download_github(&state.http, &repo, &name, &version, &dir)
+            .await
+            .ok();
+    }
+    let file = if file.is_some() {
+        file
     } else if let Some(mod_id) = moddrop::mod_page_id(&url) {
         let files = moddrop::files(&state.http, mod_id).await?;
         match moddrop::pick(&files, &version) {

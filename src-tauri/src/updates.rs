@@ -238,6 +238,20 @@ fn normalize(s: &str) -> String {
         .collect()
 }
 
+/// Returns `owner/repo` from a mod's "GitHub:owner/repo" update key, if it has one.
+pub fn github_key(keys: &[String]) -> Option<String> {
+    keys.iter().find_map(|k| {
+        let (site, rest) = k.split_once(':')?;
+        if !site.trim().eq_ignore_ascii_case("github") {
+            return None;
+        }
+        // "@Subkey" picks one mod's files in a shared repo; the repo is what comes before
+        let repo = rest.split('@').next()?.trim();
+        let (owner, name) = repo.split_once('/')?;
+        (!owner.is_empty() && !name.is_empty() && !name.contains('/')).then(|| repo.to_owned())
+    })
+}
+
 /// Extracts `owner/repo` from a GitHub URL smapi.io suggested.
 pub fn github_repo(url: &str) -> Option<String> {
     let rest = url.strip_prefix("https://github.com/")?;
@@ -320,6 +334,23 @@ mod tests {
             pick_asset(&rels, "x", "1.0").is_none(),
             "1.0 must not match 2.1.0"
         );
+    }
+
+    #[test]
+    fn reads_github_update_keys() {
+        let keys = |k: &[&str]| k.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        assert_eq!(
+            github_key(&keys(&["Nexus:1915", "GitHub:Annosz/UIInfoSuite2"])).as_deref(),
+            Some("Annosz/UIInfoSuite2")
+        );
+        assert_eq!(
+            github_key(&keys(&[
+                "github: spacechase0/StardewValleyMods@GenericModConfigMenu"
+            ]))
+            .as_deref(),
+            Some("spacechase0/StardewValleyMods")
+        );
+        assert_eq!(github_key(&keys(&["Nexus:1915", "GitHub:broken"])), None);
     }
 
     #[test]
