@@ -69,6 +69,7 @@ export const api = {
   setWiki: (wiki: string) => invoke<Settings>("settings_set_wiki", { wiki }),
   setBackupFolder: (folder: string | null) => invoke<Settings>("settings_set_backup_folder", { folder }),
   storage: () => invoke<StorageUsage[]>("storage_usage"),
+  compatForNexus: (ids: number[]) => invoke<Record<number, CompatVerdict>>("compat_for_nexus", { ids }),
   cleanStorage: (kind: StorageUsage["kind"]) => invoke<number>("storage_clean", { kind }),
   wikiTitles: (ids: string[]) => invoke<Record<string, string>>("wiki_titles", { ids }),
   detectGames: () => invoke<GameInstall[]>("game_detect"),
@@ -741,4 +742,10 @@ export interface StorageUsage {
   kind: "modBackups" | "removed" | "saveBackups" | "downloads";
   bytes: number;
   files: number;
+}
+
+/** SMAPI's compatibility list on a mod that isn't simply fine. */
+export interface CompatVerdict {
+  status: "Broken" | "Abandoned" | "Obsolete" | "Workaround" | "Unofficial";
+  summary: string | null;
 }

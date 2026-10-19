@@ -432,6 +432,8 @@ mockIPC(
         return { source: "github", versions: [{ version: "1.55.0", lines: ["## What's Changed", "* Fixed a crash"] }] };
       case "library_conflicts":
         return [];
+      case "compat_for_nexus":
+        return {};
       case "storage_usage":
         return [
           { kind: "modBackups", bytes: 48_000_000, files: 120 },

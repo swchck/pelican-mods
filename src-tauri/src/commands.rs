@@ -231,6 +231,18 @@ pub async fn storage_clean(app: AppHandle, kind: String) -> AppResult<u32> {
     .await
 }
 
+/// SMAPI's compatibility verdicts for Nexus mods `ids`; fine mods are left out.
+#[tauri::command]
+pub async fn compat_for_nexus(
+    state: State<'_, AppState>,
+    ids: Vec<u64>,
+) -> AppResult<std::collections::HashMap<u64, crate::compat::Verdict>> {
+    let cache = state.updates_file.with_file_name("compat.jsonc");
+    let mut all = crate::compat::verdicts(&state.http, &cache).await?;
+    all.retain(|id, _| ids.contains(id));
+    Ok(all)
+}
+
 /// What SMAPI's log from the last session says went wrong.
 #[tauri::command]
 pub fn smapi_log_report(app: AppHandle) -> AppResult<crate::smapi_log::LogReport> {

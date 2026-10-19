@@ -352,6 +352,7 @@ export default {
     pill: "→ {version}",
   },
   nexus: {
+    compatFrom: "From SMAPI's compatibility list.",
     openLink: "Open {name}",
     title: "Browse mods",
     search: "Search Nexus Mods",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { watchDebounced } from "@vueuse/core";
 import { DownloadIcon, HeartIcon, Loader2Icon, SearchIcon, SlidersHorizontalIcon } from "@lucide/vue";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import NexusModDetail from "@/components/browse/NexusModDetail.vue";
-import type { NexusSort } from "@/lib/api";
+import { api, type CompatVerdict, type NexusSort } from "@/lib/api";
 import { installedNexusIds } from "@/lib/nexus-ids";
 import { useNexus } from "@/stores/nexus";
 import { useLibrary } from "@/stores/library";
@@ -19,6 +19,23 @@ const nx = useNexus();
 const lib = useLibrary();
 
 const installed = computed(() => installedNexusIds(lib.packages));
+
+// what SMAPI's compatibility list says about the results; looked up as pages arrive.
+// Asked ids are kept apart from the answers: most mods have no verdict, and watching
+// the answers for them would ask again forever
+const verdicts = ref<Record<number, CompatVerdict>>({});
+const asked = new Set<number>();
+watch(
+  () => nx.results.map((m) => m.modId),
+  async (all) => {
+    const ids = all.filter((id) => !asked.has(id));
+    if (!ids.length) return;
+    ids.forEach((id) => asked.add(id));
+    const found = await api.compatForNexus(ids).catch(() => ({}));
+    verdicts.value = { ...verdicts.value, ...found };
+  },
+  { immediate: true },
+);
 const visible = computed(() =>
   nx.hideInstalled ? nx.results.filter((m) => !installed.value.has(m.modId)) : nx.results,
 );
@@ -192,6 +209,12 @@ onMounted(() => {
                 class="bg-success-soft shrink-0 rounded border-2 border-[#9cc07a] px-1 text-[10px] font-extrabold text-[#2e5a1e]"
                 >{{ t("nexus.installedBadge") }}</span
               >
+              <span
+                v-if="verdicts[m.modId]"
+                class="bg-warning-soft text-destructive shrink-0 rounded border-2 border-[#d98b76] px-1 text-[10px] font-extrabold"
+                :title="verdicts[m.modId].summary ?? ''"
+                >{{ t(`updates.compat.${verdicts[m.modId].status}`) }}</span
+              >
             </span>
             <span class="text-muted-foreground flex items-center gap-2 text-xs font-bold">
               <span class="truncate">{{ m.author }}</span>
@@ -215,6 +238,7 @@ onMounted(() => {
         v-if="nx.selected"
         :mod="nx.selected"
         :installed="installed.has(nx.selected.modId)"
+        :verdict="verdicts[nx.selected.modId] ?? null"
         :installed-ids="installed"
       />
       <div

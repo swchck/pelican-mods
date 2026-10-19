@@ -33,6 +33,7 @@
 
 ### Updates
 
+- The Nexus catalog marks mods SMAPI's compatibility list calls broken, abandoned, obsolete or needing a workaround or unofficial version, with its note in the mod's page, before you install them.
 - While the app is open it rechecks for mod updates every few hours and sends a macOS notification when new ones appear.
 
 - Profiles export to a mod list file and import back: the import shows which mods you have, installs the missing ones the way dependencies install, and makes a profile with the list's mods. Lists hold names and sources only, no files.

@@ -4,6 +4,7 @@ mod checkup;
 mod commands;
 mod companion;
 mod companion_commands;
+mod compat;
 mod config_commands;
 mod conflicts;
 mod deps;
@@ -80,6 +81,7 @@ pub fn run() {
             commands::game_catalog,
             commands::storage_usage,
             commands::storage_clean,
+            commands::compat_for_nexus,
             companion_commands::settings_set_companion,
             companion_commands::companion_status,
             companion_commands::companion_available,

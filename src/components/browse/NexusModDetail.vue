@@ -14,11 +14,17 @@ import {
 import ImageLightbox from "@/components/ImageLightbox.vue";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { NexusFile, NexusMod } from "@/lib/api";
+import type { CompatVerdict, NexusFile, NexusMod } from "@/lib/api";
 import { bbcodeImages, bbcodeToHtml } from "@/lib/bbcode";
 import { useNexus } from "@/stores/nexus";
 
-const props = defineProps<{ mod: NexusMod; installed: boolean; installedIds: Set<number> }>();
+const props = defineProps<{
+  mod: NexusMod;
+  installed: boolean;
+  installedIds: Set<number>;
+  /** SMAPI's compatibility list on this mod, when it isn't simply fine. */
+  verdict?: CompatVerdict | null;
+}>();
 const { t, locale } = useI18n();
 const nx = useNexus();
 
@@ -111,6 +117,15 @@ function onClick(e: MouseEvent) {
         <Button variant="link" size="sm" @click="openUrl(page)"><ExternalLinkIcon />Nexus</Button>
       </div>
     </header>
+
+    <p
+      v-if="verdict"
+      class="bg-warning-soft text-destructive shrink-0 rounded-md border-2 border-[#d98b76] p-2.5 text-[13px] font-semibold break-words"
+    >
+      <b>{{ t(`updates.compat.${verdict.status}`) }}</b
+      ><template v-if="verdict.summary">: {{ verdict.summary.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") }}</template>
+      <span class="mt-1 block text-xs">{{ t("nexus.compatFrom") }}</span>
+    </p>
 
     <div class="-mr-2 min-h-0 flex-1 overflow-y-auto pr-2">
       <div v-if="gallery.length" class="flex flex-col gap-2 pb-3.5">
