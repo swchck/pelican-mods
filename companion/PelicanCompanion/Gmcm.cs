@@ -52,7 +52,7 @@ internal sealed class Gmcm
             if (valueType is null || name is null)
                 continue;
             options.Add(new GmcmOption(
-                Path: PathOf(option, json),
+                Path: PathOf(option, json, checkValue: true),
                 Name: name,
                 Tooltip: Text(option, "Tooltip"),
                 Kind: KindOf(option, valueType),
@@ -95,12 +95,19 @@ internal sealed class Gmcm
         foreach (object option in reloaded ? new List<object>() : options)
         {
             Type? valueType = ValueType(option.GetType());
-            string[]? path = valueType is null ? null : PathOf(option, values);
-            JToken? token = path?.Aggregate((JToken?)values, (t, key) => t?[key]);
+            string[]? path = valueType is null ? null : PathOf(option, values, checkValue: false);
+            JToken? token = path?.Aggregate((JToken?)values, (t, key) => t is JObject o ? o[key] : null);
             if (token is null)
                 continue;
-            object? value = Convert(token, valueType!);
-            option.GetType().GetProperty("Value", Instance)?.SetValue(option, value);
+            try
+            {
+                option.GetType().GetProperty("Value", Instance)?.SetValue(option, Convert(token, valueType!));
+            }
+            catch (Exception)
+            {
+                // one value the option rejects (a null its setter can't compare, a bad
+                // keybind) shouldn't stop the others; it keeps the mod's current value
+            }
         }
         Call(options, "BeforeSave");
         (Get(config, "Save") as Action)?.Invoke();
@@ -142,25 +149,49 @@ internal sealed class Gmcm
         }
     }
 
-    private static string[]? PathOf(object option, JObject json)
+    // checkValue: json is what the mod loaded, so the key found must hold the option's
+    // current value; that catches a renamed section making `Sub.Enabled` match a top-level
+    // `Enabled`. Off when matching against new values, which differ by design.
+    private static string[]? PathOf(object option, JObject json, bool checkValue)
     {
         if (option.GetType().GetField("GetValue", Instance)?.GetValue(option) is not Delegate getter)
             return null;
         string? fieldId = Get(option, "FieldId") as string;
         if (fieldId is not null && Safe(() => json.SelectToken(fieldId)) is { } byId && byId is not JObject)
             return byId.Path.Split('.');
-        return MatchDelegate(getter, json, depth: 3);
+        string[]? path = MatchDelegate(getter, json, depth: 3);
+        if (path is null || !checkValue)
+            return path;
+        JToken? token = path.Aggregate((JToken?)json, (t, key) => t is JObject o ? o[key] : null);
+        return token is not null && Agrees(token, Safe(() => Get(option, "Value"))) ? path : null;
     }
+
+    private static bool Agrees(JToken token, object? value) => value switch
+    {
+        bool b => token.Type == JTokenType.Boolean && token.Value<bool>() == b,
+        int or long or float or double or decimal => token.Type is JTokenType.Integer or JTokenType.Float
+            && Math.Abs(token.Value<double>() - ((IConvertible)value).ToDouble(null)) < 1e-6,
+        string or Enum => string.Equals(token.ToString(), value.ToString(), StringComparison.OrdinalIgnoreCase),
+        // keybinds, colours and other objects: no cheap comparison, trust the IL
+        _ => true,
+    };
 
     // helper libraries wrap the mod's lambda, `() => get(this.GetConfig())`, so when the
     // outer body names no key, look into delegates the closure captured
     private static string[]? MatchDelegate(Delegate d, JObject json, int depth)
     {
-        string[]? path = IlPath.Match(IlPath.Members(d.Method), json);
+        List<string> members = IlPath.Members(d.Method);
+        string[]? path = IlPath.Match(members, json);
+        // `Config.Limit.Value` on a nullable reads the key, then Nullable<T>.Value
+        if (path is null && members.Count > 1 && members[^1] is "Value" or "HasValue")
+            path = IlPath.Match(members.Take(members.Count - 1).ToList(), json);
         if (path is not null || depth == 0 || d.Target is null)
             return path;
         foreach (FieldInfo field in d.Target.GetType().GetFields(Instance))
         {
+            // <>c caches every non-capturing lambda of the class; those belong to other options
+            if (field.Name.StartsWith("<>"))
+                continue;
             if (field.GetValue(d.Target) is Delegate inner && MatchDelegate(inner, json, depth - 1) is { } found)
                 return found;
         }

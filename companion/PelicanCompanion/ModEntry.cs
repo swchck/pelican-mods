@@ -25,6 +25,8 @@ internal sealed class ModEntry : Mod
     private GameSnapshot? LastState;
     private volatile bool Resend;
     private bool Launched;
+    private CatalogMessage? CachedCatalog;
+    private string? CachedLanguage;
 
     public override void Entry(IModHelper helper)
     {
@@ -34,6 +36,7 @@ internal sealed class ModEntry : Mod
         this.Gmcm = new Gmcm(helper.ModRegistry, this.ReadModConfig);
         this.Bridge = new Bridge(uri, msg => this.Monitor.Log(msg, LogLevel.Warn));
         this.Bridge.Connected += () => this.Resend = true;
+        this.Bridge.Start();
         helper.Events.GameLoop.GameLaunched += (_, _) => this.Launched = true;
         helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => this.SendState(force: true);
@@ -58,17 +61,33 @@ internal sealed class ModEntry : Mod
         if (this.Resend && this.Launched)
         {
             this.Resend = false;
-            bridge.Send(new Hello(
-                Constants.ApiVersion.ToString(),
-                Game.Version,
-                this.Helper.ModRegistry.GetAll().Select(m => m.Manifest.UniqueID).ToList()
-            ));
+            try
+            {
+                bridge.Send(new Hello(
+                    Constants.ApiVersion.ToString(),
+                    Game.Version,
+                    this.Helper.ModRegistry.GetAll().Select(m => m.Manifest.UniqueID).ToList()
+                ));
+            }
+            catch (Exception ex)
+            {
+                this.Monitor.Log($"couldn't greet the launcher: {ex}", LogLevel.Warn);
+            }
             this.Describe();
             this.SendCatalog();
             this.SendState(force: true);
         }
         while (bridge.Inbox.TryDequeue(out Command? command))
-            this.Handle(command);
+        {
+            try
+            {
+                this.Handle(command);
+            }
+            catch (Exception ex)
+            {
+                this.Monitor.Log($"couldn't handle the launcher's '{command.Kind}': {ex}", LogLevel.Warn);
+            }
+        }
         // once a second is plenty: the clock moves every 10 in-game minutes (~7s)
         if (e.IsMultipleOf(60))
             this.SendState(force: false);
@@ -148,7 +167,14 @@ internal sealed class ModEntry : Mod
     {
         try
         {
-            this.Bridge!.Send(Catalog.Build());
+            // building walks every item and recipe; a reconnect in the same language reuses it
+            string language = this.Helper.Translation.Locale;
+            if (this.CachedCatalog is null || this.CachedLanguage != language)
+            {
+                this.CachedCatalog = Catalog.Build();
+                this.CachedLanguage = language;
+            }
+            this.Bridge!.Send(this.CachedCatalog);
         }
         catch (Exception ex)
         {

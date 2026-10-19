@@ -27,14 +27,23 @@ internal sealed class Bridge : IDisposable
     /// <summary>Raised on the bridge thread after each (re)connect, before anything else is sent.</summary>
     public event Action? Connected;
 
+    private volatile bool Online;
+
     public Bridge(Uri url, Action<string> log)
     {
         this.Url = url;
         this.Log = log;
-        Task.Run(this.RunAsync);
     }
 
-    public void Send(object message) => this.Outbox.Writer.TryWrite(Protocol.Write(message));
+    /// <summary>Starts connecting; subscribe to <see cref="Connected"/> first.</summary>
+    public void Start() => Task.Run(this.RunAsync);
+
+    /// <summary>Queues a message; dropped while offline, since a reconnect resends everything.</summary>
+    public void Send(object message)
+    {
+        if (this.Online)
+            this.Outbox.Writer.TryWrite(Protocol.Write(message));
+    }
 
     public void Dispose()
     {
@@ -51,16 +60,22 @@ internal sealed class Bridge : IDisposable
             {
                 using var socket = new ClientWebSocket();
                 await socket.ConnectAsync(this.Url, this.Stop.Token);
-                delay = TimeSpan.FromSeconds(1);
+                var connectedAt = DateTime.UtcNow;
                 // anything queued while offline describes a state that's gone; the
                 // Connected handlers send a fresh picture instead
                 while (this.Outbox.Reader.TryRead(out _)) { }
+                this.Online = true;
                 this.Connected?.Invoke();
                 using var linked = CancellationTokenSource.CreateLinkedTokenSource(this.Stop.Token);
                 Task reading = this.ReadAsync(socket, linked.Token);
                 Task writing = this.WriteAsync(socket, linked.Token);
                 await Task.WhenAny(reading, writing);
                 linked.Cancel();
+                this.Online = false;
+                // only a link that held up earns a quick retry; one dropped at once would
+                // otherwise resend the whole picture from the game thread every second
+                if (DateTime.UtcNow - connectedAt > TimeSpan.FromSeconds(10))
+                    delay = TimeSpan.FromSeconds(1);
             }
             catch (Exception ex) when (ex is WebSocketException or IOException or OperationCanceledException)
             {

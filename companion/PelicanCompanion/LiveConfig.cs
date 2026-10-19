@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StardewModdingAPI;
 
@@ -17,6 +19,10 @@ internal static class LiveConfig
     private const BindingFlags AnyField = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
     /// <summary>Re-reads mod <paramref name="modId"/>'s config.json into its live config object.</summary>
+    /// <remarks>
+    /// Reads the file, not <paramref name="values"/>, which only helps find the object: the
+    /// launcher writes config.json before asking, so both agree.
+    /// </remarks>
     /// <returns>Whether a config object was found and refreshed.</returns>
     public static bool Reload(IModRegistry registry, string modId, JObject values)
     {
@@ -68,20 +74,67 @@ internal static class LiveConfig
             .Concat(type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(f => f.Name))
             .ToArray();
 
-    // copy into the existing object: other parts of the mod may hold a reference to it
+    // copy into the existing object: other parts of the mod may hold a reference to it.
+    // Only what config.json can carry (public, not [JsonIgnore]) moves, so caches and derived
+    // state the mod keeps on the same class survive; nested sections are copied into in
+    // place for the same reason. Every value is read first and a failing setter rolls back.
     private static void Copy(object from, object to)
     {
+        var undo = new List<Action>();
+        try
+        {
+            CopyInto(from, to, undo, depth: 0);
+        }
+        catch
+        {
+            for (int i = undo.Count - 1; i >= 0; i--)
+                undo[i]();
+            throw;
+        }
+    }
+
+    private static void CopyInto(object from, object to, List<Action> undo, int depth)
+    {
         Type type = to.GetType();
-        foreach (PropertyInfo p in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+        Assembly assembly = type.Assembly;
+        foreach (MemberInfo member in SerializedMembers(type))
         {
-            if (p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0)
-                p.SetValue(to, p.GetValue(from));
+            object? next = Get(member, from);
+            object? current = Get(member, to);
+            if (depth < 4 && current is not null && next is not null && current.GetType() == next.GetType()
+                && current.GetType().IsClass && current.GetType().Assembly == assembly)
+            {
+                CopyInto(next, current, undo, depth + 1);
+                continue;
+            }
+            Set(member, to, next);
+            undo.Add(() => Set(member, to, current));
         }
-        foreach (FieldInfo f in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+    }
+
+    private static IEnumerable<MemberInfo> SerializedMembers(Type type)
+    {
+        bool ignored(MemberInfo m) => m.IsDefined(typeof(JsonIgnoreAttribute), inherit: true);
+        foreach (PropertyInfo p in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
         {
-            // auto-property backing fields were handled above; init-only ones can't be set
-            if (!f.IsInitOnly && !f.Name.Contains('<'))
-                f.SetValue(to, f.GetValue(from));
+            if (p.GetGetMethod() is not null && p.GetSetMethod() is not null && p.GetIndexParameters().Length == 0 && !ignored(p))
+                yield return p;
         }
+        foreach (FieldInfo f in type.GetFields(BindingFlags.Instance | BindingFlags.Public))
+        {
+            if (!f.IsInitOnly && !ignored(f))
+                yield return f;
+        }
+    }
+
+    private static object? Get(MemberInfo m, object target) =>
+        m is PropertyInfo p ? p.GetValue(target) : ((FieldInfo)m).GetValue(target);
+
+    private static void Set(MemberInfo m, object target, object? value)
+    {
+        if (m is PropertyInfo p)
+            p.SetValue(target, value);
+        else
+            ((FieldInfo)m).SetValue(target, value);
     }
 }
