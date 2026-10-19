@@ -153,7 +153,7 @@ export default {
     openPage: "Открыть страницу",
     manual: "Скачайте файл на странице мода и перетащите его в окно.",
     nexusManual:
-      "Без Premium Nexus отдаёт файл только через сайт: нажмите «Mod Manager Download», и обновление установится само.",
+      "Без Premium Nexus отдаёт файл только через сайт: откроется окно Nexus — нажмите там «Mod Manager Download», и обновление установится само.",
     queued: "{name}: загружаем версию {version}",
     done: "{name} обновлён до {version}",
     rollback: "Откатить к {version}",
@@ -208,7 +208,7 @@ export default {
     connect: "Подключить",
     connected: "Nexus подключён: {name}",
     freeHint:
-      "Без Premium Nexus разрешает скачивание только через кнопку «Mod Manager Download» на сайте — приложение перехватит ссылку и установит мод.",
+      "Без Premium Nexus разрешает скачивание только кнопкой «Mod Manager Download»: нажмите её в окне Nexus (войти там нужно один раз). Окно само установит мод и закроется.",
     pasteNxm: "Вставить nxm-ссылку",
     go: "Скачать",
   },

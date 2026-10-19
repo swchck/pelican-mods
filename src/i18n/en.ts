@@ -156,7 +156,7 @@ export default {
     openPage: "Open page",
     manual: "Download the file on the mod page and drop it on the window.",
     nexusManual:
-      'Without Premium, Nexus hands out files only through its site: click "Mod Manager Download" and the update installs itself.',
+      'Without Premium, Nexus hands out files only through its site: a Nexus window opens, click "Mod Manager Download" there and the update installs itself.',
     queued: "{name}: downloading version {version}",
     done: "{name} updated to {version}",
     rollback: "Roll back to {version}",
@@ -216,7 +216,7 @@ export default {
     connect: "Connect",
     connected: "Nexus connected: {name}",
     freeHint:
-      "Without Premium, Nexus only allows downloads through the site's “Mod Manager Download” button; the app catches the link and installs the mod.",
+      "Without Premium, Nexus only allows downloads through its “Mod Manager Download” button: click it in the Nexus window (log in there once). The window then installs the mod and closes.",
     pasteNxm: "Paste an nxm link",
     go: "Download",
   },

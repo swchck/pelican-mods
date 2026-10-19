@@ -426,9 +426,15 @@ pub async fn updates_check(app: AppHandle, force: bool) -> AppResult<UpdateRepor
 #[derive(Debug, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum UpdateOutcome {
-    Installed { view: LibraryView },
+    Installed {
+        view: LibraryView,
+    },
     Queued,
-    OpenPage { url: String },
+    /// Waiting for the user's click in the app's Nexus window.
+    NexusWindow,
+    OpenPage {
+        url: String,
+    },
 }
 
 /// Updates package `id` to the version smapi.io suggested: GitHub and ModDrop files
@@ -517,11 +523,9 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> 
         .flatten()
         .is_some_and(|a| a.is_premium);
     if !premium {
-        // "Mod Manager Download" on this page sends an nxm link back, which installs it
-        nexus_commands::expect_nxm(&app, mod_id, file.file_id);
-        return Ok(UpdateOutcome::OpenPage {
-            url: nexus::file_page(mod_id, file.file_id),
-        });
+        // "Mod Manager Download" in the app's Nexus window sends an nxm link back, which installs it
+        nexus_commands::queue_file_page(&app, mod_id, file.file_id)?;
+        return Ok(UpdateOutcome::NexusWindow);
     }
     nexus_commands::start(app, mod_id, file.file_id, None);
     Ok(UpdateOutcome::Queued)

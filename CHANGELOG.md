@@ -19,6 +19,7 @@
 
 - Mods that share a Nexus page, such as Grandpa's Farm on the Stardew Valley Expanded page, update with their own file instead of the page's main one.
 
+- Without Nexus Premium, downloads open in the app's own Nexus window instead of the browser: click "Mod Manager Download" there and the window installs the mod and moves on to the next file, closing when done. "Update all" now covers Nexus mods this way.
 - A mod's card takes a GitHub repo of your own; updates are then checked and fetched from its releases first.
 
 ### Library and saves
@@ -26,7 +27,7 @@
 - Removing a mod also sends the copy in the game's Mods folder to the Trash, so it doesn't come back as importable or load when the game starts without the launcher.
 - Saves can be deleted from the Saves screen; the folder goes to the Trash.
 
-- Item, villager and quest names in Progress and Helpers link to their wiki page; pick the official wiki, Fandom or no links in Settings.
+- Item, villager and quest names in Progress (the perfection summary included) and Helpers link to their wiki page; pick the official wiki, Fandom or no links in Settings.
 
 ### Settings
 

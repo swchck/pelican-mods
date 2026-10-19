@@ -46,6 +46,8 @@ pub struct AppState {
     /// Nexus files the app sent the user to fetch, with when; their nxm links install
     /// without a second question.
     pub(crate) nxm_expected: Mutex<std::collections::HashMap<(u64, u64), std::time::Instant>>,
+    /// Files (mod id, file id) waiting their turn in the in-app Nexus window, front shown.
+    pub(crate) nexus_queue: Mutex<std::collections::VecDeque<(u64, u64)>>,
     /// Unconfirmed nxm links the UI hasn't collected yet.
     pub(crate) nxm_pending: Mutex<Vec<serde_json::Value>>,
     /// The built companion mod, linked into every profile; `None` when this build lacks it.
@@ -84,6 +86,7 @@ impl AppState {
             companion: std::sync::Arc::new(crate::companion::Companion::new(&cache_dir)),
             companion_dir: std::sync::OnceLock::new(),
             nxm_expected: Mutex::new(Default::default()),
+            nexus_queue: Mutex::new(Default::default()),
             nxm_pending: Mutex::new(Vec::new()),
         }
     }
