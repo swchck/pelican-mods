@@ -19,6 +19,8 @@ export interface Settings {
   companionDisabled: boolean;
   /** "official", "fandom" or "off"; null is the official wiki. */
   wiki: string | null;
+  /** Folder changed saves are copied to after each session. */
+  backupFolder: string | null;
 }
 
 export interface SmapiRelease {
@@ -62,6 +64,7 @@ export const api = {
   gameLanguage: () => invoke<string | null>("game_language"),
   logReport: () => invoke<LogReport>("smapi_log_report"),
   setWiki: (wiki: string) => invoke<Settings>("settings_set_wiki", { wiki }),
+  setBackupFolder: (folder: string | null) => invoke<Settings>("settings_set_backup_folder", { folder }),
   wikiTitles: (ids: string[]) => invoke<Record<string, string>>("wiki_titles", { ids }),
   detectGames: () => invoke<GameInstall[]>("game_detect"),
   currentGame: () => invoke<GameInstall | null>("game_current"),
@@ -445,6 +448,8 @@ export const saves = {
   export: (id: string, dest: string) => invoke<void>("saves_export", { id, dest }),
   import: (file: string) => invoke<string>("saves_import", { file }),
   delete: (id: string) => invoke<void>("saves_delete", { id }),
+  /** Copies changed saves to the backup folder from the settings; returns how many. */
+  mirror: () => invoke<number>("saves_mirror"),
 };
 
 export interface SchemaField {

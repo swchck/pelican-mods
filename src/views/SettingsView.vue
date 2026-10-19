@@ -19,7 +19,7 @@ import SmapiProgress from "@/components/SmapiProgress.vue";
 import NexusAccountCard from "@/components/NexusAccountCard.vue";
 import AboutCard from "@/components/AboutCard.vue";
 import PixelToggle from "@/components/PixelToggle.vue";
-import { api, companion as companionApi } from "@/lib/api";
+import { api, companion as companionApi, saves } from "@/lib/api";
 import { errorText, setLocale } from "@/i18n";
 import { setWikiSource, wikiSource } from "@/lib/wiki";
 import { useGame } from "@/stores/game";
@@ -37,6 +37,7 @@ onMounted(async () => {
     const s = await api.settings();
     locale.value = s.locale ?? "system";
     companionOn.value = !s.companionDisabled;
+    backupFolder.value = s.backupFolder;
   } catch (e) {
     toast.error(errorText(e));
   }
@@ -55,6 +56,27 @@ async function changeLocale(value: unknown) {
   try {
     await api.setLocale(next);
     setLocale(next);
+  } catch (e) {
+    toast.error(errorText(e));
+  }
+}
+
+const backupFolder = ref<string | null>(null);
+
+async function pickBackupFolder() {
+  const folder = await open({ directory: true, title: t("settings.backupPick") });
+  if (!folder) return;
+  await setBackupFolder(folder);
+}
+
+async function setBackupFolder(folder: string | null) {
+  try {
+    backupFolder.value = (await api.setBackupFolder(folder)).backupFolder;
+    // copy right away instead of waiting for the next session
+    if (folder) {
+      const n = await saves.mirror();
+      toast.success(t("settings.backupDone", { n }));
+    }
   } catch (e) {
     toast.error(errorText(e));
   }
@@ -149,6 +171,19 @@ async function uninstall() {
           <SelectItem value="en">English</SelectItem>
         </SelectContent>
       </Select>
+    </section>
+
+    <section class="wood-panel flex flex-col gap-2 p-5">
+      <div class="flex flex-wrap items-center gap-3">
+        <h2 class="font-pixel text-wood-dark flex-1 text-xl font-bold">{{ t("settings.backupFolder") }}</h2>
+        <Button variant="outline" @click="pickBackupFolder"><FolderOpenIcon />{{ t("settings.backupPick") }}</Button>
+        <Button v-if="backupFolder" variant="ghost" @click="setBackupFolder(null)">{{
+          t("settings.backupOff")
+        }}</Button>
+      </div>
+      <p class="text-muted-foreground text-sm leading-relaxed font-semibold">
+        {{ backupFolder ? t("settings.backupOn", { folder: backupFolder }) : t("settings.backupHint") }}
+      </p>
     </section>
 
     <section class="wood-panel flex flex-col gap-2 p-5">

@@ -198,6 +198,32 @@ pub async fn saves_delete(app: AppHandle, id: String) -> AppResult<()> {
     .await
 }
 
+/// How many copies of each save the backup folder keeps.
+const MIRROR_KEEP: usize = 10;
+
+/// Copies changed saves to the backup folder from the settings; 0 without one.
+#[tauri::command]
+pub async fn saves_mirror(app: AppHandle) -> AppResult<usize> {
+    let dir = saves_dir(&app)?;
+    blocking(app, move |s| match s.settings.get().backup_folder {
+        Some(folder) => save_backups::mirror(&folder, &dir, MIRROR_KEEP),
+        None => Ok(0),
+    })
+    .await
+}
+
+/// Picks the folder saves are copied to after each session, or with `None` stops copying.
+#[tauri::command]
+pub fn settings_set_backup_folder(
+    state: tauri::State<AppState>,
+    folder: Option<PathBuf>,
+) -> AppResult<crate::settings::Settings> {
+    if let Some(f) = folder.as_ref().filter(|f| !f.is_dir()) {
+        return Err(AppError::NotFound(f.display().to_string()));
+    }
+    state.settings.update(|s| s.backup_folder = folder)
+}
+
 /// Snapshots changed saves; called right before the game starts.
 pub async fn snapshot_before_launch(app: &AppHandle) -> AppResult<usize> {
     let dir = saves_dir(app)?;

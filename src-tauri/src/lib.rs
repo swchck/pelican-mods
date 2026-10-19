@@ -132,6 +132,8 @@ pub fn run() {
             saves_commands::saves_export,
             saves_commands::saves_import,
             saves_commands::saves_delete,
+            saves_commands::saves_mirror,
+            saves_commands::settings_set_backup_folder,
             config_commands::mod_config_get,
             config_commands::mod_config_save,
             config_commands::mod_config_defaults,

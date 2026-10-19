@@ -5,6 +5,7 @@ import {
   api,
   events,
   isAppError,
+  saves,
   type GameInstall,
   type LogLine,
   type RunState,
@@ -56,6 +57,7 @@ export const useGame = defineStore("game", () => {
         if (s.state === "exited") {
           refresh().catch((e) => toast.error(errorText(e)));
           void warnFromLog();
+          saves.mirror().catch((e) => toast.error(errorText(e)));
         }
       }),
       events.smapiProgress((p) => (progress.value = p)),

@@ -24,6 +24,8 @@ pub enum Reason {
     Launch,
     /// The state that a restore or import replaced.
     Replaced,
+    /// Copied to the user's own backup folder after a session.
+    Mirror,
 }
 
 impl Reason {
@@ -32,6 +34,7 @@ impl Reason {
             Self::Manual => "manual",
             Self::Launch => "launch",
             Self::Replaced => "replaced",
+            Self::Mirror => "mirror",
         }
     }
 
@@ -40,6 +43,7 @@ impl Reason {
             "manual" => Self::Manual,
             "launch" => Self::Launch,
             "replaced" => Self::Replaced,
+            "mirror" => Self::Mirror,
             _ => return None,
         })
     }
@@ -125,6 +129,26 @@ pub fn snapshot_changed(root: &Path, saves_dir: &Path) -> AppResult<usize> {
         if newest.is_none_or(|t| s.modified > t) {
             create(root, &s.path, Reason::Launch)?;
             n += 1;
+        }
+    }
+    Ok(n)
+}
+
+/// Copies every save changed since its newest copy in `folder` there, keeping the
+/// `keep` newest per save; returns how many it copied.
+///
+/// `folder` is the user's (iCloud Drive, a backup disk), so its layout matches the
+/// app's own snapshots and any copy imports back as a save.
+pub fn mirror(folder: &Path, saves_dir: &Path, keep: usize) -> AppResult<usize> {
+    let mut n = 0;
+    for s in saves::list(saves_dir) {
+        let newest = list(folder, &s.id).first().map(|b| b.created / 1000);
+        if newest.is_none_or(|t| s.modified > t) {
+            create(folder, &s.path, Reason::Mirror)?;
+            n += 1;
+        }
+        for old in list(folder, &s.id).into_iter().skip(keep) {
+            std::fs::remove_file(&old.file)?;
         }
     }
     Ok(n)
@@ -268,5 +292,23 @@ mod tests {
         let junk = tmp.path().join("junk.zip");
         crate::archive::tests::make_zip(&junk, &[("readme.txt", "hi")]);
         assert!(import(&tmp.path().join("b"), &saves, &junk).is_err());
+    }
+
+    #[test]
+    fn mirrors_changed_saves_and_prunes() {
+        let tmp = tempfile::tempdir().unwrap();
+        let saves = tmp.path().join("Saves");
+        write_save(&saves, "Farm_1");
+        let folder = tmp.path().join("iCloud");
+        std::fs::create_dir_all(&folder).unwrap();
+        assert_eq!(mirror(&folder, &saves, 2).unwrap(), 1);
+        // nothing changed since: no new copy
+        assert_eq!(mirror(&folder, &saves, 2).unwrap(), 0);
+        for _ in 0..3 {
+            create(&folder, &saves.join("Farm_1"), Reason::Mirror).unwrap();
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+        mirror(&folder, &saves, 2).unwrap();
+        assert_eq!(list(&folder, "Farm_1").len(), 2);
     }
 }

@@ -405,6 +405,10 @@ mockIPC(
           ],
         };
       }
+      case "saves_mirror":
+        return 2;
+      case "settings_set_backup_folder":
+        return { gamePath: null, locale: null, companionDisabled: false, wiki: null, backupFolder: a.folder };
       case "saves_delete":
         return null;
       case "mod_save_usage":

@@ -22,6 +22,8 @@ pub struct Settings {
     pub github_repos: std::collections::BTreeMap<String, String>,
     /// Where item names link: "official", "fandom" or "off"; `None` is the official wiki.
     pub wiki: Option<String>,
+    /// A folder of the user's that changed saves are copied to after each session.
+    pub backup_folder: Option<PathBuf>,
 }
 
 /// Settings plus the file they live in. Writes go straight to disk.
