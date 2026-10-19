@@ -142,6 +142,13 @@ export default {
     summary: "{n} mods, {missing} missing or outdated",
     installMissing: "Install missing ({n})",
     makeProfile: "Create profile",
+    compare: "Compare with a host's list…",
+    compareTitle: "Comparing with “{name}”",
+    compareHint:
+      "For co-op the sets should match: install what's missing, match versions, and turn the extra mods off.",
+    newer: "{n} newer here",
+    extra: "{n} extra here",
+    extraTitle: "You have these, the list doesn't",
     profileMade: "Profile “{name}” created and switched to",
   },
   logReport: {

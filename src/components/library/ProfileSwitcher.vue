@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { EllipsisIcon, FileDownIcon, FileUpIcon, PencilIcon, PlusIcon, Trash2Icon } from "@lucide/vue";
+import { EllipsisIcon, FileDownIcon, FileUpIcon, PencilIcon, PlusIcon, Trash2Icon, UsersIcon } from "@lucide/vue";
 import { open as openFile, save } from "@tauri-apps/plugin-dialog";
 import { toast } from "vue-sonner";
 import ModListDialog from "@/components/library/ModListDialog.vue";
@@ -42,7 +42,7 @@ const copy = ref(true);
 
 const nameOf = (p: Profile) => p.name ?? t("profiles.default");
 
-const imported = ref<{ file: string; view: ModListView } | null>(null);
+const imported = ref<{ file: string; view: ModListView; mode: "import" | "compare" } | null>(null);
 const importOpen = ref(false);
 
 async function exportList() {
@@ -57,11 +57,11 @@ async function exportList() {
   }
 }
 
-async function importList() {
+async function importList(mode: "import" | "compare" = "import") {
   const file = await openFile({ filters: [{ name: "JSON", extensions: ["json"] }] });
   if (!file) return;
   try {
-    imported.value = { file, view: await library.readList(file) };
+    imported.value = { file, view: await library.readList(file), mode };
     importOpen.value = true;
   } catch (e) {
     toast.error(errorText(e));
@@ -118,7 +118,8 @@ async function submit() {
         <DropdownMenuItem @select="open('rename')"><PencilIcon />{{ t("profiles.rename") }}</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem @select="exportList"><FileUpIcon />{{ t("modList.export") }}</DropdownMenuItem>
-        <DropdownMenuItem @select="importList"><FileDownIcon />{{ t("modList.import") }}</DropdownMenuItem>
+        <DropdownMenuItem @select="importList()"><FileDownIcon />{{ t("modList.import") }}</DropdownMenuItem>
+        <DropdownMenuItem @select="importList('compare')"><UsersIcon />{{ t("modList.compare") }}</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem :disabled="!canDelete" class="text-destructive" @select="open('delete')">
           <Trash2Icon />{{ t("profiles.delete") }}
@@ -174,6 +175,7 @@ async function submit() {
       v-model:open="importOpen"
       :file="imported.file"
       :initial="imported.view"
+      :mode="imported.mode"
     />
   </div>
 </template>

@@ -32,6 +32,7 @@
 ### Updates
 
 - Profiles export to a mod list file and import back: the import shows which mods you have, installs the missing ones the way dependencies install, and makes a profile with the list's mods. Lists hold names and sources only, no files.
+- A co-op partner's mod list compares against yours: what you lack, versions that differ either way, and mods only you have.
 - A mod that ships translations but none into the game's language says so in its card, with a button that searches Nexus for a translation.
 - An update shows what's new before you install it: the GitHub release notes, or the Nexus changelog for every version since yours.
 - A missing or outdated dependency installs from the mod's card in one click: the app finds it on smapi.io by its UniqueID and fetches it the way it fetches updates.

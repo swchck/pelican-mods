@@ -637,6 +637,8 @@ export interface ModListView {
   game: string | null;
   smapi: string | null;
   mods: ListedMod[];
+  /** Mods enabled here that the list lacks; in co-op the other side won't have them. */
+  extra: ListedMod[];
 }
 
 export interface ListedMod {

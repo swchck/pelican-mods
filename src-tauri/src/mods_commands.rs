@@ -746,7 +746,11 @@ pub async fn modlist_export(app: AppHandle, dest: PathBuf) -> AppResult<()> {
 pub async fn modlist_read(app: AppHandle, file: PathBuf) -> AppResult<crate::modlist::ModListView> {
     blocking(app, move |s| {
         let list = crate::modlist::read(&file)?;
-        Ok(crate::modlist::status(list, &library::scan(&s.store_root)))
+        Ok(crate::modlist::status(
+            list,
+            &library::scan(&s.store_root),
+            &s.profiles.get().active().enabled,
+        ))
     })
     .await
 }

@@ -57,6 +57,8 @@ pub struct ModListView {
     pub game: Option<String>,
     pub smapi: Option<String>,
     pub mods: Vec<ListedStatus>,
+    /// Mods enabled here that the list lacks; in co-op the other side won't have them.
+    pub extra: Vec<ListedMod>,
 }
 
 /// Lists the mods in `enabled` packages, with the GitHub repos users attached in `repos`.
@@ -101,8 +103,27 @@ pub fn read(file: &Path) -> AppResult<ModList> {
     Ok(list)
 }
 
-/// Sets each listed mod against the library's `packages`.
-pub fn status(list: ModList, packages: &[Package]) -> ModListView {
+/// Sets each listed mod against the library's `packages`, and names the mods in
+/// `enabled` packages the list lacks.
+pub fn status(list: ModList, packages: &[Package], enabled: &[String]) -> ModListView {
+    let listed: HashSet<String> = list
+        .mods
+        .iter()
+        .map(|m| m.unique_id.to_lowercase())
+        .collect();
+    let extra = packages
+        .iter()
+        .filter(|p| enabled.contains(&p.id))
+        .flat_map(|p| &p.mods)
+        .filter(|m| !listed.contains(&m.manifest.unique_id.to_lowercase()))
+        .map(|m| ListedMod {
+            unique_id: m.manifest.unique_id.clone(),
+            name: m.manifest.name.clone(),
+            version: m.manifest.version.clone(),
+            update_keys: Vec::new(),
+            github: None,
+        })
+        .collect();
     let installed: BTreeMap<String, String> = packages
         .iter()
         .flat_map(|p| &p.mods)
@@ -125,6 +146,7 @@ pub fn status(list: ModList, packages: &[Package]) -> ModListView {
                 listed: l,
             })
             .collect(),
+        extra,
     }
 }
 
@@ -187,9 +209,11 @@ mod tests {
             update_keys: Vec::new(),
             github: None,
         });
-        let view = status(other, &packages);
+        let view = status(other, &packages, &["Automate".into(), "Off".into()]);
         assert_eq!(view.mods[0].installed.as_deref(), Some("2.0.0"));
         assert_eq!(view.mods[1].installed, None);
+        assert_eq!(view.extra.len(), 1);
+        assert_eq!(view.extra[0].unique_id, "Someone.Off");
         assert_eq!(
             packages_for(&packages, &["pathoschild.automate".into()]),
             ["Automate"]
