@@ -40,7 +40,9 @@ internal record GameSnapshot(
     int Year,
     int Time,
     long Money,
-    string? Location
+    string? Location,
+    /// <summary>"sun", "rain", "storm" or "snow".</summary>
+    string Weather
 );
 
 internal record GmcmMessage(List<GmcmMod> Mods)
@@ -84,7 +86,9 @@ internal record CatalogMessage(
     List<CatalogMuseumItem> Museum,
     List<CatalogAchievement> Achievements,
     List<CatalogOrder> SpecialOrders,
-    List<CatalogCrop> Crops
+    List<CatalogCrop> Crops,
+    List<CatalogFestival> Festivals,
+    List<CatalogFish> FishInfo
 )
 {
     public string Type => "catalog";
@@ -105,9 +109,30 @@ internal record CatalogAchievement(int Id, string Name, string Description);
 internal record CatalogOrder(string Key, string Name, string Requester, bool Qi);
 
 /// <summary>A crop the Polyculture or Monoculture achievements count, by harvest id.</summary>
-internal record CatalogCrop(string Id, bool Polyculture, bool Monoculture);
+internal record CatalogCrop(string Id, bool Polyculture, bool Monoculture, string Seed, List<string> Seasons);
 
-internal record CatalogVillager(string Key, string Name, bool Romance);
+/// <summary>A festival or a passive one (Night Market) over <c>Day</c>..<c>EndDay</c>.</summary>
+internal record CatalogFestival(string Season, int Day, int EndDay, string Name);
+
+/// <summary>When and where a fish bites; crab pot catches have <c>Trap</c> and no clock.</summary>
+internal record CatalogFish(
+    string Id,
+    string Name,
+    List<string> Seasons,
+    string Weather,
+    List<int[]> Times,
+    List<string> Locations,
+    bool Trap
+);
+
+internal record CatalogVillager(
+    string Key,
+    string Name,
+    bool Romance,
+    string? BirthSeason,
+    int BirthDay,
+    List<string> Loves
+);
 
 /// <summary>A Monster Slayer goal: <see cref="Count"/> kills among <see cref="Targets"/>.</summary>
 internal record CatalogGoal(string Key, string Name, int Count, List<string> Targets);

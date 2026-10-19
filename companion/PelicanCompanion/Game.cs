@@ -33,7 +33,11 @@ internal static class Game
             Year: (int)Static("year")!,
             Time: (int)Static("timeOfDay")!,
             Money: (long)(int)player.Money,
-            Location: location is null ? null : (string)location.Name
+            Location: location is null ? null : (string)location.Name,
+            Weather: (bool)Static("isSnowing")! ? "snow"
+                : (bool)Static("isLightning")! ? "storm"
+                : (bool)Static("isRaining")! ? "rain"
+                : "sun"
         );
     }
 

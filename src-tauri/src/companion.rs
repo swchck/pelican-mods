@@ -52,6 +52,9 @@ pub struct GameSnapshot {
     pub time: u32,
     pub money: i64,
     pub location: Option<String>,
+    /// "sun", "rain", "storm" or "snow"; empty from a companion older than this field.
+    #[serde(default)]
+    pub weather: String,
 }
 
 /// The game the companion reported on connecting.
@@ -698,6 +701,18 @@ mod tests {
                     "  museum {}, achievements {}, orders {}, crops {}, items {}",
                     c.museum.len(), c.achievements.len(), c.special_orders.len(), c.crops.len(), c.items.len()
                 );
+                // worked out after the catalog goes out, so they come a little later
+                for _ in 0..100 {
+                    if companion.config_defaults("Pathoschild.LookupAnything").is_some() {
+                        break;
+                    }
+                    tokio::time::sleep(Duration::from_millis(100)).await;
+                }
+                let defaults = companion
+                    .config_defaults("Pathoschild.LookupAnything")
+                    .expect("Lookup Anything's config defaults arrive");
+                eprintln!("  defaults: {}", defaults.to_string().chars().take(300).collect::<String>());
+                assert!(defaults.get("ShowPuzzleSolutions").is_some());
                 if let Ok(out) = std::env::var("PELICAN_TEST_CATALOG_OUT") {
                     std::fs::write(out, serde_json::to_vec(&c).unwrap()).unwrap();
                 }
@@ -831,6 +846,17 @@ mod tests {
                             c.items.iter().find(|i| i.id == "24").map(|i| &i.name)
                         );
                         assert!(c.museum.len() == 95 && c.items.len() > 800);
+                        let abigail = c.villagers.iter().find(|v| v.key == "Abigail").unwrap();
+                        eprintln!(
+                            "    {} festivals, {} fish, Abigail {:?} {} loves {:?}, first fish {:?}",
+                            c.festivals.len(),
+                            c.fish_info.len(),
+                            abigail.birth_season,
+                            abigail.birth_day,
+                            abigail.loves,
+                            c.fish_info.first()
+                        );
+                        assert!(c.festivals.len() > 8 && c.fish_info.len() > 60);
                         std::fs::write(
                             out.join(format!("{code}.json")),
                             serde_json::to_vec(&c).unwrap(),

@@ -918,6 +918,9 @@ mod tests {
                 key: "Abigail".into(),
                 name: "Abigail".into(),
                 romance: true,
+                birth_season: None,
+                birth_day: 0,
+                loves: Vec::new(),
             }],
             ..Catalog::default()
         };

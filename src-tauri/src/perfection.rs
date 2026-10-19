@@ -67,6 +67,10 @@ pub struct Catalog {
     pub special_orders: Vec<CatalogOrder>,
     #[serde(default)]
     pub crops: Vec<CatalogCrop>,
+    #[serde(default)]
+    pub festivals: Vec<CatalogFestival>,
+    #[serde(default)]
+    pub fish_info: Vec<CatalogFish>,
 }
 
 impl Catalog {
@@ -176,6 +180,42 @@ pub struct CatalogCrop {
     pub id: String,
     pub polyculture: bool,
     pub monoculture: bool,
+    // added with the season plan; default so older catalogs still load
+    /// Unqualified seed id.
+    #[serde(default)]
+    pub seed: Option<String>,
+    /// "spring", "summer", "fall", "winter".
+    #[serde(default)]
+    pub seasons: Vec<String>,
+}
+
+/// A festival, or a passive one like the Night Market, over `day..=end_day`.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CatalogFestival {
+    pub season: String,
+    pub day: u32,
+    pub end_day: u32,
+    pub name: String,
+}
+
+/// When and where a fish bites.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CatalogFish {
+    /// Qualified, as `fishCaught` keys it.
+    pub id: String,
+    pub name: String,
+    /// Empty for crab pot catches, which bite all year.
+    pub seasons: Vec<String>,
+    /// "sunny", "rainy", "both", or "any" for crab pots.
+    pub weather: String,
+    /// Clock windows as HHMM pairs, start inclusive, end exclusive.
+    pub times: Vec<[u32; 2]>,
+    /// Location display names where it can be caught.
+    pub locations: Vec<String>,
+    /// Caught in crab pots rather than with a rod.
+    pub trap: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -201,6 +241,14 @@ pub struct CatalogVillager {
     pub name: String,
     /// Datable villagers max out at 8 hearts for perfection, others at 10.
     pub romance: bool,
+    #[serde(default)]
+    pub birth_season: Option<String>,
+    /// 0 when the villager has no birthday.
+    #[serde(default)]
+    pub birth_day: u32,
+    /// Unqualified ids of the items they love most.
+    #[serde(default)]
+    pub loves: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -954,11 +1002,17 @@ mod tests {
                     key: "Abigail".into(),
                     name: "Abigail".into(),
                     romance: true,
+                    birth_season: None,
+                    birth_day: 0,
+                    loves: Vec::new(),
                 },
                 CatalogVillager {
                     key: "Pierre".into(),
                     name: "Pierre".into(),
                     romance: false,
+                    birth_season: None,
+                    birth_day: 0,
+                    loves: Vec::new(),
                 },
             ],
             monsters: vec![

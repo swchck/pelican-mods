@@ -65,7 +65,9 @@ internal static class Catalog
             Museum: museum,
             Achievements: Achievements(game1),
             SpecialOrders: SpecialOrders(game1),
-            Crops: Crops(game1)
+            Crops: Crops(game1),
+            Festivals: Festivals(),
+            FishInfo: FishInfo(fish)
         );
     }
 
@@ -99,6 +101,7 @@ internal static class Catalog
     private static List<CatalogVillager> Villagers(Type game1)
     {
         var data = (IDictionary)game1.GetField("characterData", Static)!.GetValue(null)!;
+        var tastes = (IDictionary<string, string>)game1.GetField("NPCGiftTastes", Static)!.GetValue(null)!;
         MethodInfo immutablyFalse = Find("StardewValley.GameStateQuery")!.GetMethod("IsImmutablyFalse", Static)!;
         var list = new List<CatalogVillager>();
         foreach (DictionaryEntry entry in data)
@@ -107,7 +110,15 @@ internal static class Catalog
             if (!(bool)c.PerfectionScore || (bool)immutablyFalse.Invoke(null, new object?[] { (string?)c.CanSocialize })!)
                 continue;
             string key = (string)entry.Key;
-            list.Add(new CatalogVillager(key, Parse((string?)c.DisplayName) ?? key, (bool)c.CanBeRomanced));
+            object? season = c.BirthSeason;
+            list.Add(new CatalogVillager(
+                key,
+                Parse((string?)c.DisplayName) ?? key,
+                (bool)c.CanBeRomanced,
+                season?.ToString()?.ToLowerInvariant(),
+                (int)c.BirthDay,
+                Loves(tastes, key)
+            ));
         }
         return list;
     }
@@ -166,8 +177,18 @@ internal static class Catalog
         foreach (object raw in crops)
         {
             dynamic c = ((dynamic)raw).Value;
-            if ((bool)c.CountForPolyculture || (bool)c.CountForMonoculture)
-                list.Add(new CatalogCrop((string)c.HarvestItemId, (bool)c.CountForPolyculture, (bool)c.CountForMonoculture));
+            if (!(bool)c.CountForPolyculture && !(bool)c.CountForMonoculture)
+                continue;
+            var seasons = new List<string>();
+            foreach (object season in (IEnumerable)c.Seasons)
+                seasons.Add(season.ToString()!.ToLowerInvariant());
+            list.Add(new CatalogCrop(
+                (string)c.HarvestItemId,
+                (bool)c.CountForPolyculture,
+                (bool)c.CountForMonoculture,
+                (string)((dynamic)raw).Key,
+                seasons
+            ));
         }
         return list;
     }
@@ -179,5 +200,98 @@ internal static class Catalog
         MethodInfo parse = Find("StardewValley.TokenizableStrings.TokenParser")!.GetMethod("ParseText", Static)!;
         object?[] args = parse.GetParameters().Select((p, i) => i == 0 ? text : Type.Missing).ToArray();
         return parse.Invoke(null, BindingFlags.OptionalParamBinding, null, args, null) as string;
+    }
+
+    // NPCGiftTastes: "love text/love ids/like text/like ids/…"; negative ids are categories
+    private static List<string> Loves(IDictionary<string, string> tastes, string npc)
+    {
+        if (!tastes.TryGetValue(npc, out string? raw))
+            return new List<string>();
+        string[] fields = raw.Split('/');
+        return fields.Length > 1
+            ? fields[1].Split(' ', StringSplitOptions.RemoveEmptyEntries).Where(id => !id.StartsWith('-')).ToList()
+            : new List<string>();
+    }
+
+    private static object DataLoader(string method)
+    {
+        object content = Find("StardewValley.Game1")!.GetField("content", Static)!.GetValue(null)!;
+        return Find("StardewValley.DataLoader")!.GetMethod(method, Static)!.Invoke(null, new[] { content })!;
+    }
+
+    private static List<CatalogFestival> Festivals()
+    {
+        var list = new List<CatalogFestival>();
+        // "spring13" → "Egg Festival"
+        foreach ((string key, string name) in (Dictionary<string, string>)DataLoader("Festivals_FestivalDates"))
+        {
+            int digits = key.IndexOfAny("0123456789".ToCharArray());
+            if (digits > 0 && int.TryParse(key[digits..], out int day))
+                list.Add(new CatalogFestival(key[..digits], day, day, Parse(name) ?? name));
+        }
+        foreach (DictionaryEntry entry in (IDictionary)DataLoader("PassiveFestivals"))
+        {
+            dynamic f = entry.Value!;
+            if (!(bool)f.ShowOnCalendar)
+                continue;
+            list.Add(new CatalogFestival(
+                ((object)f.Season).ToString()!.ToLowerInvariant(),
+                (int)f.StartDay,
+                (int)f.EndDay,
+                Parse((string?)f.DisplayName) ?? (string)entry.Key
+            ));
+        }
+        return list;
+    }
+
+    // Data/Fish: "name/difficulty/behavior/min/max/times/seasons/weather/…", or
+    // "name/trap/…" for crab pot catches; where they bite comes from Data/Locations
+    private static List<CatalogFish> FishInfo(List<CatalogItem> fish)
+    {
+        var where = new Dictionary<string, SortedSet<string>>();
+        foreach (DictionaryEntry entry in (IDictionary)DataLoader("Locations"))
+        {
+            string key = (string)entry.Key;
+            if (key == "Default")
+                continue;
+            dynamic loc = entry.Value!;
+            string name = Parse((string?)loc.DisplayName) ?? key;
+            if (loc.Fish is not IEnumerable spawns)
+                continue;
+            foreach (dynamic spawn in spawns)
+            {
+                string? id = spawn.ItemId;
+                if (id is null)
+                    continue;
+                if (!where.TryGetValue(id, out SortedSet<string>? set))
+                    where[id] = set = new SortedSet<string>();
+                set.Add(name);
+            }
+        }
+        var data = (Dictionary<string, string>)DataLoader("Fish");
+        var list = new List<CatalogFish>();
+        foreach (CatalogItem f in fish)
+        {
+            string id = f.Id.StartsWith("(O)") ? f.Id[3..] : f.Id;
+            if (!data.TryGetValue(id, out string? raw))
+                continue;
+            string[] fields = raw.Split('/');
+            bool trap = fields.Length > 1 && fields[1] == "trap";
+            var locations = where.TryGetValue(f.Id, out SortedSet<string>? set) ? set.ToList() : new List<string>();
+            if (trap)
+            {
+                list.Add(new CatalogFish(f.Id, f.Name, new List<string>(), "any", new List<int[]>(), locations, true));
+                continue;
+            }
+            if (fields.Length < 8)
+                continue;
+            int[] clock = fields[5].Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
+            var times = new List<int[]>();
+            for (int i = 0; i + 1 < clock.Length; i += 2)
+                times.Add(new[] { clock[i], clock[i + 1] });
+            var seasons = fields[6].Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(s => s.ToLowerInvariant()).ToList();
+            list.Add(new CatalogFish(f.Id, f.Name, seasons, fields[7], times, locations, false));
+        }
+        return list;
     }
 }
