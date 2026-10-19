@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { EllipsisIcon, PencilIcon, PlusIcon, Trash2Icon } from "@lucide/vue";
+import { EllipsisIcon, FileDownIcon, FileUpIcon, PencilIcon, PlusIcon, Trash2Icon } from "@lucide/vue";
+import { open as openFile, save } from "@tauri-apps/plugin-dialog";
+import { toast } from "vue-sonner";
+import ModListDialog from "@/components/library/ModListDialog.vue";
+import { library } from "@/lib/api";
+import { errorText } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { Profile } from "@/lib/api";
+import type { ModListView, Profile } from "@/lib/api";
 import { useLibrary } from "@/stores/library";
 import { useGame } from "@/stores/game";
 
@@ -36,6 +41,32 @@ const name = ref("");
 const copy = ref(true);
 
 const nameOf = (p: Profile) => p.name ?? t("profiles.default");
+
+const imported = ref<{ file: string; view: ModListView } | null>(null);
+const importOpen = ref(false);
+
+async function exportList() {
+  const base = lib.activeProfile ? nameOf(lib.activeProfile) : "mods";
+  const dest = await save({ defaultPath: `${base}.json`, filters: [{ name: "JSON", extensions: ["json"] }] });
+  if (!dest) return;
+  try {
+    await library.exportList(dest);
+    toast.success(t("modList.exported"));
+  } catch (e) {
+    toast.error(errorText(e));
+  }
+}
+
+async function importList() {
+  const file = await openFile({ filters: [{ name: "JSON", extensions: ["json"] }] });
+  if (!file) return;
+  try {
+    imported.value = { file, view: await library.readList(file) };
+    importOpen.value = true;
+  } catch (e) {
+    toast.error(errorText(e));
+  }
+}
 const active = computed({
   get: () => lib.profiles?.active ?? "",
   set: (id: string) => void lib.activateProfile(id),
@@ -86,6 +117,9 @@ async function submit() {
         <DropdownMenuItem @select="open('create')"><PlusIcon />{{ t("profiles.create") }}</DropdownMenuItem>
         <DropdownMenuItem @select="open('rename')"><PencilIcon />{{ t("profiles.rename") }}</DropdownMenuItem>
         <DropdownMenuSeparator />
+        <DropdownMenuItem @select="exportList"><FileUpIcon />{{ t("modList.export") }}</DropdownMenuItem>
+        <DropdownMenuItem @select="importList"><FileDownIcon />{{ t("modList.import") }}</DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem :disabled="!canDelete" class="text-destructive" @select="open('delete')">
           <Trash2Icon />{{ t("profiles.delete") }}
         </DropdownMenuItem>
@@ -134,5 +168,12 @@ async function submit() {
         </form>
       </DialogContent>
     </Dialog>
+    <ModListDialog
+      v-if="imported"
+      :key="imported.file"
+      v-model:open="importOpen"
+      :file="imported.file"
+      :initial="imported.view"
+    />
   </div>
 </template>

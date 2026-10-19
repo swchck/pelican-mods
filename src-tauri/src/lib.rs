@@ -14,6 +14,7 @@ mod library;
 mod manifest;
 mod mod_config;
 mod moddrop;
+mod modlist;
 mod mods_commands;
 mod nexus;
 mod nexus_commands;
@@ -107,6 +108,9 @@ pub fn run() {
             mods_commands::mod_set_github,
             mods_commands::mod_install_dependency,
             mods_commands::mod_save_usage,
+            mods_commands::modlist_export,
+            mods_commands::modlist_read,
+            mods_commands::modlist_profile,
             nexus_commands::nexus_search,
             nexus_commands::nexus_mod,
             nexus_commands::nexus_account,

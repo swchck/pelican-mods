@@ -191,7 +191,11 @@ export const library = {
   update: (id: string) => invoke<UpdateOutcome>("mod_update", { id }),
   rollback: (uniqueId: string) => invoke<LibraryView>("mod_rollback", { uniqueId }),
   setGithub: (uniqueId: string, repo: string | null) => invoke<LibraryView>("mod_set_github", { uniqueId, repo }),
-  installDependency: (uniqueId: string) => invoke<UpdateOutcome>("mod_install_dependency", { uniqueId }),
+  installDependency: (uniqueId: string, updateKeys?: string[], github?: string | null) =>
+    invoke<UpdateOutcome>("mod_install_dependency", { uniqueId, updateKeys, github }),
+  exportList: (dest: string) => invoke<void>("modlist_export", { dest }),
+  readList: (file: string) => invoke<ModListView>("modlist_read", { file }),
+  profileFromList: (name: string, uniqueIds: string[]) => invoke<LibraryView>("modlist_profile", { name, uniqueIds }),
   saveUsage: (id: string) => invoke<SaveUsage[]>("mod_save_usage", { id }),
 };
 
@@ -604,4 +608,22 @@ export interface SaveUsage {
   /** The first few of the mod's locations the save has. */
   locations: string[];
   locationCount: number;
+}
+
+/** A shared mod list next to what the library has of it. */
+export interface ModListView {
+  name: string;
+  game: string | null;
+  smapi: string | null;
+  mods: ListedMod[];
+}
+
+export interface ListedMod {
+  uniqueId: string;
+  name: string;
+  version: string;
+  updateKeys: string[];
+  github: string | null;
+  /** The installed version, if any. */
+  installed: string | null;
 }

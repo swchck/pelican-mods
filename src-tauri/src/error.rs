@@ -29,6 +29,8 @@ pub enum AppError {
     NoDownload(String),
     #[error("not a GitHub repo: {0}")]
     BadRepo(String),
+    #[error("not a mod list: {0}")]
+    BadModList(String),
     #[error("no mods found in the archive")]
     NoMods,
     #[error("not found: {0}")]
@@ -83,6 +85,7 @@ impl AppError {
             Self::NoMods => "no_mods",
             Self::NoDownload(_) => "no_download",
             Self::BadRepo(_) => "bad_repo",
+            Self::BadModList(_) => "bad_mod_list",
             Self::NotFound(_) => "not_found",
             Self::BadProfileName(_) => "bad_profile_name",
             Self::LastProfile => "last_profile",
@@ -113,6 +116,7 @@ impl AppError {
             | Self::NotFound(s)
             | Self::NoDownload(s)
             | Self::BadRepo(s)
+            | Self::BadModList(s)
             | Self::BadNxm(s)
             | Self::BadSave(s)
             | Self::BadConfig(s)

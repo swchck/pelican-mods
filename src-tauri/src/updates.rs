@@ -78,7 +78,7 @@ struct ResponseMod {
     errors: Vec<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 struct Suggested {
     version: String,
     url: String,
@@ -161,17 +161,19 @@ pub struct Found {
     pub github: Option<String>,
 }
 
-/// Looks up mod `unique_id` on smapi.io; `None` when its list doesn't know the mod.
+/// Looks up mod `unique_id` on smapi.io, helped by `update_keys` where known; `None`
+/// when neither its list nor the keys lead anywhere.
 pub async fn lookup(
     client: &reqwest::Client,
     unique_id: &str,
+    update_keys: Vec<String>,
     smapi_version: &str,
     game_version: &str,
 ) -> AppResult<Option<Found>> {
     let body = Request {
         mods: vec![RequestMod {
             id: unique_id,
-            update_keys: Vec::new(),
+            update_keys,
             // smapi.io answers "0.0.0" with an empty list
             installed_version: "0.0.1",
         }],
@@ -191,15 +193,26 @@ pub async fn lookup(
     Ok(resp.into_iter().next().and_then(found))
 }
 
+// a mod the compatibility list knows has `main`; one found only through its update
+// keys has just the suggestion
 fn found(r: ResponseMod) -> Option<Found> {
-    let meta = r.metadata?;
-    let main = meta.main?;
+    let meta = r.metadata;
+    let release = meta
+        .as_ref()
+        .and_then(|m| m.main.clone())
+        .or(r.suggested_update)?;
     Some(Found {
-        name: meta.name.unwrap_or_else(|| r.id.clone()),
-        version: main.version,
-        url: main.url,
-        nexus_id: meta.nexus_id,
-        github: meta.git_hub_repo.as_deref().and_then(parse_repo),
+        name: meta
+            .as_ref()
+            .and_then(|m| m.name.clone())
+            .unwrap_or_else(|| r.id.clone()),
+        version: release.version,
+        url: release.url,
+        nexus_id: meta.as_ref().and_then(|m| m.nexus_id),
+        github: meta
+            .as_ref()
+            .and_then(|m| m.git_hub_repo.as_deref())
+            .and_then(parse_repo),
     })
 }
 
@@ -450,10 +463,16 @@ mod tests {
                 .user_agent("pelican-mods-test")
                 .build()
                 .unwrap();
-            let f = lookup(&client, "Annosz.UiInfoSuite2", "4.5.2", "1.6.15")
-                .await
-                .unwrap()
-                .expect("smapi.io knows UI Info Suite 2");
+            let f = lookup(
+                &client,
+                "Annosz.UiInfoSuite2",
+                Vec::new(),
+                "4.5.2",
+                "1.6.15",
+            )
+            .await
+            .unwrap()
+            .expect("smapi.io knows UI Info Suite 2");
             eprintln!("{f:?}");
             let dir = tempfile::tempdir().unwrap();
             let repo = f.github.expect("a GitHub repo");

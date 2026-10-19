@@ -115,11 +115,11 @@ export const useLibrary = defineStore("library", () => {
     }
   }
 
-  /** Finds the mod another one needs and installs it the way an update would. */
-  async function installDependency(uniqueId: string, name: string) {
+  /** Finds a mod by UniqueID (helped by a list's keys and repo) and installs it like an update. */
+  async function installDependency(uniqueId: string, name: string, keys?: string[], github?: string | null) {
     updating.value = new Set(updating.value).add(uniqueId);
     try {
-      await settle(await api.installDependency(uniqueId), "deps", { name });
+      await settle(await api.installDependency(uniqueId, keys, github), "deps", { name });
     } catch (e) {
       toast.error(errorText(e), { duration: 10000 });
     } finally {
@@ -144,6 +144,7 @@ export const useLibrary = defineStore("library", () => {
     update,
     updateAll,
     installDependency,
+    profileFromList: (name: string, uniqueIds: string[]) => run(() => api.profileFromList(name, uniqueIds)),
     rollback: (uniqueId: string) => run(() => api.rollback(uniqueId)),
     /** Attaches or (with null) detaches a GitHub repo, then asks smapi.io again with it. */
     async setGithub(uniqueId: string, repo: string | null) {
