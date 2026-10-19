@@ -8,6 +8,14 @@ use std::path::{Component, Path, PathBuf};
 
 use crate::error::{AppError, AppResult};
 
+/// Most an archive may unpack to. The biggest mods (expansions with music) stay under
+/// 2 GB; anything far past that is a decompression bomb, not a mod.
+pub const MAX_UNPACKED: u64 = 8 << 30;
+
+fn too_big() -> AppError {
+    AppError::BadArchive(format!("unpacks to more than {} GB", MAX_UNPACKED >> 30))
+}
+
 /// Archive formats mods are distributed in.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Format {
@@ -92,7 +100,14 @@ fn skipped(rel: &Path) -> bool {
 fn extract_7z(archive: &Path, out: &Path) -> AppResult<()> {
     std::fs::create_dir_all(out)?;
     let mut unsafe_name = None;
+    let mut total = 0u64;
+    let mut oversized = false;
     sevenz_rust2::decompress_file_with_extract_fn(archive, out, |entry, reader, _| {
+        total = total.saturating_add(entry.size());
+        if total > MAX_UNPACKED {
+            oversized = true;
+            return Ok(false);
+        }
         // 7z stores Windows separators; normalize before judging the path
         let name = entry.name().replace('\\', "/");
         let Some(rel) = safe_relative(Path::new(&name)) else {
@@ -106,6 +121,9 @@ fn extract_7z(archive: &Path, out: &Path) -> AppResult<()> {
         sevenz_rust2::default_entry_extract_fn(entry, reader, &out.join(rel))
     })
     .map_err(|e| AppError::BadArchive(e.to_string()))?;
+    if oversized {
+        return Err(too_big());
+    }
     match unsafe_name {
         Some(name) => Err(AppError::BadArchive(format!("unsafe path {name}"))),
         None => Ok(()),
@@ -118,7 +136,12 @@ fn extract_rar(archive: &Path, out: &Path) -> AppResult<()> {
     let mut cursor = unrar::Archive::new(archive)
         .open_for_processing()
         .map_err(bad)?;
+    let mut total = 0u64;
     while let Some(entry) = cursor.read_header().map_err(bad)? {
+        total = total.saturating_add(entry.entry().unpacked_size);
+        if total > MAX_UNPACKED {
+            return Err(too_big());
+        }
         let name = entry.entry().filename.clone();
         let Some(rel) = safe_relative(&name) else {
             return Err(AppError::BadArchive(format!(
@@ -143,6 +166,7 @@ pub fn extract_zip(archive: &Path, out: &Path) -> AppResult<()> {
     use std::os::unix::fs::PermissionsExt;
 
     let mut zip = zip::ZipArchive::new(std::fs::File::open(archive)?)?;
+    let mut left = MAX_UNPACKED;
     for i in 0..zip.len() {
         let mut entry = zip.by_index(i)?;
         let Some(rel) = entry.enclosed_name() else {
@@ -162,9 +186,13 @@ pub fn extract_zip(archive: &Path, out: &Path) -> AppResult<()> {
         if let Some(parent) = dest.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        let mut buf = Vec::with_capacity(entry.size() as usize);
-        entry.read_to_end(&mut buf)?;
-        std::fs::write(&dest, buf)?;
+        // streamed with a cap: the header's declared size is the archive's word, not a fact
+        let mut file = std::fs::File::create(&dest)?;
+        let written = std::io::copy(&mut (&mut entry).take(left + 1), &mut file)?;
+        if written > left {
+            return Err(too_big());
+        }
+        left -= written;
         if let Some(mode) = entry.unix_mode() {
             // some Windows-made zips carry 0o000; the owner must still be able to update or delete
             let mode = (mode & 0o777) | 0o600;

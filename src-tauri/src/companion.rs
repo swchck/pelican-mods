@@ -33,6 +33,9 @@ pub const URL_VAR: &str = "PELICAN_COMPANION_URL";
 /// The companion's folder name inside Mods.
 pub const FOLDER: &str = "PelicanCompanion";
 
+const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(5);
+const MAX_MESSAGE: usize = 8 << 20;
+
 // a forecast runs the geode code 60 times and lists every chest; still well under this
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -303,7 +306,14 @@ impl Companion {
         // tungstenite's handshake Callback trait fixes this signature, large Err and all
         #[allow(clippy::result_large_err)]
         let check = |req: &Request, resp: Response| -> Result<Response, ErrorResponse> {
-            if req.uri().query() == Some(expected.as_str()) {
+            // the game's ClientWebSocket sends no Origin; a browser always does, and a page
+            // has no business here even if it guessed the token
+            let from_browser = req.headers().contains_key("origin");
+            let token_ok = req
+                .uri()
+                .query()
+                .is_some_and(|q| constant_time_eq(q.as_bytes(), expected.as_bytes()));
+            if token_ok && !from_browser {
                 Ok(resp)
             } else {
                 let mut denied = ErrorResponse::new(None);
@@ -311,7 +321,13 @@ impl Companion {
                 Err(denied)
             }
         };
-        let Ok(ws) = tokio_tungstenite::accept_hdr_async(stream, check).await else {
+        let mut config = tokio_tungstenite::tungstenite::protocol::WebSocketConfig::default();
+        // the biggest real message, the catalog, is a few hundred KB
+        config.max_message_size = Some(MAX_MESSAGE);
+        config.max_frame_size = Some(MAX_MESSAGE);
+        let handshake =
+            tokio_tungstenite::accept_hdr_async_with_config(stream, check, Some(config));
+        let Ok(Ok(ws)) = tokio::time::timeout(HANDSHAKE_TIMEOUT, handshake).await else {
             return;
         };
         let (mut sink, mut stream) = ws.split();
@@ -334,6 +350,10 @@ impl Companion {
             }
         });
         while let Some(Ok(msg)) = stream.next().await {
+            // a newer game took over: this one's reports would overwrite the live session's
+            if self.link.lock().unwrap().generation != generation {
+                break;
+            }
             let Message::Text(text) = msg else { continue };
             match serde_json::from_str::<Incoming>(&text) {
                 Ok(incoming) => self.handle(incoming, events),
@@ -413,6 +433,10 @@ fn save_json(file: &PathBuf, value: &impl Serialize) -> std::io::Result<()> {
         std::fs::create_dir_all(dir)?;
     }
     std::fs::write(file, serde_json::to_vec(value).expect("cache serialize"))
+}
+
+fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
+    a.len() == b.len() && a.iter().zip(b).fold(0u8, |acc, (x, y)| acc | (x ^ y)) == 0
 }
 
 fn random_token() -> std::io::Result<String> {

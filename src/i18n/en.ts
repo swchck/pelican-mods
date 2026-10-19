@@ -379,6 +379,15 @@ export default {
       quality: { silver: "silver", gold: "gold", iridium: "iridium" },
     },
   },
+  nxmConfirm: {
+    title: "Install a mod from Nexus?",
+    why: "A website sent a download link. SMAPI mods are programs, so the launcher doesn't install them without your say-so.",
+    mod: "Mod",
+    file: "File",
+    replaces: "Replaces",
+    oldVersion: "This is an old version of the file; a newer installed one would be replaced by it.",
+    install: "Download and install",
+  },
   config: {
     open: "Mod settings",
     mods: "Mods",
@@ -508,6 +517,7 @@ export default {
     bad_config: "config.json can't be read: {detail}",
     rosetta_missing: "Rosetta 2 is required to run the game",
     cancelled: "Cancelled",
+    game_running: "Close the game to install, remove or update mods",
     companion_offline: "The game isn't connected to the launcher",
     no_world: "No farm is loaded in the game",
     companion_failed: "The game couldn't answer: {detail}",

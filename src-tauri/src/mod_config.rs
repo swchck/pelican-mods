@@ -141,7 +141,12 @@ fn labels(mod_dir: &Path, locale: &str) -> HashMap<String, Label> {
             .unwrap_or_default()
     };
     let mut strings = read("default.json");
-    let lang = locale.split(['-', '_']).next().unwrap_or("");
+    // it names a file: letters only, or "../x" would read any json on disk
+    let lang = locale
+        .split(['-', '_'])
+        .next()
+        .filter(|l| l.chars().all(|c| c.is_ascii_alphabetic()))
+        .unwrap_or("");
     if !lang.is_empty() && lang != "default" {
         strings.extend(read(&format!("{lang}.json")));
     }

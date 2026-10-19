@@ -370,6 +370,15 @@ export default {
       quality: { silver: "серебро", gold: "золото", iridium: "иридий" },
     },
   },
+  nxmConfirm: {
+    title: "Установить мод с Nexus?",
+    why: "Сайт прислал ссылку на загрузку. Моды SMAPI — это программы, поэтому без вашего подтверждения лаунчер их не ставит.",
+    mod: "Мод",
+    file: "Файл",
+    replaces: "Заменит",
+    oldVersion: "Это старая версия файла: установленная новее будет заменена ею.",
+    install: "Скачать и установить",
+  },
   config: {
     open: "Настройки мода",
     mods: "Моды",
@@ -499,6 +508,7 @@ export default {
     bad_config: "config.json не читается: {detail}",
     rosetta_missing: "Для запуска нужна Rosetta 2",
     cancelled: "Отменено",
+    game_running: "Закройте игру, чтобы устанавливать, удалять или обновлять моды",
     companion_offline: "Игра не на связи с лаунчером",
     no_world: "В игре не загружена ферма",
     companion_failed: "Игра не смогла ответить: {detail}",

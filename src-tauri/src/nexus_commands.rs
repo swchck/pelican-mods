@@ -8,6 +8,16 @@ use crate::error::{AppError, AppResult};
 use crate::mods_commands;
 use crate::nexus::{self, Account, LinkGrant, ModDetails, SearchFilters, SearchPage, Sort};
 
+// the Keychain can stop to ask for the login password; that wait belongs on a blocking
+// thread, not on an async worker or, for sync commands, the main thread
+async fn keychain<T: Send + 'static>(
+    f: impl FnOnce() -> AppResult<T> + Send + 'static,
+) -> AppResult<T> {
+    tauri::async_runtime::spawn_blocking(f)
+        .await
+        .map_err(|e| AppError::Keychain(e.to_string()))?
+}
+
 #[tauri::command]
 pub async fn nexus_search(
     app: AppHandle,
@@ -33,7 +43,7 @@ pub async fn nexus_account(app: AppHandle) -> AppResult<Option<Account>> {
     if let Some(a) = state.nexus_account.lock().unwrap().clone() {
         return Ok(Some(a));
     }
-    let Some(key) = nexus::load_key()? else {
+    let Some(key) = keychain(nexus::load_key).await? else {
         return Ok(None);
     };
     let account = nexus::validate(&state.http, &key).await?;
@@ -47,14 +57,15 @@ pub async fn nexus_set_key(app: AppHandle, key: String) -> AppResult<Account> {
     let state = app.state::<AppState>();
     let key = key.trim().to_owned();
     let account = nexus::validate(&state.http, &key).await?;
-    nexus::save_key(&key)?;
+    let stored = key.clone();
+    keychain(move || nexus::save_key(&stored)).await?;
     *state.nexus_account.lock().unwrap() = Some(account.clone());
     Ok(account)
 }
 
 #[tauri::command]
-pub fn nexus_clear_key(app: AppHandle) -> AppResult<()> {
-    nexus::clear_key()?;
+pub async fn nexus_clear_key(app: AppHandle) -> AppResult<()> {
+    keychain(nexus::clear_key).await?;
     *app.state::<AppState>().nexus_account.lock().unwrap() = None;
     Ok(())
 }
@@ -74,21 +85,52 @@ pub async fn nexus_download(app: AppHandle, mod_id: u64, file_id: u64) -> AppRes
     Ok(())
 }
 
+/// Returns the page where the user fetches this file without Premium; the nxm link it
+/// sends back is then expected and installs without asking again.
 #[tauri::command]
-pub fn nexus_file_page(mod_id: u64, file_id: u64) -> String {
+pub fn nexus_file_page(app: AppHandle, mod_id: u64, file_id: u64) -> String {
+    expect_nxm(&app, mod_id, file_id);
     nexus::file_page(mod_id, file_id)
 }
 
-/// Handles an `nxm://` link, from the OS or pasted by the user.
+/// Starts the download of an `nxm://` link the user pasted or confirmed in the app.
 #[tauri::command]
 pub fn nxm_open(app: AppHandle, url: String) -> AppResult<()> {
-    handle_nxm(&app, &url)
+    let link = nexus::parse_nxm(&url)?;
+    start(app, link.mod_id, link.file_id, link.grant);
+    Ok(())
 }
 
-/// Starts the download an nxm link describes.
+/// How long after the app sent the user to a file page its nxm link counts as expected.
+const EXPECT_FOR: std::time::Duration = std::time::Duration::from_secs(30 * 60);
+
+pub(crate) fn expect_nxm(app: &AppHandle, mod_id: u64, file_id: u64) {
+    let state = app.state::<AppState>();
+    let mut expected = state.nxm_expected.lock().unwrap();
+    expected.retain(|_, at| at.elapsed() < EXPECT_FOR);
+    expected.insert((mod_id, file_id), std::time::Instant::now());
+}
+
+/// Handles an `nxm://` link the OS handed over. Any website can open one, and it ends in
+/// a mod (code, for SMAPI mods) installed and enabled, so links the app didn't ask for go
+/// to the UI for confirmation as `nxm:pending` instead of starting.
 pub fn handle_nxm(app: &AppHandle, url: &str) -> AppResult<()> {
     let link = nexus::parse_nxm(url)?;
-    start(app.clone(), link.mod_id, link.file_id, link.grant);
+    let asked = {
+        let state = app.state::<AppState>();
+        let mut expected = state.nxm_expected.lock().unwrap();
+        expected
+            .remove(&(link.mod_id, link.file_id))
+            .is_some_and(|at| at.elapsed() < EXPECT_FOR)
+    };
+    if asked {
+        start(app.clone(), link.mod_id, link.file_id, link.grant);
+    } else {
+        let _ = app.emit(
+            "nxm:pending",
+            serde_json::json!({ "url": url, "modId": link.mod_id, "fileId": link.file_id }),
+        );
+    }
     Ok(())
 }
 
@@ -147,7 +189,9 @@ async fn run(
     grant: Option<LinkGrant>,
 ) -> AppResult<()> {
     let state = app.state::<AppState>();
-    let key = nexus::load_key()?.ok_or(AppError::NexusNoKey)?;
+    let key = keychain(nexus::load_key)
+        .await?
+        .ok_or(AppError::NexusNoKey)?;
     let url = nexus::download_url(&state.http, &key, mod_id, file_id, grant.as_ref()).await?;
     let dir = state.work_dir.with_file_name("downloads");
     let file = {

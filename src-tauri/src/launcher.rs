@@ -29,6 +29,9 @@ const LOG_CAPACITY: usize = 2000;
 /// How often the SMAPI log file is polled for new lines.
 const TAIL_INTERVAL: Duration = Duration::from_millis(250);
 
+/// How long output readers may keep going after the game exits.
+const READER_GRACE: Duration = Duration::from_secs(3);
+
 /// Severity of a console line, as SMAPI names it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -307,7 +310,9 @@ impl Launcher {
         tauri::async_runtime::spawn(async move {
             let mut file: Option<tokio::fs::File> = None;
             let mut pos = 0u64;
-            let mut pending = String::new();
+            // bytes, not text: a 250 ms read can end inside a multi-byte character, and
+            // decoding each read on its own would turn that character into U+FFFD for good
+            let mut pending: Vec<u8> = Vec::new();
             loop {
                 let last_round = *exited.borrow();
                 if file.is_none() {
@@ -329,9 +334,10 @@ impl Launcher {
                         let mut buf = Vec::with_capacity((len - pos) as usize);
                         if let Ok(n) = f.read_to_end(&mut buf).await {
                             pos += n as u64;
-                            pending.push_str(&String::from_utf8_lossy(&buf));
-                            while let Some(nl) = pending.find('\n') {
-                                let line: String = pending.drain(..=nl).collect();
+                            pending.extend_from_slice(&buf);
+                            while let Some(nl) = pending.iter().position(|b| *b == b'\n') {
+                                let raw: Vec<u8> = pending.drain(..=nl).collect();
+                                let line = String::from_utf8_lossy(&raw);
                                 let line = line.trim_end_matches(['\n', '\r']);
                                 Self::emit(&inner, sink.as_ref(), Source::SmapiFile, line);
                             }
@@ -340,7 +346,8 @@ impl Launcher {
                 }
                 if last_round {
                     if !pending.is_empty() {
-                        Self::emit(&inner, sink.as_ref(), Source::SmapiFile, &pending);
+                        let rest = String::from_utf8_lossy(&pending);
+                        Self::emit(&inner, sink.as_ref(), Source::SmapiFile, &rest);
                     }
                     break;
                 }
@@ -370,9 +377,12 @@ impl Launcher {
                 }
             };
             let _ = exited.send(true);
-            // the last lines may still be in flight; "exited" must come after them
-            for r in readers {
-                let _ = r.await;
+            // the last lines may still be in flight; "exited" must come after them. Bounded:
+            // a process the game spawned can keep the pipes open long after it quit
+            for mut r in readers {
+                if tokio::time::timeout(READER_GRACE, &mut r).await.is_err() {
+                    r.abort();
+                }
             }
             let state = RunState::Exited {
                 code: status.ok().and_then(|s| s.code()),

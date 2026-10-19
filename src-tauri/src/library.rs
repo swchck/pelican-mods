@@ -92,26 +92,53 @@ pub fn scan(root: &Path) -> Vec<Package> {
 
 /// Installs every package in the archive at `archive` into `root`; packages it replaces
 /// move to `backups`.
+#[cfg(test)]
 pub fn install_archive(root: &Path, backups: &Path, archive: &Path) -> AppResult<Vec<Installed>> {
+    let mut done = Vec::new();
+    install_archive_into(root, backups, archive, &mut done)?;
+    Ok(done)
+}
+
+/// Like [`install_archive`], but packages already moved into `root` land in `done` even
+/// when a later one fails, so the caller can still record them.
+pub fn install_archive_into(
+    root: &Path,
+    backups: &Path,
+    archive: &Path,
+    done: &mut Vec<Installed>,
+) -> AppResult<()> {
     let staging = Staging::new(root)?;
     archive::extract(archive, &staging.path)?;
     let fallback = archive
         .file_stem()
         .map(|s| s.to_string_lossy().into_owned())
         .unwrap_or_else(|| "Mod".into());
-    install_staged(root, backups, &staging.path, &fallback)
+    install_staged(root, backups, &staging.path, &fallback, done)
 }
 
 /// Copies the mod folder `src` into `root` as a package; packages it replaces move to
 /// `backups`.
+#[cfg(test)]
 pub fn install_dir(root: &Path, backups: &Path, src: &Path) -> AppResult<Vec<Installed>> {
+    let mut done = Vec::new();
+    install_dir_into(root, backups, src, &mut done)?;
+    Ok(done)
+}
+
+/// Like [`install_dir`], reporting through `done` as [`install_archive_into`] does.
+pub fn install_dir_into(
+    root: &Path,
+    backups: &Path,
+    src: &Path,
+    done: &mut Vec<Installed>,
+) -> AppResult<()> {
     let staging = Staging::new(root)?;
     let name = src
         .file_name()
         .map(|s| s.to_string_lossy().into_owned())
         .unwrap_or_else(|| "Mod".into());
     copy_dir(src, &staging.path.join(&name))?;
-    install_staged(root, backups, &staging.path, &name)
+    install_staged(root, backups, &staging.path, &name, done)
 }
 
 /// Deletes the package `id` from `root`.
@@ -139,13 +166,13 @@ fn install_staged(
     backups: &Path,
     staging: &Path,
     fallback: &str,
-) -> AppResult<Vec<Installed>> {
+    out: &mut Vec<Installed>,
+) -> AppResult<()> {
     let candidates = package_roots(staging, fallback);
     if candidates.is_empty() {
         return Err(AppError::NoMods);
     }
     let mut existing = scan(root);
-    let mut out = Vec::new();
     for (path, name) in candidates {
         let Some(pkg) = read_package(name.clone(), path.clone()) else {
             continue;
@@ -159,17 +186,27 @@ fn install_staged(
         for old in &replaced {
             carry_configs(old, &pkg)?;
         }
-        for old in &replaced {
-            backups::stash(backups, old)?;
-        }
+        // the new package goes in before the old ones leave: if stashing fails both are
+        // installed, which is untidy but loses nothing
         let target = free_name(root, &sanitize(&name));
         std::fs::rename(&path, root.join(&target))?;
+        let mut stashed = Vec::new();
+        let mut failure = None;
+        for old in replaced {
+            match backups::stash(backups, &old) {
+                Ok(()) => stashed.push(old.id),
+                Err(e) => failure = Some(e),
+            }
+        }
         out.push(Installed {
             id: target,
-            replaced: replaced.into_iter().map(|p| p.id).collect(),
+            replaced: stashed,
         });
+        if let Some(e) = failure {
+            return Err(e);
+        }
     }
-    Ok(out)
+    Ok(())
 }
 
 // config.json is written by the mod at runtime and never ships in the download, so an

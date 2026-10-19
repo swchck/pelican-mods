@@ -12,7 +12,8 @@ use crate::archive;
 use crate::error::{AppError, AppResult};
 use crate::saves;
 
-/// Snapshots kept per save; the oldest go first.
+/// Snapshots kept per save and reason; the oldest go first. Per reason, so a run of
+/// launches can't push out the backups the player made or a restore left behind.
 pub const KEEP: usize = 10;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -77,7 +78,11 @@ pub fn create(root: &Path, dir: &Path, reason: Reason) -> AppResult<Snapshot> {
     let created = now_ms();
     let file = folder.join(format!("{created}@{}.zip", reason.tag()));
     archive::zip_dir(dir, &file, &id)?;
-    for old in list(root, &id).into_iter().skip(KEEP) {
+    for old in list(root, &id)
+        .into_iter()
+        .filter(|s| s.reason == reason)
+        .skip(KEEP)
+    {
         let _ = std::fs::remove_file(old.file);
     }
     Ok(Snapshot {
@@ -133,7 +138,12 @@ pub fn export(dir: &Path, dest: &Path) -> AppResult<()> {
 /// Replaces save folder contents with the snapshot at `file`; the current state is
 /// snapshotted first. Returns the save id.
 pub fn restore(root: &Path, saves_dir: &Path, file: &Path) -> AppResult<String> {
-    if !file.starts_with(root) {
+    // canonical: a lexical starts_with lets root/../anything.zip through
+    let inside = match (file.canonicalize(), root.canonicalize()) {
+        (Ok(f), Ok(r)) => f.starts_with(r),
+        _ => false,
+    };
+    if !inside {
         return Err(AppError::NotFound(file.display().to_string()));
     }
     import(root, saves_dir, file)
@@ -153,11 +163,19 @@ pub fn import(root: &Path, saves_dir: &Path, file: &Path) -> AppResult<String> {
         let id = save_id(&found)?;
         saves::summary(&found)?;
         let target = saves_dir.join(&id);
+        // the old save moves aside and only goes once the new one is in place
+        let aside = saves_dir.join(format!(".replaced-{}", now_ms()));
         if target.exists() {
             create(root, &target, Reason::Replaced)?;
-            std::fs::remove_dir_all(&target)?;
+            std::fs::rename(&target, &aside)?;
         }
-        std::fs::rename(&found, &target)?;
+        if let Err(e) = std::fs::rename(&found, &target) {
+            if aside.exists() {
+                let _ = std::fs::rename(&aside, &target);
+            }
+            return Err(e.into());
+        }
+        let _ = std::fs::remove_dir_all(&aside);
         Ok(id)
     })();
     let _ = std::fs::remove_dir_all(&staging);

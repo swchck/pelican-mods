@@ -202,7 +202,7 @@ pub async fn download_github(
         .bytes()
         .await?;
     tokio::fs::create_dir_all(dir).await?;
-    let file = dir.join(&asset.name);
+    let file = dir.join(crate::downloads::safe_file_name(&asset.name));
     tokio::fs::write(&file, bytes).await?;
     Ok(file)
 }
@@ -211,7 +211,12 @@ pub async fn download_github(
 // so match the version in the tag first and the mod name in the asset second
 fn pick_asset<'a>(releases: &'a [GhRelease], mod_name: &str, version: &str) -> Option<&'a GhAsset> {
     let want = normalize(mod_name);
-    let release = releases.iter().find(|r| r.tag_name.ends_with(version))?;
+    // on a boundary, so version 1.5 doesn't take tag 2.1.5
+    let release = releases.iter().find(|r| {
+        r.tag_name.strip_suffix(version).is_some_and(|head| {
+            head.is_empty() || head.ends_with(['/', 'v', 'V', '-', '_', ' ', '@'])
+        })
+    })?;
     let zips: Vec<&GhAsset> = release
         .assets
         .iter()
@@ -311,6 +316,10 @@ mod tests {
         );
         assert!(pick_asset(&rels, "Nope", "3.0.0").is_none());
         assert!(pick_asset(&rels, "x", "9.9.9").is_none());
+        assert!(
+            pick_asset(&rels, "x", "1.0").is_none(),
+            "1.0 must not match 2.1.0"
+        );
     }
 
     #[test]

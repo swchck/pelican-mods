@@ -19,7 +19,10 @@ function safeUrl(escaped: string): string | null {
     .trim();
   try {
     const u = new URL(raw);
-    return u.protocol === "https:" || u.protocol === "http:" ? escape(u.href) : null;
+    if (u.protocol !== "https:" && u.protocol !== "http:") return null;
+    // the rules run again over their own output: a "[" left in an attribute lets a later
+    // pass build a tag inside it, and that tag's quotes break out of the attribute
+    return escape(u.href).replace(/\[/g, "%5B").replace(/\]/g, "%5D");
   } catch {
     return null;
   }

@@ -124,7 +124,10 @@ pub async fn mods_generate_configs(app: AppHandle) -> AppResult<()> {
     };
     // mods write config.json during Entry, which finishes before SMAPI reports ready
     let _ = state.launcher.stop();
-    while matches!(state.launcher.state(), RunState::Running { .. }) {
+    let stopping = std::time::Instant::now();
+    while matches!(state.launcher.state(), RunState::Running { .. })
+        && stopping.elapsed() < Duration::from_secs(15)
+    {
         tokio::time::sleep(Duration::from_millis(100)).await;
     }
     if ready {

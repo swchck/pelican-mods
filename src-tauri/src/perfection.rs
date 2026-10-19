@@ -459,13 +459,7 @@ fn facts_from(reader: impl BufRead) -> AppResult<Facts> {
                 text.clear();
             }
             Event::Text(t) => text.push_str(&t.xml10_content()),
-            Event::GeneralRef(r) => {
-                if let Ok(Some(c)) = r.resolve_char_ref() {
-                    text.push(c);
-                } else if r.as_ref() == "amp" {
-                    text.push('&');
-                }
-            }
+            Event::GeneralRef(r) => text.push_str(&crate::saves::entity(&r)),
             Event::End(_) => {
                 let t = text.trim();
                 // only the main player counts; farmhands live under <farmhands>

@@ -277,6 +277,9 @@ export const nexusEvents = {
     listen<Download[]>("downloads:changed", (e) => cb(e.payload)),
   libraryChanged: (cb: () => void): Promise<UnlistenFn> => listen("library:changed", () => cb()),
   nxmError: (cb: (e: AppError) => void): Promise<UnlistenFn> => listen<AppError>("nxm:error", (e) => cb(e.payload)),
+  /** An nxm link from outside the app, waiting for the user to confirm it. */
+  nxmPending: (cb: (link: NxmLink) => void): Promise<UnlistenFn> =>
+    listen<NxmLink>("nxm:pending", (e) => cb(e.payload)),
 };
 
 export interface Skills {
@@ -453,6 +456,12 @@ export interface Forecast {
   islandWeatherTomorrow: string | null;
   geodesCracked: number;
   geodes: { id: string; name: string; next: { id: string; name: string; stack: number }[] }[];
+}
+
+export interface NxmLink {
+  url: string;
+  modId: number;
+  fileId: number;
 }
 
 export const companion = {

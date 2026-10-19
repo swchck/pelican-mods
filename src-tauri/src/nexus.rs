@@ -388,7 +388,13 @@ pub async fn download_url(
     }
     let mut path = format!("/games/{GAME_DOMAIN}/mods/{mod_id}/files/{file_id}/download_link.json");
     if let Some(g) = grant {
-        path.push_str(&format!("?key={}&expires={}", g.key, g.expires));
+        // encoded: the key comes from a link any website can craft
+        let query = url::form_urlencoded::Serializer::new(String::new())
+            .append_pair("key", &g.key)
+            .append_pair("expires", &g.expires.to_string())
+            .finish();
+        path.push('?');
+        path.push_str(&query);
     }
     let resp = rest(client, &path, api_key).send().await?;
     match resp.status() {

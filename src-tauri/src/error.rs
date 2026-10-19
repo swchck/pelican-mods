@@ -53,6 +53,8 @@ pub enum AppError {
     RosettaMissing,
     #[error("cancelled by the user")]
     Cancelled,
+    #[error("close the game before changing installed mods")]
+    GameRunning,
     #[error("the game isn't connected to the launcher")]
     CompanionOffline,
     #[error("no save is loaded in the game")]
@@ -90,6 +92,7 @@ impl AppError {
             Self::BadConfig(_) => "bad_config",
             Self::RosettaMissing => "rosetta_missing",
             Self::Cancelled => "cancelled",
+            Self::GameRunning => "game_running",
             Self::CompanionOffline => "companion_offline",
             Self::NoWorld => "no_world",
             Self::CompanionFailed(_) => "companion_failed",

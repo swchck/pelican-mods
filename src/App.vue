@@ -8,6 +8,7 @@ import AppSidebar from "@/components/AppSidebar.vue";
 import SetupView from "@/views/SetupView.vue";
 import SmapiPrompt from "@/components/SmapiPrompt.vue";
 import NexusKeyDialog from "@/components/NexusKeyDialog.vue";
+import NxmConfirmDialog from "@/components/NxmConfirmDialog.vue";
 import AppUpdateDialogs from "@/components/AppUpdateDialogs.vue";
 import ShortcutsDialog from "@/components/ShortcutsDialog.vue";
 import { useShortcut, useShortcuts } from "@/stores/shortcuts";
@@ -61,6 +62,7 @@ onMounted(() => {
   </div>
   <SmapiPrompt />
   <NexusKeyDialog />
+  <NxmConfirmDialog />
   <AppUpdateDialogs />
   <ShortcutsDialog />
   <Toaster position="bottom-right" rich-colors />

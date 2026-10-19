@@ -104,6 +104,8 @@ pub async fn saves_progress(app: AppHandle, id: String) -> AppResult<Progress> {
 
 #[tauri::command]
 pub async fn saves_snapshots(app: AppHandle, id: String) -> AppResult<Vec<Snapshot>> {
+    // validates the id as a real save folder name before it becomes a path
+    save_path(&app, &id)?;
     blocking(app, move |s| {
         Ok(save_backups::list(&s.save_backup_root, &id))
     })

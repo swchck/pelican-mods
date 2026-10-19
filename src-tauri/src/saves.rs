@@ -203,7 +203,7 @@ fn root_fields(reader: impl BufRead) -> AppResult<HashMap<String, String>> {
     Ok(fields)
 }
 
-fn entity(r: &quick_xml::events::BytesRef<'_>) -> String {
+pub(crate) fn entity(r: &quick_xml::events::BytesRef<'_>) -> String {
     if let Ok(Some(c)) = r.resolve_char_ref() {
         return c.to_string();
     }

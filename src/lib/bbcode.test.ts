@@ -42,4 +42,16 @@ describe("bbcodeImages", () => {
     const src = "[img]https://a/1.png[/img] [img]http://b/2.png[/img] [img]https://a/1.png[/img]";
     expect(bbcodeImages(src)).toEqual(["https://a/1.png"]);
   });
+
+  it("keeps tags from forming inside attributes on later passes", () => {
+    const evil = "[url]https://evil/[u[img]x[/img]rl]https://h/onmouseover=alert(1)//[/u[img]x[/img]rl][/url]";
+    const html = bbcodeToHtml(evil);
+    // every tag with attributes must be exactly the shape the renderer writes
+    for (const tag of html.match(/<(a|img)\b[^>]*>/g) ?? []) {
+      expect(tag).toMatch(
+        /^<a href="https?:\/\/[^"<>[\]]*" data-external>$|^<img src="https?:\/\/[^"<>[\]]*" alt="" loading="lazy">$/,
+      );
+    }
+    expect(html).not.toContain('onmouseover=alert(1)//"');
+  });
 });

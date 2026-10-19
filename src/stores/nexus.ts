@@ -12,6 +12,7 @@ import {
   type NexusFilters,
   type NexusMod,
   type NexusSort,
+  type NxmLink,
 } from "@/lib/api";
 import { errorText, i18n } from "@/i18n";
 import { useLibrary } from "@/stores/library";
@@ -39,6 +40,8 @@ export const useNexus = defineStore("nexus", () => {
   const keyDialog = ref(false);
   // the download that was waiting for a key; it resumes once the key is accepted
   const pending = ref<{ modId: number; fileId: number } | null>(null);
+  /** Links from websites the user hasn't confirmed yet, oldest first. */
+  const incoming = ref<NxmLink[]>([]);
 
   const selected = computed(() => (selectedId.value ? (details.value[selectedId.value] ?? null) : null));
   const active = computed(() => downloads.value.filter((d) => d.state !== "done" && d.state !== "failed"));
@@ -154,6 +157,9 @@ export const useNexus = defineStore("nexus", () => {
       }),
       nexusEvents.libraryChanged(() => void library.load()),
       nexusEvents.nxmError((e) => toast.error(errorText(e))),
+      nexusEvents.nxmPending((link) => {
+        if (!incoming.value.some((l) => l.url === link.url)) incoming.value = [...incoming.value, link];
+      }),
     ]);
     // listeners first: a failed fetch must not leave downloads and nxm errors unheard
     try {
@@ -185,6 +191,7 @@ export const useNexus = defineStore("nexus", () => {
     downloads,
     keyDialog,
     pending,
+    incoming,
     active,
     search,
     select,

@@ -107,30 +107,36 @@ pub async fn fetch(
     let total = resp.content_length().unwrap_or(0);
     let name = file_name(resp.url());
     tokio::fs::create_dir_all(dir).await?;
-    let path = unique(dir, &name);
-    let mut file = tokio::fs::File::create(&path).await?;
-    let mut stream = resp.bytes_stream();
-    let mut received = 0u64;
-    let mut last = Instant::now();
-    while let Some(chunk) = stream.next().await {
-        let chunk = match chunk {
-            Ok(c) => c,
-            Err(e) => {
-                drop(file);
-                let _ = tokio::fs::remove_file(&path).await;
-                return Err(e.into());
+    let (path, mut file) = create_unique(dir, &name).await?;
+    let written: AppResult<u64> = async {
+        let mut stream = resp.bytes_stream();
+        let mut received = 0u64;
+        let mut last = Instant::now();
+        while let Some(chunk) = stream.next().await {
+            let chunk = chunk?;
+            file.write_all(&chunk).await?;
+            received += chunk.len() as u64;
+            if last.elapsed() >= REPORT_EVERY {
+                last = Instant::now();
+                progress(received, total);
             }
-        };
-        file.write_all(&chunk).await?;
-        received += chunk.len() as u64;
-        if last.elapsed() >= REPORT_EVERY {
-            last = Instant::now();
-            progress(received, total);
+        }
+        file.flush().await?;
+        Ok(received)
+    }
+    .await;
+    match written {
+        Ok(received) => {
+            progress(received, total.max(received));
+            Ok(path)
+        }
+        Err(e) => {
+            // a partial archive left behind would look installable next time
+            drop(file);
+            let _ = tokio::fs::remove_file(&path).await;
+            Err(e)
         }
     }
-    file.flush().await?;
-    progress(received, total.max(received));
-    Ok(path)
 }
 
 fn file_name(url: &reqwest::Url) -> String {
@@ -148,7 +154,35 @@ fn file_name(url: &reqwest::Url) -> String {
             }
         })
         .collect::<String>();
-    let clean: String = decoded
+    safe_file_name(&decoded)
+}
+
+// create_new, not exists-then-create: two downloads of the same file can pick a name in
+// the same instant, and the second would truncate the first
+async fn create_unique(dir: &Path, name: &str) -> AppResult<(PathBuf, tokio::fs::File)> {
+    for i in 1u32.. {
+        let path = if i == 1 {
+            dir.join(name)
+        } else {
+            dir.join(format!("{i}-{name}"))
+        };
+        match tokio::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)
+            .await
+        {
+            Ok(file) => return Ok((path, file)),
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(e) => return Err(e.into()),
+        }
+    }
+    unreachable!("u32 names run out first")
+}
+
+/// Cleans a server-supplied file name so it can't leave the download folder.
+pub fn safe_file_name(raw: &str) -> String {
+    let clean: String = raw
         .chars()
         .map(|c| {
             if matches!(c, '/' | '\\' | ':') || c.is_control() {
@@ -164,17 +198,6 @@ fn file_name(url: &reqwest::Url) -> String {
     } else {
         clean.to_owned()
     }
-}
-
-fn unique(dir: &Path, name: &str) -> PathBuf {
-    let first = dir.join(name);
-    if !first.exists() {
-        return first;
-    }
-    (2..)
-        .map(|i| dir.join(format!("{i}-{name}")))
-        .find(|p| !p.exists())
-        .expect("some name is free")
 }
 
 #[cfg(test)]

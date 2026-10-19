@@ -157,7 +157,7 @@ fn build_view(state: &AppState) -> LibraryView {
 
 /// Builds the active profile's symlink folder and returns it for `--mods-path`.
 pub fn deploy_active(state: &AppState) -> AppResult<PathBuf> {
-    let _guard = state.library_lock.lock().unwrap();
+    let _guard = lock_library(state);
     let (bundled, _) = game_mods(state);
     let mut bundled: Vec<(String, PathBuf)> = bundled.into_iter().map(|p| (p.id, p.path)).collect();
     if state.companion_enabled() {
@@ -213,14 +213,37 @@ pub async fn library_install(app: AppHandle, paths: Vec<PathBuf>) -> AppResult<L
 /// Installs archives or mod folders into the store and enables new packages in the
 /// active profile. Blocking; call from a blocking thread.
 pub fn install_paths(s: &AppState, paths: &[PathBuf]) -> AppResult<()> {
-    let _guard = s.library_lock.lock().unwrap();
+    ensure_stopped(s)?;
+    let _guard = lock_library(s);
     for path in paths {
-        let installed = if path.is_dir() {
-            library::install_dir(&s.store_root, &s.backup_root, path)?
+        let mut done = Vec::new();
+        let result = if path.is_dir() {
+            library::install_dir_into(&s.store_root, &s.backup_root, path, &mut done)
         } else {
-            library::install_archive(&s.store_root, &s.backup_root, path)?
+            library::install_archive_into(&s.store_root, &s.backup_root, path, &mut done)
         };
-        record_installs(s, &installed)?;
+        // whatever made it into the store belongs in the profile, failure or not
+        record_installs(s, &done)?;
+        result?;
+    }
+    Ok(())
+}
+
+/// Takes the library lock. A panic inside an archive library poisons it; the store on disk
+/// is still consistent then, so later installs and launches carry on instead of panicking.
+pub(crate) fn lock_library(s: &AppState) -> std::sync::MutexGuard<'_, ()> {
+    s.library_lock
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+// moving packages under a running SMAPI breaks the symlinks it reads assets through
+fn ensure_stopped(s: &AppState) -> AppResult<()> {
+    if matches!(
+        s.launcher.state(),
+        crate::launcher::RunState::Running { .. }
+    ) {
+        return Err(AppError::GameRunning);
     }
     Ok(())
 }
@@ -230,11 +253,14 @@ pub fn install_paths(s: &AppState, paths: &[PathBuf]) -> AppResult<()> {
 pub async fn library_import(app: AppHandle, names: Vec<String>) -> AppResult<LibraryView> {
     blocking(app, move |s| {
         let mods_dir = s.game_dir()?.join("Mods");
-        let _guard = s.library_lock.lock().unwrap();
+        ensure_stopped(s)?;
+        let _guard = lock_library(s);
         for name in &names {
             let src = library::package_path(&mods_dir, name)?;
-            let installed = library::install_dir(&s.store_root, &s.backup_root, &src)?;
-            record_installs(s, &installed)?;
+            let mut done = Vec::new();
+            let result = library::install_dir_into(&s.store_root, &s.backup_root, &src, &mut done);
+            record_installs(s, &done)?;
+            result?;
         }
         drop(_guard);
         Ok(build_view(s))
@@ -245,7 +271,8 @@ pub async fn library_import(app: AppHandle, names: Vec<String>) -> AppResult<Lib
 #[tauri::command]
 pub async fn library_remove(app: AppHandle, id: String) -> AppResult<LibraryView> {
     blocking(app, move |s| {
-        let _guard = s.library_lock.lock().unwrap();
+        ensure_stopped(s)?;
+        let _guard = lock_library(s);
         library::remove(&s.store_root, &id)?;
         s.profiles.update(|p| {
             p.forget_package(&id);
@@ -420,10 +447,14 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> 
     };
     if let Some(file) = file {
         let view = blocking(app, move |s| {
-            let _guard = s.library_lock.lock().unwrap();
-            let installed = library::install_archive(&s.store_root, &s.backup_root, &file);
+            ensure_stopped(s)?;
+            let _guard = lock_library(s);
+            let mut done = Vec::new();
+            let result =
+                library::install_archive_into(&s.store_root, &s.backup_root, &file, &mut done);
             let _ = std::fs::remove_file(&file);
-            record_installs(s, &installed?)?;
+            record_installs(s, &done)?;
+            result?;
             drop(_guard);
             Ok(build_view(s))
         })
@@ -446,6 +477,7 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> 
         .is_some_and(|a| a.is_premium);
     if !premium {
         // "Mod Manager Download" on this page sends an nxm link back, which installs it
+        nexus_commands::expect_nxm(&app, mod_id, file.file_id);
         return Ok(UpdateOutcome::OpenPage {
             url: nexus::file_page(mod_id, file.file_id),
         });
@@ -458,14 +490,18 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> 
 #[tauri::command]
 pub async fn mod_rollback(app: AppHandle, unique_id: String) -> AppResult<LibraryView> {
     blocking(app, move |s| {
-        let _guard = s.library_lock.lock().unwrap();
+        ensure_stopped(s)?;
+        let _guard = lock_library(s);
         let backup = backups::list(&s.backup_root, &unique_id)
             .into_iter()
             .next()
             .ok_or_else(|| AppError::NotFound(unique_id.clone()))?;
-        let installed = library::install_dir(&s.store_root, &s.backup_root, &backup.path)?;
+        let mut done = Vec::new();
+        let result =
+            library::install_dir_into(&s.store_root, &s.backup_root, &backup.path, &mut done);
+        record_installs(s, &done)?;
+        result?;
         backups::discard(&s.backup_root, &backup)?;
-        record_installs(s, &installed)?;
         drop(_guard);
         Ok(build_view(s))
     })

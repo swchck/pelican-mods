@@ -43,6 +43,9 @@ pub struct AppState {
     /// Serializes store and profile changes; installs run on blocking threads in parallel.
     pub(crate) library_lock: Mutex<()>,
     pub(crate) companion: std::sync::Arc<crate::companion::Companion>,
+    /// Nexus files the app sent the user to fetch, with when; their nxm links install
+    /// without a second question.
+    pub(crate) nxm_expected: Mutex<std::collections::HashMap<(u64, u64), std::time::Instant>>,
     /// The built companion mod, linked into every profile; `None` when this build lacks it.
     pub(crate) companion_dir: std::sync::OnceLock<PathBuf>,
 }
@@ -50,8 +53,12 @@ pub struct AppState {
 impl AppState {
     /// Builds state rooted at the app's config, data and cache folders.
     pub fn new(config_dir: PathBuf, data_dir: PathBuf, cache_dir: PathBuf) -> Self {
+        // no overall timeout: a 1 GB mod on a slow line is fine, a connection that stops
+        // sending isn't, and without these it would hold the installing flag forever
         let http = reqwest::Client::builder()
             .user_agent(concat!("PelicanMods/", env!("CARGO_PKG_VERSION")))
+            .connect_timeout(std::time::Duration::from_secs(20))
+            .read_timeout(std::time::Duration::from_secs(60))
             .build()
             .expect("http client");
         Self {
@@ -74,6 +81,7 @@ impl AppState {
             library_lock: Mutex::new(()),
             companion: std::sync::Arc::new(crate::companion::Companion::new(&cache_dir)),
             companion_dir: std::sync::OnceLock::new(),
+            nxm_expected: Mutex::new(Default::default()),
         }
     }
 
