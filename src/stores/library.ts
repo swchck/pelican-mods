@@ -2,7 +2,7 @@ import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import { toast } from "vue-sonner";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { library as api, type LibraryView, type PackageView, type UpdateReport } from "@/lib/api";
+import { library as api, type LibraryView, type PackageView, type UpdateOutcome, type UpdateReport } from "@/lib/api";
 import { packageUpdate } from "@/lib/packages";
 import { errorText, i18n } from "@/i18n";
 import { useNexus } from "./nexus";
@@ -93,22 +93,38 @@ export const useLibrary = defineStore("library", () => {
     }
     updating.value = new Set(updating.value).add(p.id);
     try {
-      const outcome = await api.update(p.id);
-      const vars = { name: p.id, version: u.version };
-      if (outcome.kind === "installed") {
-        changes++;
-        view.value = outcome.view;
-        toast.success(i18n.global.t("updates.done", vars));
-      } else if (outcome.kind === "queued") {
-        toast.info(i18n.global.t("updates.queued", vars));
-      } else {
-        await openUrl(outcome.url);
-      }
+      await settle(await api.update(p.id), "updates", { name: p.id, version: u.version });
     } catch (e) {
       toast.error(errorText(e), { duration: 10000 });
     } finally {
       const next = new Set(updating.value);
       next.delete(p.id);
+      updating.value = next;
+    }
+  }
+
+  async function settle(outcome: UpdateOutcome, texts: "updates" | "deps", vars: Record<string, string>) {
+    if (outcome.kind === "installed") {
+      changes++;
+      view.value = outcome.view;
+      toast.success(i18n.global.t(`${texts}.done`, vars));
+    } else if (outcome.kind === "queued") {
+      toast.info(i18n.global.t(`${texts}.queued`, vars));
+    } else {
+      await openUrl(outcome.url);
+    }
+  }
+
+  /** Finds the mod another one needs and installs it the way an update would. */
+  async function installDependency(uniqueId: string, name: string) {
+    updating.value = new Set(updating.value).add(uniqueId);
+    try {
+      await settle(await api.installDependency(uniqueId), "deps", { name });
+    } catch (e) {
+      toast.error(errorText(e), { duration: 10000 });
+    } finally {
+      const next = new Set(updating.value);
+      next.delete(uniqueId);
       updating.value = next;
     }
   }
@@ -127,6 +143,7 @@ export const useLibrary = defineStore("library", () => {
     checkUpdates,
     update,
     updateAll,
+    installDependency,
     rollback: (uniqueId: string) => run(() => api.rollback(uniqueId)),
     /** Attaches or (with null) detaches a GitHub repo, then asks smapi.io again with it. */
     async setGithub(uniqueId: string, repo: string | null) {

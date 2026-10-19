@@ -87,8 +87,15 @@ struct Suggested {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Metadata {
+    #[serde(default)]
+    name: Option<String>,
     #[serde(rename = "nexusID")]
     nexus_id: Option<u64>,
+    #[serde(default)]
+    git_hub_repo: Option<String>,
+    /// The newest release on the mod's main page.
+    #[serde(default)]
+    main: Option<Suggested>,
     compatibility_status: Option<String>,
     compatibility_summary: Option<String>,
 }
@@ -141,6 +148,58 @@ pub async fn check(
     Ok(UpdateReport {
         checked_at: now_secs(),
         mods: resp.into_iter().map(convert).collect(),
+    })
+}
+
+/// Where to get a mod the player doesn't have, as smapi.io's mod list knows it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Found {
+    pub name: String,
+    pub version: String,
+    pub url: String,
+    pub nexus_id: Option<u64>,
+    pub github: Option<String>,
+}
+
+/// Looks up mod `unique_id` on smapi.io; `None` when its list doesn't know the mod.
+pub async fn lookup(
+    client: &reqwest::Client,
+    unique_id: &str,
+    smapi_version: &str,
+    game_version: &str,
+) -> AppResult<Option<Found>> {
+    let body = Request {
+        mods: vec![RequestMod {
+            id: unique_id,
+            update_keys: Vec::new(),
+            // smapi.io answers "0.0.0" with an empty list
+            installed_version: "0.0.1",
+        }],
+        api_version: smapi_version,
+        game_version,
+        platform: "Mac",
+        include_extended_metadata: true,
+    };
+    let resp: Vec<ResponseMod> = client
+        .post(API)
+        .json(&body)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+    Ok(resp.into_iter().next().and_then(found))
+}
+
+fn found(r: ResponseMod) -> Option<Found> {
+    let meta = r.metadata?;
+    let main = meta.main?;
+    Some(Found {
+        name: meta.name.unwrap_or_else(|| r.id.clone()),
+        version: main.version,
+        url: main.url,
+        nexus_id: meta.nexus_id,
+        github: meta.git_hub_repo.as_deref().and_then(parse_repo),
     })
 }
 
@@ -380,6 +439,44 @@ mod tests {
             Some("spacechase0/StardewValleyMods")
         );
         assert_eq!(github_key(&keys(&["Nexus:1915", "GitHub:broken"])), None);
+    }
+
+    // network: smapi.io finds a mod by UniqueID alone, and its GitHub release downloads
+    #[test]
+    #[ignore]
+    fn finds_dependencies_online() {
+        tauri::async_runtime::block_on(async {
+            let client = reqwest::Client::builder()
+                .user_agent("pelican-mods-test")
+                .build()
+                .unwrap();
+            let f = lookup(&client, "Annosz.UiInfoSuite2", "4.5.2", "1.6.15")
+                .await
+                .unwrap()
+                .expect("smapi.io knows UI Info Suite 2");
+            eprintln!("{f:?}");
+            let dir = tempfile::tempdir().unwrap();
+            let repo = f.github.expect("a GitHub repo");
+            let file = download_github(&client, &repo, &f.name, &f.version, dir.path())
+                .await
+                .unwrap();
+            eprintln!("downloaded {}", file.display());
+            assert!(file.is_file());
+        });
+    }
+
+    #[test]
+    fn reads_lookups() {
+        let body = r#"[{"id":"spacechase0.SpaceCore","metadata":{"id":["spacechase0.SpaceCore"],
+            "name":"SpaceCore","nexusID":1348,"gitHubRepo":"spacechase0/StardewValleyMods",
+            "main":{"version":"1.28.0","url":"https://www.nexusmods.com/stardewvalley/mods/1348"}},
+            "errors":[]}]"#;
+        let resp: Vec<ResponseMod> = serde_json::from_str(body).unwrap();
+        let f = found(resp.into_iter().next().unwrap()).unwrap();
+        assert_eq!(f.name, "SpaceCore");
+        assert_eq!(f.version, "1.28.0");
+        assert_eq!(f.nexus_id, Some(1348));
+        assert_eq!(f.github.as_deref(), Some("spacechase0/StardewValleyMods"));
     }
 
     #[test]

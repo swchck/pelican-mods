@@ -2,7 +2,15 @@
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
-import { CircleAlertIcon, CircleCheckIcon, CircleMinusIcon, CircleXIcon, SearchIcon } from "@lucide/vue";
+import {
+  CircleAlertIcon,
+  CircleCheckIcon,
+  CircleMinusIcon,
+  CircleXIcon,
+  DownloadIcon,
+  Loader2Icon,
+  SearchIcon,
+} from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import type { Dependency } from "@/lib/api";
 import { resolveDeps, type DepRow } from "@/lib/deps";
@@ -80,9 +88,23 @@ function find(r: DepRow) {
           v-else-if="r.state === 'missing' || r.state === 'old'"
           size="xs"
           variant="outline"
+          :disabled="lib.working || lib.updating.has(r.uniqueId)"
+          :title="t('deps.installHint')"
+          @click.stop="lib.installDependency(r.uniqueId, r.name)"
+        >
+          <Loader2Icon v-if="lib.updating.has(r.uniqueId)" class="animate-spin" /><DownloadIcon v-else />{{
+            t("deps.install")
+          }}
+        </Button>
+        <Button
+          v-if="r.state === 'missing' || r.state === 'old'"
+          size="xs"
+          variant="ghost"
+          :aria-label="t('deps.find')"
+          :title="t('deps.find')"
           @click.stop="find(r)"
         >
-          <SearchIcon />{{ t("deps.find") }}
+          <SearchIcon />
         </Button>
       </div>
     </template>

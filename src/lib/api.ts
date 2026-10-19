@@ -189,6 +189,7 @@ export const library = {
   update: (id: string) => invoke<UpdateOutcome>("mod_update", { id }),
   rollback: (uniqueId: string) => invoke<LibraryView>("mod_rollback", { uniqueId }),
   setGithub: (uniqueId: string, repo: string | null) => invoke<LibraryView>("mod_set_github", { uniqueId, repo }),
+  installDependency: (uniqueId: string) => invoke<UpdateOutcome>("mod_install_dependency", { uniqueId }),
 };
 
 export type NexusSort = "endorsements" | "downloads" | "updated" | "created";

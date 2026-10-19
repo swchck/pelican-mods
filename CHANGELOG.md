@@ -19,6 +19,8 @@
 
 ### Updates
 
+- A missing or outdated dependency installs from the mod's card in one click: the app finds it on smapi.io by its UniqueID and fetches it the way it fetches updates.
+
 - Mods that list a GitHub repo update from its releases first, even when the newest version was found on Nexus, so they update in one click without a Nexus Premium account.
 
 - Mods that share a Nexus page, such as Grandpa's Farm on the Stardew Valley Expanded page, update with their own file instead of the page's main one.

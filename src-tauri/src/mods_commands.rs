@@ -460,6 +460,44 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> 
     };
     let (name, version, url, nexus_id, github, subkey) =
         found.ok_or_else(|| AppError::NoDownload(id.clone()))?;
+    fetch_and_install(
+        app,
+        Wanted {
+            name,
+            version,
+            url,
+            nexus_id,
+            github,
+            subkey,
+        },
+    )
+    .await
+}
+
+/// A mod version to fetch, and every lead on where it lives.
+struct Wanted {
+    name: String,
+    version: String,
+    /// The page smapi.io points at.
+    url: String,
+    nexus_id: Option<u64>,
+    github: Option<String>,
+    /// A Nexus subkey for mods sharing a page ("@GF").
+    subkey: Option<String>,
+}
+
+/// Installs `w` right away from GitHub or ModDrop, queues it from Nexus for Premium,
+/// or hands back the page where only the user can start the download.
+async fn fetch_and_install(app: AppHandle, w: Wanted) -> AppResult<UpdateOutcome> {
+    let Wanted {
+        name,
+        version,
+        url,
+        nexus_id,
+        github,
+        subkey,
+    } = w;
+    let state = app.state::<AppState>();
     let dir = state.work_dir.with_file_name("downloads");
     let mut file = None;
     if let Some(repo) = updates::github_repo(&url) {
@@ -525,6 +563,34 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> 
     }
     nexus_commands::start(app, mod_id, file.file_id, None);
     Ok(UpdateOutcome::Queued)
+}
+
+/// Finds mod `unique_id`, which another mod needs, and installs it like an update.
+#[tauri::command]
+pub async fn mod_install_dependency(app: AppHandle, unique_id: String) -> AppResult<UpdateOutcome> {
+    let (smapi, game) = {
+        let s = app.state::<AppState>();
+        versions(&s)
+    };
+    let http = app.state::<AppState>().http.clone();
+    let found = updates::lookup(&http, &unique_id, &smapi, &game).await?;
+    let Some(f) = found else {
+        return Ok(UpdateOutcome::OpenPage {
+            url: "https://smapi.io/mods".to_owned(),
+        });
+    };
+    fetch_and_install(
+        app,
+        Wanted {
+            name: f.name,
+            version: f.version,
+            url: f.url,
+            nexus_id: f.nexus_id,
+            github: f.github,
+            subkey: None,
+        },
+    )
+    .await
 }
 
 /// Attaches GitHub repo `repo` ("owner/repo" or a github.com link) to the mod

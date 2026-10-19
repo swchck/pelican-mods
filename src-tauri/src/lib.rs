@@ -104,6 +104,7 @@ pub fn run() {
             mods_commands::mod_update,
             mods_commands::mod_rollback,
             mods_commands::mod_set_github,
+            mods_commands::mod_install_dependency,
             nexus_commands::nexus_search,
             nexus_commands::nexus_mod,
             nexus_commands::nexus_account,
