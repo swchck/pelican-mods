@@ -142,6 +142,8 @@ export default {
     game: "Game",
     counts: "{errors} errors, {warnings} warnings",
     clean: "No errors or warnings in the last session.",
+    updateRoots: "Update incompatible ({n})",
+    notInLibrary: "not in the library: it sits in the game's Mods folder",
     toastLost: "The game couldn't find {n} locations from the save: the mods that add them didn't load.",
     toastSkipped: "SMAPI skipped {n} mods.",
     open: "Report",

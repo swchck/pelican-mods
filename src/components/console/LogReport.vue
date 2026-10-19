@@ -1,13 +1,45 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { ChevronDownIcon, CircleAlertIcon, TriangleAlertIcon } from "@lucide/vue";
-import type { LogReport } from "@/lib/api";
+import {
+  ArrowUpCircleIcon,
+  ChevronDownIcon,
+  CircleAlertIcon,
+  Loader2Icon,
+  RefreshCwIcon,
+  TriangleAlertIcon,
+} from "@lucide/vue";
+import { Button } from "@/components/ui/button";
+import type { LogReport, PackageView, SkippedMod } from "@/lib/api";
+import { packageUpdate } from "@/lib/packages";
 import { relativeTime } from "@/lib/time";
+import { useLibrary } from "@/stores/library";
 
-defineProps<{ report: LogReport }>();
+const props = defineProps<{ report: LogReport }>();
 const { t, locale } = useI18n();
+const lib = useLibrary();
 const open = ref<string | null>(null);
+
+// the log names mods by their manifest Name
+const packageOf = (s: SkippedMod): PackageView | undefined =>
+  lib.packages.find((p) => p.mods.some((m) => m.manifest.name === s.name));
+const updateOf = (s: SkippedMod) => {
+  const p = packageOf(s);
+  return p ? packageUpdate(p, lib.report) : null;
+};
+// only the roots: mods skipped for a missing dependency load once it does
+const fixable = computed(() =>
+  props.report.skipped.filter((s) => s.kind !== "dependency" && updateOf(s)).map((s) => packageOf(s)!),
+);
+const busy = ref(false);
+async function updateAll() {
+  busy.value = true;
+  try {
+    for (const p of fixable.value) await lib.update(p);
+  } finally {
+    busy.value = false;
+  }
+}
 </script>
 
 <template>
@@ -35,7 +67,17 @@ const open = ref<string | null>(null);
       </section>
 
       <section v-if="report.skipped.length" class="wood-panel flex flex-col gap-2 p-3.5">
-        <h2 class="font-extrabold">{{ t("logReport.skipped", { n: report.skipped.length }) }}</h2>
+        <div class="flex flex-wrap items-center gap-2">
+          <h2 class="flex-1 font-extrabold">{{ t("logReport.skipped", { n: report.skipped.length }) }}</h2>
+          <Button variant="outline" size="sm" :disabled="lib.checking" @click="lib.checkUpdates(true)">
+            <Loader2Icon v-if="lib.checking" class="animate-spin" /><RefreshCwIcon v-else />{{ t("updates.check") }}
+          </Button>
+          <Button v-if="fixable.length" size="sm" :disabled="busy || lib.working" @click="updateAll">
+            <Loader2Icon v-if="busy" class="animate-spin" /><ArrowUpCircleIcon v-else />{{
+              t("logReport.updateRoots", { n: fixable.length })
+            }}
+          </Button>
+        </div>
         <p class="text-muted-foreground text-xs font-semibold">{{ t("logReport.skippedHint") }}</p>
         <ul class="flex flex-col gap-1 text-sm">
           <li v-for="s in report.skipped" :key="s.name" class="flex flex-wrap items-baseline gap-x-2">
@@ -43,6 +85,15 @@ const open = ref<string | null>(null);
             <span class="text-muted-foreground font-mono text-xs">{{ s.version }}</span>
             <span class="text-muted-foreground text-xs font-semibold">
               {{ s.kind === "other" ? s.reason : t(`logReport.kind.${s.kind}`, { needs: s.needs ?? "" }) }}
+            </span>
+            <span v-if="s.kind !== 'dependency' && updateOf(s)" class="text-success text-xs font-bold">
+              → {{ updateOf(s)!.version }}
+            </span>
+            <span
+              v-else-if="s.kind === 'incompatible' && !packageOf(s)"
+              class="text-muted-foreground text-xs font-semibold italic"
+            >
+              {{ t("logReport.notInLibrary") }}
             </span>
           </li>
         </ul>
