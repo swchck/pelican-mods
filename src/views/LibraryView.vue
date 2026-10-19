@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DisableWarning from "@/components/library/DisableWarning.vue";
 import { onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "vue-sonner";
@@ -169,5 +170,6 @@ onUnmounted(() => {
     >
       <span class="font-pixel text-wood-dark text-3xl font-bold">{{ t("library.dropHint") }}</span>
     </div>
+    <DisableWarning />
   </div>
 </template>

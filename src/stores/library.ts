@@ -2,7 +2,14 @@ import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import { toast } from "vue-sonner";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { library as api, type LibraryView, type PackageView, type UpdateOutcome, type UpdateReport } from "@/lib/api";
+import {
+  library as api,
+  type LibraryView,
+  type PackageView,
+  type SaveUsage,
+  type UpdateOutcome,
+  type UpdateReport,
+} from "@/lib/api";
 import { packageUpdate } from "@/lib/packages";
 import { errorText, i18n } from "@/i18n";
 import { useNexus } from "./nexus";
@@ -129,6 +136,26 @@ export const useLibrary = defineStore("library", () => {
     }
   }
 
+  /** A mod about to be turned off that saves still use; the library asks before it goes. */
+  const pendingDisable = ref<{ id: string; usage: SaveUsage[] } | null>(null);
+
+  async function toggle(id: string, on: boolean): Promise<boolean> {
+    if (!on) {
+      const usage = await api.saveUsage(id).catch(() => []);
+      if (usage.length) {
+        pendingDisable.value = { id, usage };
+        return false;
+      }
+    }
+    return run(() => api.toggle(id, on));
+  }
+
+  async function confirmDisable() {
+    const p = pendingDisable.value;
+    pendingDisable.value = null;
+    if (p) await run(() => api.toggle(p.id, false));
+  }
+
   async function updateAll() {
     for (const p of directUpdates.value) await update(p);
   }
@@ -161,7 +188,9 @@ export const useLibrary = defineStore("library", () => {
     install: (paths: string[]) => run(() => api.install(paths)),
     importGameMods: (names: string[]) => run(() => api.import(names)),
     remove: (id: string) => run(() => api.remove(id)),
-    toggle: (id: string, on: boolean) => run(() => api.toggle(id, on)),
+    toggle,
+    pendingDisable,
+    confirmDisable,
     createProfile: (name: string, copyFrom: string | null) => run(() => api.createProfile(name, copyFrom)),
     renameProfile: (id: string, name: string) => run(() => api.renameProfile(id, name)),
     deleteProfile: (id: string) => run(() => api.deleteProfile(id)),
