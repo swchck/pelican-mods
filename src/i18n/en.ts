@@ -78,6 +78,11 @@ export default {
     change: "Change…",
     language: "Language",
     languageSystem: "Same as the game",
+    wiki: "Wiki links",
+    wikiOfficial: "Official wiki",
+    wikiOff: "No links",
+    wikiHint:
+      "Item, villager and quest names in Progress and Helpers open their page. Pages are in English; mod items have none.",
     smapi: "SMAPI",
     reinstall: "Reinstall",
     uninstall: "Remove SMAPI",

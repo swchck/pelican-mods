@@ -1,8 +1,16 @@
 <script setup lang="ts">
 import type { TreasureSeries } from "@/lib/api";
+import WikiName from "@/components/WikiName.vue";
 
 /** Upcoming results per container, one column each, numbered from `opened + 1`. */
-defineProps<{ title: string; hint: string; opened: number; series: TreasureSeries[] }>();
+defineProps<{
+  title: string;
+  hint: string;
+  opened: number;
+  series: TreasureSeries[];
+  /** English wiki titles by item id. */
+  titles?: Record<string, string>;
+}>();
 </script>
 
 <template>
@@ -22,8 +30,8 @@ defineProps<{ title: string; hint: string; opened: number; series: TreasureSerie
             <td class="text-muted-foreground py-1 pr-3 font-mono text-xs">{{ opened + row + 1 }}</td>
             <td v-for="g in series" :key="g.id" class="py-1 pr-3 font-semibold">
               <template v-if="g.next[row]">
-                {{ g.next[row].name
-                }}<span v-if="g.next[row].stack > 1" class="text-muted-foreground"> ×{{ g.next[row].stack }}</span>
+                <WikiName :title="titles?.[g.next[row].id]">{{ g.next[row].name }}</WikiName
+                ><span v-if="g.next[row].stack > 1" class="text-muted-foreground"> ×{{ g.next[row].stack }}</span>
               </template>
             </td>
           </tr>

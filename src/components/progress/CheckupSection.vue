@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n";
 import { CheckIcon, CircleIcon, HeartIcon, SearchIcon } from "@lucide/vue";
 import { Input } from "@/components/ui/input";
 import PixelToggle from "@/components/PixelToggle.vue";
+import WikiName from "@/components/WikiName.vue";
 import type { CheckupGroup, CheckupItem, CheckupSection } from "@/lib/api";
 
 const props = defineProps<{ section: CheckupSection }>();
@@ -104,8 +105,8 @@ const categoryOf = (g: CheckupGroup, i: number) =>
           >
             <CheckIcon v-if="item.done" class="text-success size-4 shrink-0" />
             <CircleIcon v-else class="text-wood-light size-3.5 shrink-0" />
-            <span class="min-w-0 leading-snug font-semibold [overflow-wrap:anywhere]">
-              {{ text(item) }}
+            <span class="min-w-0 leading-snug font-semibold break-words hyphens-auto">
+              <WikiName :title="item.wiki">{{ text(item) }}</WikiName>
               <template v-if="item.label === 'journalScrap' || item.label === 'secretNote'"> #{{ item.have }}</template>
             </span>
             <span

@@ -17,6 +17,8 @@ export interface Settings {
   locale: string | null;
   /** The companion mod is linked into the game unless this is set. */
   companionDisabled: boolean;
+  /** "official", "fandom" or "off"; null is the official wiki. */
+  wiki: string | null;
 }
 
 export interface SmapiRelease {
@@ -58,6 +60,8 @@ export const api = {
   settings: () => invoke<Settings>("settings_get"),
   setLocale: (locale: string | null) => invoke<Settings>("settings_set_locale", { locale }),
   gameLanguage: () => invoke<string | null>("game_language"),
+  setWiki: (wiki: string) => invoke<Settings>("settings_set_wiki", { wiki }),
+  wikiTitles: (ids: string[]) => invoke<Record<string, string>>("wiki_titles", { ids }),
   detectGames: () => invoke<GameInstall[]>("game_detect"),
   currentGame: () => invoke<GameInstall | null>("game_current"),
   setGamePath: (path: string) => invoke<GameInstall>("game_set_path", { path }),
@@ -385,6 +389,8 @@ export interface CheckupItem {
   need: number | null;
   done: boolean;
   note: string | null;
+  /** English page title on the Stardew wikis, for base game things. */
+  wiki: string | null;
 }
 
 export interface CheckupGroup {

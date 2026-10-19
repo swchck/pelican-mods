@@ -407,6 +407,10 @@ mockIPC(
       }
       case "saves_delete":
         return null;
+      case "wiki_titles":
+        return Object.fromEntries((a.ids as string[]).map((id) => [id, "Parsnip"]));
+      case "settings_set_wiki":
+        return { gamePath: null, locale: null, companionDisabled: false, wiki: a.wiki };
       case "game_language":
         return "ru";
       case "nxm_take_pending":
@@ -416,6 +420,7 @@ mockIPC(
           id,
           name,
           label: null,
+          wiki: name,
           have: null,
           need: null,
           done,

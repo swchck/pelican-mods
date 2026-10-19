@@ -6,7 +6,8 @@ import { CloudSunIcon, GemIcon, Loader2Icon, RefreshCwIcon, StoreIcon } from "@l
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TreasureTable from "@/components/helpers/TreasureTable.vue";
-import { companion as api, isAppError, type Forecast } from "@/lib/api";
+import WikiName from "@/components/WikiName.vue";
+import { api as appApi, companion as api, isAppError, type Forecast } from "@/lib/api";
 import { bestGrange, grangeScore, itemPoints, place, SLOTS, type GrangeItem } from "@/lib/grange";
 import { errorText } from "@/i18n";
 import { useCompanion } from "@/stores/companion";
@@ -17,6 +18,8 @@ const companion = useCompanion();
 
 const tab = ref<"forecast" | "fair">("forecast");
 const forecast = ref<Forecast | null>(null);
+/** English wiki titles of the forecast's base game items, by item id. */
+const titles = ref<Record<string, string>>({});
 const items = ref<GrangeItem[] | null>(null);
 /** Indexes into `pool` the player put on the display; null follows the suggestion. */
 const chosen = ref<number[] | null>(null);
@@ -30,8 +33,13 @@ async function load() {
   loading.value = true;
   noWorld.value = false;
   try {
-    if (tab.value === "forecast") forecast.value = await api.forecast();
-    else {
+    if (tab.value === "forecast") {
+      const f = await api.forecast();
+      forecast.value = f;
+      const ids = [...f.geodes, ...f.mysteryBoxes].flatMap((g) => g.next.map((x) => x.id));
+      ids.push(...(f.cart ?? []).map((c) => c.id));
+      titles.value = await appApi.wikiTitles([...new Set(ids)]).catch(() => ({}));
+    } else {
       items.value = await api.items();
       chosen.value = null;
     }
@@ -163,7 +171,7 @@ watch([tab, ready], load, { immediate: true });
               <h2 class="font-pixel text-wood-dark text-xl font-bold">{{ t("helpers.cart") }}</h2>
               <ul class="flex flex-col gap-0.5 text-sm">
                 <li v-for="c in forecast.cart" :key="c.id" class="flex gap-2">
-                  <span class="truncate font-semibold">{{ c.name }}</span>
+                  <WikiName :title="titles[c.id]" class="truncate font-semibold">{{ c.name }}</WikiName>
                   <span class="text-muted-foreground ml-auto shrink-0 font-mono text-xs">
                     {{ t("live.gold", { amount: n(c.price) }) }}
                   </span>
@@ -176,6 +184,7 @@ watch([tab, ready], load, { immediate: true });
             :hint="t('helpers.geodesHint', { n: forecast.geodesCracked })"
             :opened="forecast.geodesCracked"
             :series="forecast.geodes"
+            :titles="titles"
           />
           <TreasureTable
             v-if="forecast.mysteryBoxes.length"
@@ -183,6 +192,7 @@ watch([tab, ready], load, { immediate: true });
             :hint="t('helpers.mysteryBoxesHint', { n: forecast.mysteryBoxesOpened })"
             :opened="forecast.mysteryBoxesOpened"
             :series="forecast.mysteryBoxes"
+            :titles="titles"
           />
         </div>
       </TabsContent>

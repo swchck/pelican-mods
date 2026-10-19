@@ -21,6 +21,7 @@ import AboutCard from "@/components/AboutCard.vue";
 import PixelToggle from "@/components/PixelToggle.vue";
 import { api, companion as companionApi } from "@/lib/api";
 import { errorText, setLocale } from "@/i18n";
+import { setWikiSource, wikiSource } from "@/lib/wiki";
 import { useGame } from "@/stores/game";
 import { useCompanion } from "@/stores/companion";
 
@@ -54,6 +55,14 @@ async function changeLocale(value: unknown) {
   try {
     await api.setLocale(next);
     setLocale(next);
+  } catch (e) {
+    toast.error(errorText(e));
+  }
+}
+
+async function changeWiki(value: unknown) {
+  try {
+    setWikiSource((await api.setWiki(String(value))).wiki);
   } catch (e) {
     toast.error(errorText(e));
   }
@@ -140,6 +149,23 @@ async function uninstall() {
           <SelectItem value="en">English</SelectItem>
         </SelectContent>
       </Select>
+    </section>
+
+    <section class="wood-panel flex flex-col gap-2 p-5">
+      <div class="flex items-center gap-3">
+        <h2 class="font-pixel text-wood-dark flex-1 text-xl font-bold">{{ t("settings.wiki") }}</h2>
+        <Select :model-value="wikiSource" @update:model-value="changeWiki">
+          <SelectTrigger class="bg-parchment border-input w-48 border-2 font-bold">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="official">{{ t("settings.wikiOfficial") }}</SelectItem>
+            <SelectItem value="fandom">Fandom</SelectItem>
+            <SelectItem value="off">{{ t("settings.wikiOff") }}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <p class="text-muted-foreground text-sm leading-relaxed font-semibold">{{ t("settings.wikiHint") }}</p>
     </section>
 
     <AboutCard />

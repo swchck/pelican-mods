@@ -155,6 +155,24 @@ pub fn settings_get(state: State<AppState>) -> Settings {
     state.settings.get()
 }
 
+/// Picks where item names link: "official", "fandom" or "off".
+#[tauri::command]
+pub fn settings_set_wiki(state: State<AppState>, wiki: String) -> AppResult<Settings> {
+    let wiki = match wiki.as_str() {
+        "official" | "fandom" | "off" => wiki,
+        _ => "official".to_owned(),
+    };
+    state.settings.update(|s| s.wiki = Some(wiki))
+}
+
+/// English wiki page titles for base game object ids ("(O)24"); unknown ids are left out.
+#[tauri::command]
+pub fn wiki_titles(ids: Vec<String>) -> std::collections::HashMap<String, String> {
+    ids.into_iter()
+        .filter_map(|id| Some((id.clone(), crate::perfection::wiki_title(&id)?)))
+        .collect()
+}
+
 /// The language the game is set to, such as "ru", if it has ever started.
 #[tauri::command]
 pub fn game_language(app: AppHandle) -> Option<String> {

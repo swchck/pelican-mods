@@ -111,6 +111,19 @@ const BUILTIN: [(&str, &str); 12] = [
     ("hu", include_str!("../resources/catalogs/hu.json")),
 ];
 
+/// Returns the English wiki page title for base game object `id` ("24" or "(O)24"),
+/// which both Stardew wikis name pages by; mod items have none.
+pub fn wiki_title(id: &str) -> Option<String> {
+    static TITLES: std::sync::OnceLock<HashMap<String, String>> = std::sync::OnceLock::new();
+    let titles = TITLES.get_or_init(|| {
+        let en = Catalog::builtin("en");
+        let villagers = en.villagers.iter().map(|v| (v.key.clone(), v.name.clone()));
+        let items = en.items.iter().map(|i| (i.id.clone(), i.name.clone()));
+        items.chain(villagers).collect()
+    });
+    titles.get(id.strip_prefix("(O)").unwrap_or(id)).cloned()
+}
+
 /// The language code the game was last set to, from its startup preferences in `data_dir`.
 pub fn game_language(data_dir: &Path) -> Option<String> {
     let prefs = std::fs::read_to_string(data_dir.join("startup_preferences")).ok()?;

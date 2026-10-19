@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 use serde::Serialize;
 
-use crate::perfection::{Catalog, Facts};
+use crate::perfection::{Catalog, Facts, wiki_title};
 
 /// Every section, in display order.
 #[derive(Debug, Clone, Serialize)]
@@ -57,6 +57,8 @@ pub struct Item {
     pub done: bool,
     /// Translation key of a short remark ("found, not donated", "gold quality"…).
     pub note: Option<&'static str>,
+    /// English page title on the Stardew wikis, for base game things.
+    pub wiki: Option<String>,
 }
 
 impl Item {
@@ -69,6 +71,7 @@ impl Item {
             need: None,
             done,
             note: None,
+            wiki: None,
         }
     }
 
@@ -81,6 +84,7 @@ impl Item {
             need: None,
             done,
             note: None,
+            wiki: None,
         }
     }
 
@@ -92,6 +96,11 @@ impl Item {
             need: Some(need),
             ..Self::label(label, have >= need)
         }
+    }
+
+    fn wiki(mut self, title: Option<String>) -> Self {
+        self.wiki = title;
+        self
     }
 
     fn counted(mut self, have: u64, need: u64) -> Self {
@@ -316,7 +325,7 @@ fn bundle(
             let name = names.get(item).copied().unwrap_or(item);
             Item {
                 need: (count > 1).then_some(count),
-                ..Item::named(format!("{id}-{i}"), name, done)
+                ..Item::named(format!("{id}-{i}"), name, done).wiki(wiki_title(item))
             }
         };
         it.note = match *quality {
@@ -354,7 +363,7 @@ fn museum(f: &Facts, c: &Catalog) -> Section {
     for m in &c.museum {
         let donated = f.donated.contains(&m.id);
         let found = f.artifacts_found.contains(&m.id) || f.minerals_found.contains(&m.id);
-        let mut item = Item::named(m.id.clone(), m.name.clone(), donated);
+        let mut item = Item::named(m.id.clone(), m.name.clone(), donated).wiki(wiki_title(&m.id));
         if !donated && found {
             item = item.with_note("foundNotDonated");
         }
@@ -398,6 +407,7 @@ fn friends(f: &Facts, c: &Catalog) -> Section {
                 _ => 10,
             };
             let mut item = Item::named(v.key.clone(), v.name.clone(), points / 250 >= max)
+                .wiki(wiki_title(&v.key))
                 .counted(points / 250, max);
             item.note = match status {
                 Some("Married") => Some("married"),
@@ -464,7 +474,9 @@ fn collections(f: &Facts, c: &Catalog) -> Section {
                 .find(|i| i.id == cr.id)
                 .map_or(cr.id.as_str(), |i| i.name.as_str());
             let have = shipped(&cr.id);
-            Item::named(cr.id.clone(), name, have >= 15).counted(have, 15)
+            Item::named(cr.id.clone(), name, have >= 15)
+                .counted(have, 15)
+                .wiki(wiki_title(&cr.id))
         })
         .collect();
     poly.sort_by_key(|i| (i.done, std::cmp::Reverse(i.have)));
@@ -532,6 +544,9 @@ fn quests(f: &Facts, c: &Catalog) -> Section {
                     o.name.clone(),
                     f.special_orders.contains(&o.key),
                 )
+                .wiki(Some(
+                    if qi { "Qi's Walnut Room" } else { "Quests" }.to_owned(),
+                ))
             })
             .collect()
     };
@@ -567,6 +582,7 @@ fn monsters(f: &Facts, c: &Catalog) -> Section {
                 .map(|t| f.kills.get(t).copied().unwrap_or(0) as u64)
                 .sum();
             Item::named(g.key.clone(), g.name.clone(), have >= g.count as u64)
+                .wiki(Some("Adventurer's Guild".to_owned()))
                 .counted(have, g.count as u64)
         })
         .collect();
@@ -615,6 +631,7 @@ fn island(f: &Facts) -> Section {
             need: Some(*cost),
             done: f.mail.contains(*flag),
             note: None,
+            wiki: Some("Ginger Island".to_owned()),
         })
         .collect();
     // journal scraps are secret notes 1001–1011
@@ -685,7 +702,7 @@ fn secrets(f: &Facts, names: &HashMap<&str, &str>) -> Section {
         .iter()
         .map(|b| {
             let read = f.stats.get(*b).is_some_and(|n| *n > 0);
-            Item::named(*b, names.get(b).copied().unwrap_or(b), read)
+            Item::named(*b, names.get(b).copied().unwrap_or(b), read).wiki(wiki_title(b))
         })
         .collect();
     let mut powers: Vec<Item> = POWERS
@@ -824,6 +841,7 @@ fn achievements(f: &Facts, c: &Catalog) -> Section {
                 a.name.clone(),
                 f.achievements.contains(&a.id),
             )
+            .wiki(Some("Achievements".to_owned()))
         })
         .collect();
     section("achievements", vec![group("achievementList", items)])

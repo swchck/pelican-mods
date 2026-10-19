@@ -26,6 +26,8 @@
 - Removing a mod also sends the copy in the game's Mods folder to the Trash, so it doesn't come back as importable or load when the game starts without the launcher.
 - Saves can be deleted from the Saves screen; the folder goes to the Trash.
 
+- Item, villager and quest names in Progress and Helpers link to their wiki page; pick the official wiki, Fandom or no links in Settings.
+
 ### Settings
 
 - The app's language follows the game's (Russian or English) unless you pick one; other game languages fall back to the system's.

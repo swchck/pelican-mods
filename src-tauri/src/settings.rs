@@ -20,6 +20,8 @@ pub struct Settings {
     /// GitHub repos ("owner/repo") users attached to mods, by lowercased UniqueID; they
     /// win over a repo in the manifest.
     pub github_repos: std::collections::BTreeMap<String, String>,
+    /// Where item names link: "official", "fandom" or "off"; `None` is the official wiki.
+    pub wiki: Option<String>,
 }
 
 /// Settings plus the file they live in. Writes go straight to disk.
