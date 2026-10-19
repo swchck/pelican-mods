@@ -36,6 +36,7 @@ url = "2"
 quick-xml = "0.42"
 tokio-tungstenite = { version = "0.30", default-features = false, features = ["handshake"] }
 trash = "5.2.9"
+tauri-plugin-notification = "=2.5.1"
 
 [dev-dependencies]
 tokio-tungstenite = { version = "0.30", default-features = false, features = ["handshake", "connect"] }

@@ -8,6 +8,7 @@
     "dialog:allow-open",
     "dialog:allow-save",
     "dialog:allow-ask",
+    "notification:default",
     "clipboard-manager:allow-read-text",
     "updater:default",
     "process:allow-restart",

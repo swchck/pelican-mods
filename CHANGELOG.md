@@ -33,6 +33,8 @@
 
 ### Updates
 
+- While the app is open it rechecks for mod updates every few hours and sends a macOS notification when new ones appear.
+
 - Profiles export to a mod list file and import back: the import shows which mods you have, installs the missing ones the way dependencies install, and makes a profile with the list's mods. Lists hold names and sources only, no files.
 - A co-op partner's mod list compares against yours: what you lack, versions that differ either way, and mods only you have.
 - A mod that ships translations but none into the game's language says so in its card, with a button that searches Nexus for a translation.

@@ -331,6 +331,7 @@ export default {
     available: "Version {version} is available",
     update: "Update",
     changes: "What's new?",
+    notifyTitle: "{n} mod updates",
     changesLoading: "Loading changes…",
     noChanges: "The author didn't describe the changes",
     changesFrom: { github: "from the GitHub release", nexus: "from the Nexus changelog" },

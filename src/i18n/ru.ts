@@ -328,6 +328,7 @@ export default {
     available: "Доступна версия {version}",
     update: "Обновить",
     changes: "Что нового?",
+    notifyTitle: "Обновления модов: {n}",
     changesLoading: "Загружаем изменения…",
     noChanges: "Автор не описал изменения",
     changesFrom: { github: "из релиза на GitHub", nexus: "из истории изменений на Nexus" },

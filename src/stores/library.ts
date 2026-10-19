@@ -10,7 +10,8 @@ import {
   type UpdateOutcome,
   type UpdateReport,
 } from "@/lib/api";
-import { packageUpdate } from "@/lib/packages";
+import { packageTitle, packageUpdate } from "@/lib/packages";
+import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
 import { errorText, i18n } from "@/i18n";
 import { useNexus } from "./nexus";
 
@@ -83,8 +84,41 @@ export const useLibrary = defineStore("library", () => {
 
   async function load() {
     const ok = await run(api.get, true);
-    if (ok) void checkUpdates(false);
+    if (ok) {
+      void checkUpdates(false);
+      backgroundChecks();
+    }
     return ok;
+  }
+
+  // hourly while the app stays open; the backend answers from its cache until it's 6 hours
+  // old, so this asks smapi.io about four times a day at most
+  const RECHECK_MS = 60 * 60 * 1000;
+  let rechecking: ReturnType<typeof setInterval> | null = null;
+
+  function backgroundChecks() {
+    if (rechecking) return;
+    rechecking = setInterval(async () => {
+      const before = new Set(updatable.value.map((p) => p.id));
+      await checkUpdates(false);
+      const fresh = updatable.value.filter((p) => !before.has(p.id));
+      if (fresh.length) await notifyUpdates(fresh.map(packageTitle));
+    }, RECHECK_MS);
+  }
+
+  async function notifyUpdates(names: string[]) {
+    try {
+      let allowed = await isPermissionGranted();
+      if (!allowed) allowed = (await requestPermission()) === "granted";
+      if (!allowed) return;
+      const { t } = i18n.global;
+      sendNotification({
+        title: t("updates.notifyTitle", { n: names.length }),
+        body: names.slice(0, 4).join(", ") + (names.length > 4 ? "…" : ""),
+      });
+    } catch {
+      // a notification is a nicety; the library's badge says the same
+    }
   }
 
   /**
