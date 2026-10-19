@@ -61,6 +61,8 @@
 
 ### Settings
 
+- A disk space card shows what the app keeps (earlier mod versions, removed mods, save copies, downloads) and cleans each up: the latest mod version and five copies per save stay.
+
 - The app's language follows the game's (Russian or English) unless you pick one; other game languages fall back to the system's.
 
 ## 0.2.0 — 2026-10-19

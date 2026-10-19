@@ -195,6 +195,42 @@ pub fn game_catalog(app: AppHandle, state: State<AppState>) -> crate::perfection
     }
 }
 
+/// Mod version backups kept per mod by the cleanup; the newest is what rollback uses.
+const KEEP_MOD_BACKUPS: usize = 1;
+/// Save snapshots kept per save by the cleanup.
+const KEEP_SAVE_BACKUPS: usize = 5;
+
+/// How much the launcher's own data takes on disk, by kind.
+#[tauri::command]
+pub async fn storage_usage(app: AppHandle) -> AppResult<Vec<crate::storage::Usage>> {
+    crate::mods_commands::blocking(app, |s| {
+        Ok(vec![
+            crate::storage::measure("modBackups", &s.backup_root),
+            crate::storage::measure("removed", &s.removed_root),
+            crate::storage::measure("saveBackups", &s.save_backup_root),
+            crate::storage::measure("downloads", &s.work_dir.with_file_name("downloads")),
+        ])
+    })
+    .await
+}
+
+/// Trims one kind of kept data: old mod and save backups, set-aside removals, downloads.
+#[tauri::command]
+pub async fn storage_clean(app: AppHandle, kind: String) -> AppResult<u32> {
+    crate::mods_commands::blocking(app, move |s| match kind.as_str() {
+        "modBackups" => crate::storage::prune(&s.backup_root, KEEP_MOD_BACKUPS),
+        "saveBackups" => crate::storage::prune(&s.save_backup_root, KEEP_SAVE_BACKUPS),
+        "removed" => {
+            let n = crate::storage::clear(&s.removed_root)?;
+            s.history.forget_stashes()?;
+            Ok(n)
+        }
+        "downloads" => crate::storage::clear(&s.work_dir.with_file_name("downloads")),
+        other => Err(AppError::NotFound(other.to_owned())),
+    })
+    .await
+}
+
 /// What SMAPI's log from the last session says went wrong.
 #[tauri::command]
 pub fn smapi_log_report(app: AppHandle) -> AppResult<crate::smapi_log::LogReport> {

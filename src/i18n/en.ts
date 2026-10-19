@@ -69,6 +69,29 @@ export default {
     tabLog: "Log",
     tabReport: "Report",
   },
+  storage: {
+    title: "Disk space",
+    clean: "Clean up",
+    cleaned: "Cleaned up",
+    kind: {
+      modBackups: "Earlier mod versions",
+      removed: "Removed mods",
+      saveBackups: "Save copies",
+      downloads: "Downloaded archives",
+    },
+    hint: {
+      modBackups: "For rolling updates back; cleaning keeps the latest one per mod.",
+      removed: "Set aside so a removal can be undone; after cleaning it can't be.",
+      saveBackups: "Snapshots before each launch and by hand; cleaning keeps the 5 newest per save.",
+      downloads: "Mod archives left over from installs.",
+    },
+    confirm: {
+      modBackups: "Delete every earlier mod version except the latest one per mod?",
+      removed: "Delete the removed mods for good? Their removal can't be undone after this.",
+      saveBackups: "Keep the 5 newest copies of each save and delete the rest?",
+      downloads: "Delete the downloaded archives?",
+    },
+  },
   history: {
     title: "Library history",
     hint: "Mod installs, updates and removals. Any of them can be undone: a removed mod comes back, an update rolls back.",

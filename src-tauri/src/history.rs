@@ -90,6 +90,16 @@ impl History {
         self.save(&entries)
     }
 
+    /// Forgets every stashed removal after the stash folder was emptied; those can't be
+    /// undone any more.
+    pub fn forget_stashes(&self) -> AppResult<()> {
+        let mut entries = self.entries.lock().unwrap();
+        for e in entries.iter_mut() {
+            e.stash = None;
+        }
+        self.save(&entries)
+    }
+
     pub fn mark_undone(&self, at: u64) -> AppResult<()> {
         let mut entries = self.entries.lock().unwrap();
         if let Some(e) = entries.iter_mut().find(|e| e.at == at) {

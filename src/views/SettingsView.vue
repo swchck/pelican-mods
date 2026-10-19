@@ -22,6 +22,7 @@ import PixelToggle from "@/components/PixelToggle.vue";
 import { api, companion as companionApi, saves } from "@/lib/api";
 import { errorText, setLocale } from "@/i18n";
 import { setWikiSource, wikiSource } from "@/lib/wiki";
+import StorageCard from "@/components/settings/StorageCard.vue";
 import { useGame } from "@/stores/game";
 import { useCompanion } from "@/stores/companion";
 
@@ -202,6 +203,8 @@ async function uninstall() {
       </div>
       <p class="text-muted-foreground text-sm leading-relaxed font-semibold">{{ t("settings.wikiHint") }}</p>
     </section>
+
+    <StorageCard />
 
     <AboutCard />
 

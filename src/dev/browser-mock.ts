@@ -432,6 +432,13 @@ mockIPC(
         return { source: "github", versions: [{ version: "1.55.0", lines: ["## What's Changed", "* Fixed a crash"] }] };
       case "library_conflicts":
         return [];
+      case "storage_usage":
+        return [
+          { kind: "modBackups", bytes: 48_000_000, files: 120 },
+          { kind: "removed", bytes: 0, files: 0 },
+          { kind: "saveBackups", bytes: 31_500_000, files: 40 },
+          { kind: "downloads", bytes: 2_100_000, files: 3 },
+        ];
       case "history_list":
         return [
           {
