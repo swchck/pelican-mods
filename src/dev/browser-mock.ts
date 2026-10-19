@@ -407,6 +407,38 @@ mockIPC(
       }
       case "saves_delete":
         return null;
+      case "smapi_log_report":
+        return {
+          written: Math.floor(Date.now() / 1000) - 600,
+          skipped: [
+            {
+              name: "SpaceCore",
+              version: "1.25.2",
+              kind: "incompatible",
+              needs: null,
+              reason: "it's no longer compatible.",
+            },
+            {
+              name: "Json Assets",
+              version: "1.11.8",
+              kind: "dependency",
+              needs: "SpaceCore",
+              reason: "it needs the 'SpaceCore' mod",
+            },
+          ],
+          lostLocations: ["Custom_AndyHouse", "Custom_SophiaHouse"],
+          lostNpcs: ["Andy", "Sophia"],
+          mods: [
+            {
+              source: "Content Patcher",
+              errors: 2,
+              warnings: 0,
+              entries: [
+                { level: "error", text: "Two content packs want to load the 'Animals/horse' asset.", count: 2 },
+              ],
+            },
+          ],
+        };
       case "wiki_titles":
         return Object.fromEntries((a.ids as string[]).map((id) => [id, "Parsnip"]));
       case "settings_set_wiki":

@@ -60,6 +60,7 @@ export const api = {
   settings: () => invoke<Settings>("settings_get"),
   setLocale: (locale: string | null) => invoke<Settings>("settings_set_locale", { locale }),
   gameLanguage: () => invoke<string | null>("game_language"),
+  logReport: () => invoke<LogReport>("smapi_log_report"),
   setWiki: (wiki: string) => invoke<Settings>("settings_set_wiki", { wiki }),
   wikiTitles: (ids: string[]) => invoke<Record<string, string>>("wiki_titles", { ids }),
   detectGames: () => invoke<GameInstall[]>("game_detect"),
@@ -562,3 +563,29 @@ export const modConfig = {
     invoke<ModConfig>("mod_config_defaults", { package: pkg, relPath, locale }),
   generate: () => invoke<void>("mods_generate_configs"),
 };
+
+/** What SMAPI's log from the last session says went wrong. */
+export interface LogReport {
+  /** Unix seconds; 0 without a log. */
+  written: number;
+  skipped: SkippedMod[];
+  /** Save locations the game ignored because no loaded mod adds them; saving drops them. */
+  lostLocations: string[];
+  lostNpcs: string[];
+  mods: ModProblems[];
+}
+
+export interface SkippedMod {
+  name: string;
+  version: string;
+  kind: "incompatible" | "dependency" | "smapi" | "other";
+  needs: string | null;
+  reason: string;
+}
+
+export interface ModProblems {
+  source: string;
+  errors: number;
+  warnings: number;
+  entries: { level: "error" | "warn"; text: string; count: number }[];
+}

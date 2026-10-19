@@ -25,6 +25,7 @@ mod saves;
 mod saves_commands;
 mod settings;
 mod smapi;
+mod smapi_log;
 mod updates;
 mod version;
 
@@ -69,6 +70,7 @@ pub fn run() {
             commands::game_language,
             commands::settings_set_wiki,
             commands::wiki_titles,
+            commands::smapi_log_report,
             companion_commands::settings_set_companion,
             companion_commands::companion_status,
             companion_commands::companion_available,

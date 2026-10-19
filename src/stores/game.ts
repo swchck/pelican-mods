@@ -12,6 +12,7 @@ import {
   type SmapiRelease,
 } from "@/lib/api";
 import { compareVersions } from "@/lib/version";
+import { router } from "@/router";
 import { errorText, i18n } from "@/i18n";
 
 const LOG_LIMIT = 2000;
@@ -52,7 +53,10 @@ export const useGame = defineStore("game", () => {
       }),
       events.state((s) => {
         run.value = s;
-        if (s.state === "exited") refresh().catch((e) => toast.error(errorText(e)));
+        if (s.state === "exited") {
+          refresh().catch((e) => toast.error(errorText(e)));
+          void warnFromLog();
+        }
       }),
       events.smapiProgress((p) => (progress.value = p)),
     ]);
@@ -69,6 +73,20 @@ export const useGame = defineStore("game", () => {
     }
     phase.value = install.value ? "ready" : "setup";
     await checkSmapi();
+  }
+
+  /** Points at the log report when the session that just ended skipped mods or lost save data. */
+  async function warnFromLog() {
+    const r = await api.logReport().catch(() => null);
+    if (!r || (!r.skipped.length && !r.lostLocations.length)) return;
+    const { t } = i18n.global;
+    const text = r.lostLocations.length
+      ? t("logReport.toastLost", { n: r.lostLocations.length })
+      : t("logReport.toastSkipped", { n: r.skipped.length });
+    toast.warning(text, {
+      duration: 20000,
+      action: { label: t("logReport.open"), onClick: () => void router.push("/console?tab=report") },
+    });
   }
 
   async function refresh() {

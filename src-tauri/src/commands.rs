@@ -173,6 +173,12 @@ pub fn wiki_titles(ids: Vec<String>) -> std::collections::HashMap<String, String
         .collect()
 }
 
+/// What SMAPI's log from the last session says went wrong.
+#[tauri::command]
+pub fn smapi_log_report(app: AppHandle) -> AppResult<crate::smapi_log::LogReport> {
+    crate::smapi_log::read(&game_data_dir(&app)?.join("ErrorLogs/SMAPI-latest.txt"))
+}
+
 /// The language the game is set to, such as "ru", if it has ever started.
 #[tauri::command]
 pub fn game_language(app: AppHandle) -> Option<String> {

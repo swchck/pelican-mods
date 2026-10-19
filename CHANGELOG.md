@@ -13,6 +13,10 @@
 
 - Forecasts in the spirit of Stardew Predictor: night events for the next four weeks (meteorite, fairy, witch, owl, capsule, earthquake and more), the bookseller's days this season, the traveling cart's stock on cart days, and the next mystery boxes alongside the geodes. All of it comes from the game's own code with your mods loaded.
 
+### Console
+
+- A Report tab sums up the last session's SMAPI log: mods SMAPI skipped and why, save locations and villagers the game dropped because their mod didn't load, and each mod's errors and warnings with repeats folded. After a session that skipped mods or lost save data, the app points to it.
+
 ### Updates
 
 - Mods that list a GitHub repo update from its releases first, even when the newest version was found on Nexus, so they update in one click without a Nexus Premium account.
