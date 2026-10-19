@@ -47,17 +47,12 @@ export function packageUpdate(p: PackageView, report: UpdateReport | null): Pack
     const info = report.mods[m.manifest.uniqueId.toLowerCase()];
     // the report outlives the install it was made for; an update already applied drops out here
     if (info?.version && info.url && compareVersions(info.version, m.manifest.version) > 0) {
-      // a GitHub repo in the update keys is tried first, whichever site smapi.io suggested
-      const via = hasGithubKey(m.manifest.updateKeys) ? "github" : updateSource(info.url);
+      // a known GitHub repo is tried first, whichever site smapi.io suggested
+      const via = m.github ? "github" : updateSource(info.url);
       return { version: info.version, url: info.url, via };
     }
   }
   return null;
-}
-
-// mirrors updates::github_key on the backend
-function hasGithubKey(keys: string[]): boolean {
-  return keys.some((k) => /^\s*github\s*:\s*[^/@\s]+\/[^/@\s]+/i.test(k));
 }
 
 function updateSource(url: string): UpdateSource {

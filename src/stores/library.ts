@@ -128,6 +128,10 @@ export const useLibrary = defineStore("library", () => {
     update,
     updateAll,
     rollback: (uniqueId: string) => run(() => api.rollback(uniqueId)),
+    /** Attaches or (with null) detaches a GitHub repo, then asks smapi.io again with it. */
+    async setGithub(uniqueId: string, repo: string | null) {
+      if (await run(() => api.setGithub(uniqueId, repo))) await checkUpdates(true);
+    },
     selectedId,
     filter,
     working,

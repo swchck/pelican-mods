@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { toast } from "vue-sonner";
@@ -8,12 +8,14 @@ import {
   CircleAlertIcon,
   ExternalLinkIcon,
   FolderIcon,
+  GitBranchIcon,
   Loader2Icon,
   SlidersHorizontalIcon,
   Trash2Icon,
   Undo2Icon,
 } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogClose,
@@ -43,6 +45,24 @@ const props = defineProps<{ pkg: PackageView }>();
 const { t } = useI18n();
 const lib = useLibrary();
 const confirmRemove = ref(false);
+
+// the package's first mod carries the repo; a pack's parts release together
+const repoMod = computed(() => (props.pkg.system ? null : (props.pkg.mods[0] ?? null)));
+const repoInput = ref("");
+watch(
+  () => [props.pkg.id, repoMod.value?.github, repoMod.value?.githubCustom],
+  () => (repoInput.value = repoMod.value?.githubCustom ? (repoMod.value.github ?? "") : ""),
+  { immediate: true },
+);
+const repoHint = computed(() => {
+  const m = repoMod.value;
+  if (m?.githubCustom) return t("library.githubCustom");
+  if (m?.github) return t("library.githubManifest", { repo: m.github });
+  return t("library.githubNone");
+});
+function saveRepo(repo: string | null) {
+  if (repoMod.value) void lib.setGithub(repoMod.value.manifest.uniqueId, repo);
+}
 const router = useRouter();
 const nx = useNexus();
 // mods with settings first; a multi-part package opens its first configurable part
@@ -173,6 +193,41 @@ async function remove() {
         <template v-else>{{ seg.text }}</template>
       </template>
     </p>
+
+    <form v-if="repoMod" class="flex flex-col gap-1.5 text-[13px]" @submit.prevent="saveRepo(repoInput)">
+      <label :for="`repo-${pkg.id}`" class="flex items-center gap-1.5 font-extrabold">
+        <GitBranchIcon class="size-3.5" />{{ t("library.github") }}
+      </label>
+      <div class="flex gap-1.5">
+        <Input
+          :id="`repo-${pkg.id}`"
+          v-model="repoInput"
+          :placeholder="repoMod.githubCustom ? '' : (repoMod.github ?? 'owner/repo')"
+          spellcheck="false"
+          class="bg-parchment border-input h-8 min-w-0 border-2 text-xs"
+        />
+        <Button
+          size="sm"
+          type="submit"
+          :disabled="
+            lib.working || !repoInput.trim() || repoInput.trim() === (repoMod.githubCustom ? repoMod.github : '')
+          "
+          >{{ t("library.githubSave") }}</Button
+        >
+      </div>
+      <span class="text-muted-foreground text-xs font-semibold">
+        {{ repoHint }}
+        <button
+          v-if="repoMod.githubCustom"
+          type="button"
+          class="underline decoration-dotted underline-offset-2"
+          :disabled="lib.working"
+          @click="saveRepo(null)"
+        >
+          {{ t("library.githubClear") }}
+        </button>
+      </span>
+    </form>
 
     <ul
       v-if="pkg.enabled && packageIssues(pkg).length"

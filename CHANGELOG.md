@@ -19,6 +19,8 @@
 
 - Mods that share a Nexus page, such as Grandpa's Farm on the Stardew Valley Expanded page, update with their own file instead of the page's main one.
 
+- A mod's card takes a GitHub repo of your own; updates are then checked and fetched from its releases first.
+
 ### Library and saves
 
 - Removing a mod also sends the copy in the game's Mods folder to the Trash, so it doesn't come back as importable or load when the game starts without the launcher.

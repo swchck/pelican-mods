@@ -27,6 +27,8 @@ pub enum AppError {
     BadManifest(String),
     #[error("no direct download for this mod: {0}")]
     NoDownload(String),
+    #[error("not a GitHub repo: {0}")]
+    BadRepo(String),
     #[error("no mods found in the archive")]
     NoMods,
     #[error("not found: {0}")]
@@ -80,6 +82,7 @@ impl AppError {
             Self::BadManifest(_) => "bad_manifest",
             Self::NoMods => "no_mods",
             Self::NoDownload(_) => "no_download",
+            Self::BadRepo(_) => "bad_repo",
             Self::NotFound(_) => "not_found",
             Self::BadProfileName(_) => "bad_profile_name",
             Self::LastProfile => "last_profile",
@@ -109,6 +112,7 @@ impl AppError {
             | Self::BadManifest(s)
             | Self::NotFound(s)
             | Self::NoDownload(s)
+            | Self::BadRepo(s)
             | Self::BadNxm(s)
             | Self::BadSave(s)
             | Self::BadConfig(s)

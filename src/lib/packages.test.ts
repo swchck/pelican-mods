@@ -18,6 +18,8 @@ function mod(name: string, id: string, extra: Partial<ModView> = {}): ModView {
     requiredBy: [],
     hasConfig: false,
     hasSchema: false,
+    github: null,
+    githubCustom: false,
     manifest: {
       name,
       author: "Pathoschild",
@@ -89,6 +91,8 @@ describe("packages", () => {
     expect(packageUpdate(p, info("https://github.com/a/b/releases"))?.via).toBe("github");
     expect(packageUpdate(p, info("https://www.moddrop.com/stardew-valley/mods/1-x"))?.via).toBe("moddrop");
     expect(packageUpdate(p, info("https://www.curseforge.com/stardewvalley/mods/x"))?.via).toBe("page");
+    const withRepo = { ...p, mods: p.mods.map((m) => ({ ...m, github: "a/b" })) };
+    expect(packageUpdate(withRepo, nexus)?.via).toBe("github");
     expect(packageStatus(p, nexus)).toBe("update");
     expect(packageStatus(p, null)).toBe("off");
     expect(packageCompat(p, nexus)).toBeNull();

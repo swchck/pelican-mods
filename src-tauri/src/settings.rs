@@ -17,6 +17,9 @@ pub struct Settings {
     pub locale: Option<String>,
     /// Keeps the companion mod out of the game; it's on unless turned off.
     pub companion_disabled: bool,
+    /// GitHub repos ("owner/repo") users attached to mods, by lowercased UniqueID; they
+    /// win over a repo in the manifest.
+    pub github_repos: std::collections::BTreeMap<String, String>,
 }
 
 /// Settings plus the file they live in. Writes go straight to disk.

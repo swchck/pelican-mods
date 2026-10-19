@@ -117,6 +117,10 @@ export interface ModView {
   hasConfig: boolean;
   /** A content pack whose content.json declares a ConfigSchema. */
   hasSchema: boolean;
+  /** "owner/repo" updates come from first: the user's, else the manifest's. */
+  github: string | null;
+  /** Whether `github` is one the user attached. */
+  githubCustom: boolean;
 }
 
 export interface PackageView {
@@ -179,6 +183,7 @@ export const library = {
   checkUpdates: (force: boolean) => invoke<UpdateReport>("updates_check", { force }),
   update: (id: string) => invoke<UpdateOutcome>("mod_update", { id }),
   rollback: (uniqueId: string) => invoke<LibraryView>("mod_rollback", { uniqueId }),
+  setGithub: (uniqueId: string, repo: string | null) => invoke<LibraryView>("mod_set_github", { uniqueId, repo }),
 };
 
 export type NexusSort = "endorsements" | "downloads" | "updated" | "created";

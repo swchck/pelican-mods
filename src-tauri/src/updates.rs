@@ -64,7 +64,7 @@ struct Request<'a> {
 #[serde(rename_all = "camelCase")]
 struct RequestMod<'a> {
     id: &'a str,
-    update_keys: &'a [String],
+    update_keys: Vec<String>,
     installed_version: &'a str,
 }
 
@@ -93,20 +93,28 @@ struct Metadata {
     compatibility_summary: Option<String>,
 }
 
-/// Asks smapi.io about every mod in `packages`.
+/// Asks smapi.io about every mod in `packages`; `repos` adds user-attached GitHub
+/// repos (by lowercased UniqueID) to the mods' own update keys.
 pub async fn check(
     client: &reqwest::Client,
     packages: &[Package],
+    repos: &std::collections::BTreeMap<String, String>,
     smapi_version: &str,
     game_version: &str,
 ) -> AppResult<UpdateReport> {
     let mods: Vec<RequestMod> = packages
         .iter()
         .flat_map(|p| &p.mods)
-        .map(|m| RequestMod {
-            id: &m.manifest.unique_id,
-            update_keys: &m.manifest.update_keys,
-            installed_version: &m.manifest.version,
+        .map(|m| {
+            let mut update_keys = m.manifest.update_keys.clone();
+            if let Some(repo) = repos.get(&m.manifest.unique_id.to_lowercase()) {
+                update_keys.push(format!("GitHub:{repo}"));
+            }
+            RequestMod {
+                id: &m.manifest.unique_id,
+                update_keys,
+                installed_version: &m.manifest.version,
+            }
         })
         .collect();
     if mods.is_empty() {
@@ -252,6 +260,27 @@ pub fn github_key(keys: &[String]) -> Option<String> {
     })
 }
 
+/// Reads what a user typed for a mod's repo: "owner/repo" or a github.com link.
+pub fn parse_repo(input: &str) -> Option<String> {
+    let s = input.trim().trim_end_matches('/').trim_end_matches(".git");
+    let s = s
+        .strip_prefix("https://")
+        .or_else(|| s.strip_prefix("http://"))
+        .unwrap_or(s);
+    let s = s.strip_prefix("www.").unwrap_or(s);
+    let s = s.strip_prefix("github.com/").unwrap_or(s);
+    let mut parts = s.split('/');
+    let (owner, repo) = (parts.next()?, parts.next()?);
+    let ok = |p: &str, extra: &str| {
+        !p.is_empty()
+            && p.chars()
+                .all(|c| c.is_ascii_alphanumeric() || extra.contains(c))
+    };
+    // GitHub user names have no dots, which also turns away "nexusmods.com/…"; a deeper
+    // path ("…/releases") is fine
+    (ok(owner, "-") && ok(repo, "-_.")).then(|| format!("{owner}/{repo}"))
+}
+
 /// Extracts `owner/repo` from a GitHub URL smapi.io suggested.
 pub fn github_repo(url: &str) -> Option<String> {
     let rest = url.strip_prefix("https://github.com/")?;
@@ -354,6 +383,25 @@ mod tests {
     }
 
     #[test]
+    fn parses_typed_repos() {
+        for typed in [
+            "Annosz/UIInfoSuite2",
+            "https://github.com/Annosz/UIInfoSuite2",
+            " github.com/Annosz/UIInfoSuite2/releases ",
+            "https://github.com/Annosz/UIInfoSuite2.git",
+        ] {
+            assert_eq!(
+                parse_repo(typed).as_deref(),
+                Some("Annosz/UIInfoSuite2"),
+                "{typed}"
+            );
+        }
+        assert_eq!(parse_repo("UIInfoSuite2"), None);
+        assert_eq!(parse_repo("https://nexusmods.com/x"), None);
+        assert_eq!(parse_repo("owner/re po"), None);
+    }
+
+    #[test]
     fn parses_github_repo() {
         assert_eq!(
             github_repo("https://github.com/owner/Repo/releases").as_deref(),
@@ -407,7 +455,9 @@ mod tests {
             .unwrap();
 
         tauri::async_runtime::block_on(async {
-            let report = check(&client, &packages, "4.5.2", "1.6.15").await.unwrap();
+            let report = check(&client, &packages, &Default::default(), "4.5.2", "1.6.15")
+                .await
+                .unwrap();
             let info = &report.mods["esca.farmtypemanager"];
             let version = info.version.clone().expect("an update is suggested");
             let repo = github_repo(info.url.as_deref().unwrap()).expect("GitHub url");

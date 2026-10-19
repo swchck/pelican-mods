@@ -18,6 +18,8 @@ function pkg(id: string, uniqueId: string, name: string, version: string, enable
         requiredBy: [],
         hasConfig: false,
         hasSchema: false,
+        github: null,
+        githubCustom: false,
         manifest: {
           name,
           author: "",

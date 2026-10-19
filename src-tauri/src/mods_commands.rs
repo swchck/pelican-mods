@@ -60,6 +60,10 @@ pub struct ModView {
     pub has_config: bool,
     /// A content pack whose `content.json` declares a `ConfigSchema`.
     pub has_schema: bool,
+    /// The GitHub repo updates come from first: the user's, else the manifest's.
+    pub github: Option<String>,
+    /// Whether `github` is one the user attached.
+    pub github_custom: bool,
 }
 
 // SMAPI's own mods ("SMAPI.ConsoleCommands", …) come with the installer and update with it
@@ -82,6 +86,7 @@ fn game_mods(state: &AppState) -> (Vec<Package>, Vec<Package>) {
 fn build_view(state: &AppState) -> LibraryView {
     let packages = library::scan(&state.store_root);
     let profiles = state.profiles.get();
+    let repos = state.settings.get().github_repos;
     let (bundled, others) = game_mods(state);
     let install = state.game_dir().ok().and_then(|d| game::inspect(&d).ok());
     let enabled = &profiles.active().enabled;
@@ -134,6 +139,11 @@ fn build_view(state: &AppState) -> LibraryView {
                 has_schema: m.manifest.content_pack_for.is_some()
                     && mod_config::declares_schema(&p.path.join(&m.rel_path)),
                 source: manifest::source(&m.manifest),
+                github_custom: repos.contains_key(&m.manifest.unique_id.to_lowercase()),
+                github: repos
+                    .get(&m.manifest.unique_id.to_lowercase())
+                    .cloned()
+                    .or_else(|| updates::github_key(&m.manifest.update_keys)),
                 rel_path: m.rel_path,
                 manifest: m.manifest,
             })
@@ -404,7 +414,8 @@ pub async fn updates_check(app: AppHandle, force: bool) -> AppResult<UpdateRepor
         return Ok(cached);
     }
     let state = app.state::<AppState>();
-    let report = updates::check(&state.http, &packages, &smapi, &game).await?;
+    let repos = state.settings.get().github_repos;
+    let report = updates::check(&state.http, &packages, &repos, &smapi, &game).await?;
     *state.updates.lock().unwrap() = report.clone();
     let _ = updates::save_cache(&state.updates_file, &report);
     Ok(report)
@@ -429,6 +440,7 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> 
     let state = app.state::<AppState>();
     let pkg = library::read_package(id.clone(), library::package_path(&state.store_root, &id)?)
         .ok_or_else(|| AppError::NotFound(id.clone()))?;
+    let repos = state.settings.get().github_repos;
     let found = {
         let report = state.updates.lock().unwrap();
         pkg.mods.iter().find_map(|m| {
@@ -438,7 +450,10 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> 
                 info.version.clone()?,
                 info.url.clone()?,
                 info.nexus_id,
-                updates::github_key(&m.manifest.update_keys),
+                repos
+                    .get(&m.manifest.unique_id.to_lowercase())
+                    .cloned()
+                    .or_else(|| updates::github_key(&m.manifest.update_keys)),
                 nexus::update_subkey(&m.manifest.update_keys),
             ))
         })
@@ -510,6 +525,35 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> 
     }
     nexus_commands::start(app, mod_id, file.file_id, None);
     Ok(UpdateOutcome::Queued)
+}
+
+/// Attaches GitHub repo `repo` ("owner/repo" or a github.com link) to the mod
+/// `unique_id`, or with `None` detaches it.
+#[tauri::command]
+pub async fn mod_set_github(
+    app: AppHandle,
+    unique_id: String,
+    repo: Option<String>,
+) -> AppResult<LibraryView> {
+    let repo = match repo.as_deref().map(str::trim).filter(|r| !r.is_empty()) {
+        Some(typed) => {
+            Some(updates::parse_repo(typed).ok_or_else(|| AppError::BadRepo(typed.to_owned()))?)
+        }
+        None => None,
+    };
+    blocking(app, move |s| {
+        let key = unique_id.to_lowercase();
+        s.settings.update(|st| match repo {
+            Some(r) => {
+                st.github_repos.insert(key, r);
+            }
+            None => {
+                st.github_repos.remove(&key);
+            }
+        })?;
+        Ok(build_view(s))
+    })
+    .await
 }
 
 /// Restores the newest backup of the mod `unique_id`; the current version is backed up.
