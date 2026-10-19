@@ -8,6 +8,8 @@ export const useCompanion = defineStore("companion", () => {
   const available = ref(false);
   /** Bumped when the game reports GMCM menus, so open settings can pick them up. */
   const gmcmSeen = ref<{ ids: string[]; at: number }>({ ids: [], at: 0 });
+  /** Bumped when the game sends fresh perfection lists. */
+  const catalogAt = ref(0);
 
   const connected = computed(() => status.value.connected && status.value.hello !== null);
   const loaded = (uniqueId: string) =>
@@ -18,7 +20,8 @@ export const useCompanion = defineStore("companion", () => {
     status.value = await api.status();
     void api.onStatus((s) => (status.value = s));
     void api.onGmcm((ids) => (gmcmSeen.value = { ids, at: Date.now() }));
+    void api.onCatalog(() => (catalogAt.value = Date.now()));
   }
 
-  return { status, available, connected, gmcmSeen, loaded, init };
+  return { status, available, connected, gmcmSeen, catalogAt, loaded, init };
 });

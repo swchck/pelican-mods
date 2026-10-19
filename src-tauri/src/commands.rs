@@ -38,6 +38,7 @@ pub struct AppState {
     /// Zip snapshots of save folders.
     pub(crate) save_backup_root: PathBuf,
     pub(crate) save_progress: crate::saves_commands::ProgressCache,
+    pub(crate) save_facts: crate::saves_commands::FactsCache,
     pub(crate) profiles: ProfilesStore,
     /// Serializes store and profile changes; installs run on blocking threads in parallel.
     pub(crate) library_lock: Mutex<()>,
@@ -68,11 +69,10 @@ impl AppState {
             nexus_account: Mutex::new(None),
             save_backup_root: data_dir.join("save-backups"),
             save_progress: Default::default(),
+            save_facts: Default::default(),
             profiles: ProfilesStore::load(config_dir.join("profiles.json")),
             library_lock: Mutex::new(()),
-            companion: std::sync::Arc::new(crate::companion::Companion::new(
-                cache_dir.join("gmcm.json"),
-            )),
+            companion: std::sync::Arc::new(crate::companion::Companion::new(&cache_dir)),
             companion_dir: std::sync::OnceLock::new(),
         }
     }

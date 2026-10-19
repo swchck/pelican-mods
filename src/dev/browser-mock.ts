@@ -301,6 +301,47 @@ mockIPC(
         };
       case "saves_list":
         return [save];
+      case "saves_perfection": {
+        const m = (key: string, name = key, extra = {}) => ({
+          key,
+          name,
+          have: null,
+          need: null,
+          known: null,
+          ...extra,
+        });
+        const part = (id: string, weight: number, done: number, total: number, missing: unknown[] = []) => ({
+          id,
+          weight,
+          done,
+          total,
+          score: Math.round((done / total) * weight * 10) / 10,
+          missing,
+        });
+        return {
+          percent: 41.3,
+          catalog: ["1.6.15", "ru"],
+          parts: [
+            part("shipping", 15, 98, 154, [m("188", "Зелёная фасоль"), m("190", "Цветная капуста")]),
+            part("obelisks", 4, 1, 4, [m("Water Obelisk"), m("Desert Obelisk"), m("Island Obelisk")]),
+            { ...part("clock", 10, 0, 1, [m("Gold Clock")]), score: 0 },
+            { ...part("slayer", 10, 7, 12, [m("Slimes", "Слаймы", { have: 640, need: 1000 })]), score: 0 },
+            part("friends", 11, 6, 34, [
+              m("Pierre", "Пьер", { have: 6, need: 10 }),
+              m("Abigail", "Эбигейл", { have: 5, need: 8 }),
+            ]),
+            part("level", 5, 19, 25),
+            {
+              ...part("stardrops", 10, 3, 7, [m("CF_Sewer"), m("CF_Statue"), m("CF_Fish"), m("museumComplete")]),
+              score: 0,
+            },
+            part("cooking", 10, 30, 81, [m("Omelet", "Омлет", { known: true }), m("Salad", "Салат", { known: false })]),
+            part("crafting", 10, 60, 149, [m("Keg", "Бочонок", { known: false })]),
+            part("fish", 10, 38, 72, [m("(O)128", "Иглобрюх")]),
+            part("walnuts", 5, 65, 130),
+          ],
+        };
+      }
       case "saves_progress":
         return {
           ccRooms: ["ccPantry", "ccVault"],

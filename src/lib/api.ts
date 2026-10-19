@@ -325,8 +325,51 @@ export interface Snapshot {
   file: string;
 }
 
+export type PerfectionPartId =
+  | "shipping"
+  | "obelisks"
+  | "clock"
+  | "slayer"
+  | "friends"
+  | "level"
+  | "stardrops"
+  | "cooking"
+  | "crafting"
+  | "fish"
+  | "walnuts";
+
+export interface PerfectionMissing {
+  key: string;
+  name: string;
+  /** Hearts or kills so far, for villagers and Monster Slayer goals. */
+  have: number | null;
+  need: number | null;
+  /** For recipes: learned yet. */
+  known: boolean | null;
+}
+
+export interface PerfectionPart {
+  id: PerfectionPartId;
+  /** Share of the 100% this part is worth. */
+  weight: number;
+  done: number;
+  /** null until the companion has sent the game's lists. */
+  total: number | null;
+  score: number | null;
+  missing: PerfectionMissing[];
+}
+
+export interface Perfection {
+  /** 0–100, once every part has a total. */
+  percent: number | null;
+  /** Game version and language of the lists used. */
+  catalog: [string, string] | null;
+  parts: PerfectionPart[];
+}
+
 export const saves = {
   list: () => invoke<SaveSummary[]>("saves_list"),
+  perfection: (id: string) => invoke<Perfection>("saves_perfection", { id }),
   progress: (id: string) => invoke<SaveProgress>("saves_progress", { id }),
   snapshots: (id: string) => invoke<Snapshot[]>("saves_snapshots", { id }),
   backup: (id: string) => invoke<Snapshot>("saves_backup", { id }),
@@ -412,6 +455,7 @@ export const companion = {
     listen<CompanionStatus>("companion:status", (e) => cb(e.payload)),
   onGmcm: (cb: (ids: string[]) => void): Promise<UnlistenFn> =>
     listen<string[]>("companion:gmcm", (e) => cb(e.payload)),
+  onCatalog: (cb: () => void): Promise<UnlistenFn> => listen("companion:catalog", () => cb()),
 };
 
 export const modConfig = {

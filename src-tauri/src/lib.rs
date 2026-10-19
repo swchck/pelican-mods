@@ -16,6 +16,7 @@ mod moddrop;
 mod mods_commands;
 mod nexus;
 mod nexus_commands;
+mod perfection;
 mod profiles;
 mod rosetta;
 mod save_backups;
@@ -106,6 +107,7 @@ pub fn run() {
             nexus_commands::downloads_clear,
             saves_commands::saves_list,
             saves_commands::saves_progress,
+            saves_commands::saves_perfection,
             saves_commands::saves_snapshots,
             saves_commands::saves_backup,
             saves_commands::saves_restore,

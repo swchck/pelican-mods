@@ -18,6 +18,10 @@ impl Events for TauriEvents {
     fn gmcm(&self, ids: &[String]) {
         let _ = self.0.emit("companion:gmcm", ids);
     }
+
+    fn catalog(&self) {
+        let _ = self.0.emit("companion:catalog", ());
+    }
 }
 
 /// Finds the built companion and starts the server; call once from setup.

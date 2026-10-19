@@ -65,6 +65,31 @@ internal record GmcmOption(
 
 internal record GmcmChoice(string Value, string Label);
 
+internal record CatalogMessage(
+    string Game,
+    string Language,
+    List<CatalogItem> Shipping,
+    List<CatalogItem> Fish,
+    List<CatalogRecipe> Cooking,
+    List<CatalogRecipe> Crafting,
+    List<CatalogVillager> Villagers,
+    List<CatalogGoal> Monsters
+)
+{
+    public string Type => "catalog";
+}
+
+/// <summary>An item; shipping ids are unqualified ("24"), fish ids qualified ("(O)128").</summary>
+internal record CatalogItem(string Id, string Name);
+
+/// <summary>A recipe by its data key, with the id of the item it makes.</summary>
+internal record CatalogRecipe(string Key, string Name, string Output);
+
+internal record CatalogVillager(string Key, string Name, bool Romance);
+
+/// <summary>A Monster Slayer goal: <see cref="Count"/> kills among <see cref="Targets"/>.</summary>
+internal record CatalogGoal(string Key, string Name, int Count, List<string> Targets);
+
 internal record Result(long Id, bool Ok, string? Method = null, string? Error = null)
 {
     public string Type => "result";

@@ -10,6 +10,7 @@ use crate::commands::{AppState, game_data_dir};
 use crate::error::{AppError, AppResult};
 use crate::launcher::RunState;
 use crate::mods_commands::blocking;
+use crate::perfection::{self, Perfection};
 use crate::save_backups::{self, Reason, Snapshot};
 use crate::saves::{self, Progress, SaveSummary};
 
@@ -17,6 +18,10 @@ use crate::saves::{self, Progress, SaveSummary};
 /// save takes a second or two.
 #[derive(Default)]
 pub struct ProgressCache(Mutex<HashMap<String, (u64, Progress)>>);
+
+/// Perfection facts per save, under the same mtime rule as [`ProgressCache`].
+#[derive(Default)]
+pub struct FactsCache(Mutex<HashMap<String, (u64, perfection::Facts)>>);
 
 fn saves_dir(app: &AppHandle) -> AppResult<PathBuf> {
     Ok(game_data_dir(app)?.join("Saves"))
@@ -43,6 +48,37 @@ fn ensure_stopped(state: &AppState) -> AppResult<()> {
 pub async fn saves_list(app: AppHandle) -> AppResult<Vec<SaveSummary>> {
     let dir = saves_dir(&app)?;
     blocking(app, move |_| Ok(saves::list(&dir))).await
+}
+
+/// Scores save `id` for perfection, against the catalog the companion last sent.
+#[tauri::command]
+pub async fn saves_perfection(app: AppHandle, id: String) -> AppResult<Perfection> {
+    let path = save_path(&app, &id)?;
+    blocking(app, move |s| {
+        let modified = saves::summary(&path)?.modified;
+        let cached = s
+            .save_facts
+            .0
+            .lock()
+            .unwrap()
+            .get(&id)
+            .filter(|(m, _)| *m == modified)
+            .map(|(_, f)| f.clone());
+        let facts = match cached {
+            Some(f) => f,
+            None => {
+                let f = perfection::facts(&path)?;
+                s.save_facts
+                    .0
+                    .lock()
+                    .unwrap()
+                    .insert(id.clone(), (modified, f.clone()));
+                f
+            }
+        };
+        Ok(perfection::evaluate(&facts, s.companion.catalog().as_ref()))
+    })
+    .await
 }
 
 #[tauri::command]

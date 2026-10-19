@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { GamepadIcon, LibraryIcon, SaveIcon, SearchIcon, SettingsIcon, TerminalIcon } from "@lucide/vue";
+import { GamepadIcon, LibraryIcon, SaveIcon, SearchIcon, SettingsIcon, TerminalIcon, TrophyIcon } from "@lucide/vue";
 import DownloadsCard from "@/components/DownloadsCard.vue";
 import AppUpdateCard from "@/components/AppUpdateCard.vue";
 import AppLogo from "@/components/AppLogo.vue";
@@ -20,6 +20,7 @@ const links = [
   { to: "/", label: "nav.library", icon: LibraryIcon },
   { to: "/browse", label: "nav.browse", icon: SearchIcon },
   { to: "/saves", label: "nav.saves", icon: SaveIcon },
+  { to: "/progress", label: "nav.progress", icon: TrophyIcon },
   { to: "/game", label: "nav.home", icon: GamepadIcon },
   { to: "/console", label: "nav.console", icon: TerminalIcon },
   { to: "/settings", label: "nav.settings", icon: SettingsIcon },

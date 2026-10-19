@@ -3,7 +3,15 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "vue-sonner";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { ArchiveRestoreIcon, DownloadIcon, FolderOpenIcon, Loader2Icon, SaveIcon, UploadIcon } from "@lucide/vue";
+import {
+  ArchiveRestoreIcon,
+  DownloadIcon,
+  FolderOpenIcon,
+  Loader2Icon,
+  SaveIcon,
+  TrophyIcon,
+  UploadIcon,
+} from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -181,6 +189,11 @@ useShortcut("page.install", () => void importSave());
               {{ t("saves.progressOf", { farm: selected.farmName }) }}
             </h2>
             <span class="text-muted-foreground text-xs font-bold">{{ hours(selected.playTimeMs) }}</span>
+            <Button variant="outline" size="sm" as-child>
+              <RouterLink :to="{ path: '/progress', query: { save: selected.id } }">
+                <TrophyIcon />{{ t("saves.perfection") }}
+              </RouterLink>
+            </Button>
           </div>
 
           <div v-if="!progress" class="text-muted-foreground flex items-center gap-2 text-sm font-semibold">

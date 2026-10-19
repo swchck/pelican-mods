@@ -33,6 +33,12 @@ internal sealed class ModEntry : Mod
         helper.Events.GameLoop.GameLaunched += (_, _) => this.Launched = true;
         helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => this.SendState(force: true);
+        // the game applies the player's language after GameLaunched; names follow it
+        helper.Events.Content.LocaleChanged += (_, _) =>
+        {
+            if (this.Launched)
+                this.SendCatalog();
+        };
     }
 
     protected override void Dispose(bool disposing)
@@ -54,6 +60,7 @@ internal sealed class ModEntry : Mod
                 this.Helper.ModRegistry.GetAll().Select(m => m.Manifest.UniqueID).ToList()
             ));
             this.Describe();
+            this.SendCatalog();
             this.SendState(force: true);
         }
         while (bridge.Inbox.TryDequeue(out Command? command))
@@ -106,6 +113,18 @@ internal sealed class ModEntry : Mod
         catch (Exception ex)
         {
             this.Monitor.Log($"couldn't read GMCM menus: {ex}", LogLevel.Trace);
+        }
+    }
+
+    private void SendCatalog()
+    {
+        try
+        {
+            this.Bridge!.Send(Catalog.Build());
+        }
+        catch (Exception ex)
+        {
+            this.Monitor.Log($"couldn't list perfection items: {ex}", LogLevel.Trace);
         }
     }
 

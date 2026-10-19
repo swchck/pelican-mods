@@ -6,6 +6,7 @@ export type ShortcutId =
   | "nav.library"
   | "nav.browse"
   | "nav.saves"
+  | "nav.progress"
   | "nav.game"
   | "nav.console"
   | "nav.settings"
@@ -32,8 +33,9 @@ export const SHORTCUTS: ShortcutDef[] = [
   { id: "nav.library", combos: ["mod+1"], group: "nav" },
   { id: "nav.browse", combos: ["mod+2"], group: "nav" },
   { id: "nav.saves", combos: ["mod+3"], group: "nav" },
-  { id: "nav.game", combos: ["mod+4"], group: "nav" },
-  { id: "nav.console", combos: ["mod+5"], group: "nav" },
+  { id: "nav.progress", combos: ["mod+4"], group: "nav" },
+  { id: "nav.game", combos: ["mod+5"], group: "nav" },
+  { id: "nav.console", combos: ["mod+6"], group: "nav" },
   { id: "nav.settings", combos: ["mod+,"], group: "nav" },
   { id: "game.play", combos: ["mod+p"], group: "game" },
   { id: "game.vanilla", combos: ["mod+shift+p"], group: "game" },

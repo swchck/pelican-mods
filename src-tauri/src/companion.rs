@@ -22,6 +22,7 @@ use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::handshake::server::{ErrorResponse, Request, Response};
 
 use crate::error::{AppError, AppResult};
+use crate::perfection::Catalog;
 
 /// Bumped when a message shape changes incompatibly.
 pub const PROTOCOL: u32 = 1;
@@ -126,6 +127,7 @@ enum Incoming {
     Hello(Hello),
     State { state: Option<GameSnapshot> },
     Gmcm { mods: Vec<GmcmMod> },
+    Catalog(Box<Catalog>),
     Result(ResultMsg),
 }
 
@@ -140,6 +142,7 @@ struct ResultMsg {
 pub trait Events: Send + Sync + 'static {
     fn status(&self, status: &Status);
     fn gmcm(&self, ids: &[String]);
+    fn catalog(&self);
 }
 
 #[derive(Default)]
@@ -158,11 +161,19 @@ pub struct Companion {
     next_id: AtomicU64,
     schemas: Mutex<HashMap<String, GmcmMod>>,
     schemas_file: PathBuf,
+    catalog: Mutex<Option<Catalog>>,
+    catalog_file: PathBuf,
 }
 
 impl Companion {
-    /// Creates the link; GMCM menus seen in earlier sessions load from `schemas_file`.
-    pub fn new(schemas_file: PathBuf) -> Self {
+    /// Creates the link; GMCM menus and the perfection catalog seen in earlier
+    /// sessions load from `cache_dir`.
+    pub fn new(cache_dir: &std::path::Path) -> Self {
+        let schemas_file = cache_dir.join("gmcm.json");
+        let catalog_file = cache_dir.join("catalog.json");
+        let catalog = std::fs::read(&catalog_file)
+            .ok()
+            .and_then(|b| serde_json::from_slice(&b).ok());
         let schemas = std::fs::read(&schemas_file)
             .ok()
             .and_then(|b| serde_json::from_slice::<Vec<GmcmMod>>(&b).ok())
@@ -176,6 +187,8 @@ impl Companion {
             next_id: AtomicU64::new(1),
             schemas: Mutex::new(schemas),
             schemas_file,
+            catalog: Mutex::new(catalog),
+            catalog_file,
         }
     }
 
@@ -195,6 +208,11 @@ impl Companion {
             .unwrap()
             .get(&unique_id.to_lowercase())
             .cloned()
+    }
+
+    /// The perfection catalog from the last game that connected, if any ever did.
+    pub fn catalog(&self) -> Option<Catalog> {
+        self.catalog.lock().unwrap().clone()
     }
 
     /// Reports whether the connected game has mod `unique_id` loaded.
@@ -347,10 +365,17 @@ impl Companion {
                     }
                     schemas.values().cloned().collect()
                 };
-                if let Err(e) = save_schemas(&self.schemas_file, &snapshot) {
+                if let Err(e) = save_json(&self.schemas_file, &snapshot) {
                     eprintln!("companion: couldn't save GMCM menus: {e}");
                 }
                 events.gmcm(&ids);
+            }
+            Incoming::Catalog(catalog) => {
+                if let Err(e) = save_json(&self.catalog_file, &*catalog) {
+                    eprintln!("companion: couldn't save the catalog: {e}");
+                }
+                *self.catalog.lock().unwrap() = Some(*catalog);
+                events.catalog();
             }
             Incoming::Result(r) => {
                 if let Some(tx) = self.link.lock().unwrap().pending.remove(&r.id) {
@@ -361,14 +386,11 @@ impl Companion {
     }
 }
 
-fn save_schemas(file: &PathBuf, schemas: &[GmcmMod]) -> std::io::Result<()> {
+fn save_json(file: &PathBuf, value: &impl Serialize) -> std::io::Result<()> {
     if let Some(dir) = file.parent() {
         std::fs::create_dir_all(dir)?;
     }
-    std::fs::write(
-        file,
-        serde_json::to_vec(schemas).expect("schemas serialize"),
-    )
+    std::fs::write(file, serde_json::to_vec(value).expect("cache serialize"))
 }
 
 fn random_token() -> std::io::Result<String> {
@@ -395,12 +417,13 @@ mod tests {
         fn gmcm(&self, ids: &[String]) {
             self.gmcm.lock().unwrap().extend(ids.iter().cloned());
         }
+        fn catalog(&self) {}
     }
 
     #[test]
     fn talks_to_a_companion() {
         let dir = tempfile::tempdir().unwrap();
-        let companion = Arc::new(Companion::new(dir.path().join("gmcm.json")));
+        let companion = Arc::new(Companion::new(dir.path()));
         let recorder = Arc::new(Recorder::default());
         tauri::async_runtime::block_on(async {
             tauri::async_runtime::spawn(companion.clone().serve(recorder.clone()));
@@ -463,7 +486,7 @@ mod tests {
             *recorder.gmcm.lock().unwrap(),
             ["Pathoschild.LookupAnything"]
         );
-        let reloaded = Companion::new(dir.path().join("gmcm.json"));
+        let reloaded = Companion::new(dir.path());
         assert_eq!(
             reloaded
                 .schema("pathoschild.lookupanything")
@@ -518,7 +541,7 @@ mod tests {
         let lookup = mods.join("LookupAnything");
         copy_dir(&store.join("LookupAnything"), &lookup);
 
-        let companion = Arc::new(Companion::new(dir.path().join("gmcm.json")));
+        let companion = Arc::new(Companion::new(dir.path()));
         let recorder = Arc::new(Recorder::default());
         let home = PathBuf::from(std::env::var("HOME").unwrap());
         tauri::async_runtime::block_on(async {
@@ -565,6 +588,22 @@ mod tests {
                     mapped * 2 > schema.options.len(),
                     "most options map to keys"
                 );
+
+                for _ in 0..50 {
+                    if companion.catalog().is_some() {
+                        break;
+                    }
+                    tokio::time::sleep(Duration::from_millis(100)).await;
+                }
+                let c = companion.catalog().expect("a perfection catalog arrives");
+                eprintln!(
+                    "catalog {} {}: {} shipped, {} fish, {} cooking, {} crafting, {} villagers, {} goals",
+                    c.game, c.language, c.shipping.len(), c.fish.len(), c.cooking.len(),
+                    c.crafting.len(), c.villagers.len(), c.monsters.len()
+                );
+                eprintln!("  e.g. {:?} / {:?} / {:?}", c.fish.first(), c.villagers.first(), c.monsters.first());
+                assert!(c.shipping.len() > 100 && c.fish.len() > 50 && c.cooking.len() > 70);
+                assert!(c.crafting.len() > 100 && c.villagers.len() > 25 && c.monsters.len() > 8);
 
                 let file = lookup.join("config.json");
                 let mut config: Value =
