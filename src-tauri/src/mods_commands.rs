@@ -713,6 +713,28 @@ pub async fn game_crash(app: AppHandle) -> AppResult<Option<crate::smapi_log::Cr
     .await
 }
 
+/// Records the active profile for the saves written since `since` (Unix seconds), so
+/// the next launch can offer it back; called when a session ends.
+#[tauri::command]
+pub async fn saves_remember_profile(app: AppHandle, since: u64) -> AppResult<LibraryView> {
+    let saves_dir = crate::commands::game_data_dir(&app)?.join("Saves");
+    blocking(app, move |s| {
+        let played: Vec<String> = crate::saves::list(&saves_dir)
+            .into_iter()
+            .filter(|save| save.modified >= since)
+            .map(|save| save.id)
+            .collect();
+        if !played.is_empty() {
+            s.profiles.update(|p| {
+                p.remember_saves(&played);
+                Ok(())
+            })?;
+        }
+        Ok(build_view(s))
+    })
+    .await
+}
+
 /// What the last played save would lose if the game started now with the active profile.
 #[tauri::command]
 pub async fn game_preflight(app: AppHandle) -> AppResult<Option<crate::save_usage::Preflight>> {
@@ -724,12 +746,37 @@ pub async fn game_preflight(app: AppHandle) -> AppResult<Option<crate::save_usag
                 .into_iter()
                 .map(|m| m.name)
                 .collect();
-        Ok(crate::save_usage::preflight(
-            &data.join("Saves"),
+        let profiles = s.profiles.get();
+        let saves_dir = data.join("Saves");
+        let mut found = crate::save_usage::preflight(
+            &saves_dir,
             &library::scan(&s.store_root),
-            &s.profiles.get().active().enabled,
+            &profiles.active().enabled,
             &skipped,
-        ))
+        );
+        // the newest save remembers its own profile; offer it even when nothing's missing
+        let newest = crate::saves::list(&saves_dir)
+            .into_iter()
+            .max_by_key(|s| s.modified);
+        let other = newest.as_ref().and_then(|save| {
+            profiles
+                .save_profiles
+                .get(&save.id)
+                .filter(|p| **p != profiles.active && profiles.profiles.iter().any(|x| x.id == **p))
+                .cloned()
+        });
+        if let Some(profile) = other {
+            let save = newest.expect("a profile was found for it");
+            let pf = found.get_or_insert_with(|| crate::save_usage::Preflight {
+                save_id: save.id,
+                farmer: save.farmer,
+                farm_name: save.farm_name,
+                missing: Vec::new(),
+                switch_to: None,
+            });
+            pf.switch_to = Some(profile);
+        }
+        Ok(found)
     })
     .await
 }

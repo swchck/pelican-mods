@@ -90,6 +90,9 @@ export default {
     locations: "{n} of its locations in the save",
     risk: "Loading that save and saving drops whatever these mods add.",
     anyway: "Play anyway",
+    otherProfile: "Another profile",
+    lastProfile: "{save} was last played with the “{profile}” profile.",
+    switch: "Switch to “{profile}” and play",
     enable: "Turn on and play",
   },
   calendar: {
@@ -416,6 +419,7 @@ export default {
     exported: "Save exported",
     imported: "Save imported",
     restored: "Backup restored",
+    playedWith: "profile: {profile}",
     delete: "Delete save",
     deleteTitle: "Delete {name}?",
     deleteText: "The save folder goes to the Trash, where Finder can put it back. Its backups stay here.",

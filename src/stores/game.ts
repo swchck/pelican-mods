@@ -5,6 +5,7 @@ import {
   api,
   events,
   isAppError,
+  library,
   saves,
   type GameInstall,
   type Crash,
@@ -16,6 +17,7 @@ import {
 } from "@/lib/api";
 import { compareVersions } from "@/lib/version";
 import { router } from "@/router";
+import { useLibrary } from "@/stores/library";
 import { errorText, i18n } from "@/i18n";
 
 const LOG_LIMIT = 2000;
@@ -60,6 +62,8 @@ export const useGame = defineStore("game", () => {
           refresh().catch((e) => toast.error(errorText(e)));
           // a stop from the app also ends with a non-zero code; only the game's own exit counts
           if (s.code !== 0 && !stopping) void explainCrash();
+          if (launchedAt) void rememberProfile(launchedAt);
+          launchedAt = 0;
           stopping = false;
           void warnFromLog();
           saves.mirror().catch((e) => toast.error(errorText(e)));
@@ -85,6 +89,13 @@ export const useGame = defineStore("game", () => {
   /** The error the last session died on; cleared by the next launch. */
   const crash = ref<Crash | null>(null);
   let stopping = false;
+  /** Unix seconds the modded session started; saves written after it ran with its profile. */
+  let launchedAt = 0;
+
+  async function rememberProfile(since: number) {
+    const lib = useLibrary();
+    lib.view = await library.rememberProfile(since).catch(() => lib.view);
+  }
 
   async function explainCrash() {
     const c = await api.crash().catch(() => null);
@@ -176,6 +187,8 @@ export const useGame = defineStore("game", () => {
     try {
       log.value = [];
       run.value = await api.launch(modded);
+      // a little early, so a save written in the first second still counts
+      if (modded) launchedAt = Math.floor(Date.now() / 1000) - 5;
     } catch (e) {
       toast.error(errorText(e));
     }

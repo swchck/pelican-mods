@@ -5,6 +5,7 @@
 //! bundled mods from the game folder, and SMAPI starts with `--mods-path` pointing there.
 //! Switching profiles therefore copies nothing and leaves the game's own `Mods` alone.
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
@@ -31,6 +32,9 @@ pub struct Profile {
 pub struct Profiles {
     pub active: String,
     pub profiles: Vec<Profile>,
+    /// The profile each save was last played with, by save id.
+    #[serde(default)]
+    pub save_profiles: BTreeMap<String, String>,
 }
 
 impl Default for Profiles {
@@ -42,11 +46,19 @@ impl Default for Profiles {
                 name: None,
                 enabled: Vec::new(),
             }],
+            save_profiles: BTreeMap::new(),
         }
     }
 }
 
 impl Profiles {
+    /// Records the active profile as the one `saves` were played with.
+    pub fn remember_saves(&mut self, saves: &[String]) {
+        for s in saves {
+            self.save_profiles.insert(s.clone(), self.active.clone());
+        }
+    }
+
     /// Returns the active profile.
     pub fn active(&self) -> &Profile {
         self.profiles
@@ -107,6 +119,7 @@ impl Profiles {
         }
         self.get_mut(id)?;
         self.profiles.retain(|p| p.id != id);
+        self.save_profiles.retain(|_, p| p != id);
         if self.active == id {
             self.active = self.profiles[0].id.clone();
         }
@@ -227,6 +240,18 @@ pub fn deploy(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn remembers_which_profile_played_a_save() {
+        let mut p = Profiles::default();
+        let sve = p.create("SVE", None).unwrap();
+        p.activate(&sve).unwrap();
+        p.remember_saves(&["Farm_1".to_owned()]);
+        assert_eq!(p.save_profiles.get("Farm_1"), Some(&sve));
+        p.activate(DEFAULT_ID).unwrap();
+        p.delete(&sve).unwrap();
+        assert!(p.save_profiles.is_empty());
+    }
 
     #[test]
     fn manages_profiles() {

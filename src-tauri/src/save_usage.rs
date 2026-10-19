@@ -111,6 +111,8 @@ pub struct Preflight {
     pub farmer: String,
     pub farm_name: String,
     pub missing: Vec<Missing>,
+    /// The profile the save was last played with, when it isn't the active one.
+    pub switch_to: Option<String>,
 }
 
 /// Checks the most recently played save against `packages`: those it uses that are
@@ -157,6 +159,7 @@ pub fn preflight(
         farmer: save.farmer,
         farm_name: save.farm_name,
         missing,
+        switch_to: None,
     })
 }
 

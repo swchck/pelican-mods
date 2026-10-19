@@ -174,6 +174,8 @@ export interface Profile {
 export interface Profiles {
   active: string;
   profiles: Profile[];
+  /** The profile each save was last played with, by save id. */
+  saveProfiles: Record<string, string>;
 }
 
 export interface LibraryView {
@@ -197,6 +199,7 @@ export const library = {
   update: (id: string) => invoke<UpdateOutcome>("mod_update", { id }),
   rollback: (uniqueId: string) => invoke<LibraryView>("mod_rollback", { uniqueId }),
   setGithub: (uniqueId: string, repo: string | null) => invoke<LibraryView>("mod_set_github", { uniqueId, repo }),
+  rememberProfile: (since: number) => invoke<LibraryView>("saves_remember_profile", { since }),
   installDependency: (uniqueId: string, updateKeys?: string[], github?: string | null) =>
     invoke<UpdateOutcome>("mod_install_dependency", { uniqueId, updateKeys, github }),
   exportList: (dest: string) => invoke<void>("modlist_export", { dest }),
@@ -690,6 +693,8 @@ export interface Preflight {
     /** Off in the active profile; otherwise SMAPI skipped it last session. */
     disabled: boolean;
   }[];
+  /** The profile the save was last played with, when it isn't the active one. */
+  switchTo: string | null;
 }
 
 /** Content packs loading the same asset exclusively; the game drops all of them. */

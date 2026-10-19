@@ -27,6 +27,7 @@ import { api, saves, type SaveProgress, type SaveSummary, type Snapshot } from "
 import { relativeTime } from "@/lib/time";
 import { errorText } from "@/i18n";
 import { useGame } from "@/stores/game";
+import { useLibrary } from "@/stores/library";
 import { useShortcut } from "@/stores/shortcuts";
 
 const { t, locale } = useI18n();
@@ -43,6 +44,12 @@ const restoreTarget = ref<Snapshot | null>(null);
 const deleteTarget = ref<SaveSummary | null>(null);
 
 const selected = computed(() => list.value.find((s) => s.id === selectedId.value) ?? null);
+const lib = useLibrary();
+const profileOf = (id: string) => {
+  const pid = lib.profiles?.saveProfiles?.[id];
+  const p = pid ? lib.profiles?.profiles.find((x) => x.id === pid) : null;
+  return p ? (p.name ?? t("profiles.default")) : null;
+};
 
 // grass, autumn leaves, snow, and a summer sea; one per season like the in-game calendar
 const banners = [
@@ -190,6 +197,9 @@ useShortcut("page.install", () => void importSave());
           <div class="flex flex-col gap-0.5 px-3.5 pt-2.5 pb-3">
             <span class="font-pixel text-wood-dark truncate text-xl font-bold">{{ s.farmName }}</span>
             <span class="text-muted-foreground truncate text-[13px] font-bold">{{ s.farmer }} · {{ date(s) }}</span>
+            <span v-if="profileOf(s.id)" class="text-muted-foreground truncate text-[11px] font-semibold">
+              {{ t("saves.playedWith", { profile: profileOf(s.id) }) }}
+            </span>
             <span class="text-[13px] font-extrabold text-[#7a5a0e]">{{ money(s.money) }}</span>
           </div>
         </button>

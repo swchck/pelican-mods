@@ -29,6 +29,17 @@ const game = useGame();
 const companion = useCompanion();
 const lib = useLibrary();
 
+const switchName = computed(() => {
+  const id = game.preflight?.switchTo;
+  const p = id ? lib.profiles?.profiles.find((x) => x.id === id) : null;
+  return p ? (p.name ?? t("profiles.default")) : null;
+});
+
+async function switchAndPlay() {
+  const id = game.preflight?.switchTo;
+  if (id && (await lib.activateProfile(id))) await game.launch(true);
+}
+
 async function enableAndPlay() {
   const off = game.preflight?.missing.filter((m) => m.disabled) ?? [];
   for (const m of off) if (!(await lib.toggle(m.package, true))) return;
@@ -124,9 +135,21 @@ const status = computed(() => {
     <Dialog :open="game.preflight !== null" @update:open="(v: boolean) => !v && (game.preflight = null)">
       <DialogContent v-if="game.preflight">
         <DialogHeader>
-          <DialogTitle class="font-pixel text-xl">{{ t("preflight.title") }}</DialogTitle>
+          <DialogTitle class="font-pixel text-xl">{{
+            game.preflight.missing.length ? t("preflight.title") : t("preflight.otherProfile")
+          }}</DialogTitle>
           <DialogDescription>
-            {{ t("preflight.text", { save: `${game.preflight.farmer} · ${game.preflight.farmName}` }) }}
+            <template v-if="game.preflight.missing.length">{{
+              t("preflight.text", { save: `${game.preflight.farmer} · ${game.preflight.farmName}` })
+            }}</template>
+            <template v-if="switchName">
+              {{
+                t("preflight.lastProfile", {
+                  save: `${game.preflight.farmer} · ${game.preflight.farmName}`,
+                  profile: switchName,
+                })
+              }}
+            </template>
           </DialogDescription>
         </DialogHeader>
         <ul class="flex flex-col gap-1 text-sm">
@@ -138,13 +161,14 @@ const status = computed(() => {
             </span>
           </li>
         </ul>
-        <p class="text-destructive text-xs font-bold">{{ t("preflight.risk") }}</p>
+        <p v-if="game.preflight.missing.length" class="text-destructive text-xs font-bold">{{ t("preflight.risk") }}</p>
         <DialogFooter class="flex-wrap gap-2">
           <DialogClose as-child>
             <Button variant="outline">{{ t("common.cancel") }}</Button>
           </DialogClose>
           <Button variant="outline" @click="game.launch(true, true)">{{ t("preflight.anyway") }}</Button>
-          <Button v-if="game.preflight.missing.some((m) => m.disabled)" @click="enableAndPlay">
+          <Button v-if="switchName" @click="switchAndPlay">{{ t("preflight.switch", { profile: switchName }) }}</Button>
+          <Button v-else-if="game.preflight.missing.some((m) => m.disabled)" @click="enableAndPlay">
             {{ t("preflight.enable") }}
           </Button>
         </DialogFooter>

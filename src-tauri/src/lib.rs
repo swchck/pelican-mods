@@ -112,6 +112,7 @@ pub fn run() {
             mods_commands::mod_save_usage,
             mods_commands::game_preflight,
             mods_commands::game_crash,
+            mods_commands::saves_remember_profile,
             mods_commands::library_conflicts,
             mods_commands::mod_changelog,
             mods_commands::modlist_export,
