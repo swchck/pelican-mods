@@ -290,6 +290,8 @@ pub struct Missing {
     pub have: Option<u32>,
     pub need: Option<u32>,
     pub known: Option<bool>,
+    /// English page title on the Stardew wikis, for base game things.
+    pub wiki: Option<String>,
 }
 
 impl Missing {
@@ -300,6 +302,7 @@ impl Missing {
             have: None,
             need: None,
             known: None,
+            wiki: None,
         }
     }
 }
@@ -361,6 +364,7 @@ pub fn evaluate(facts: &Facts, catalog: Option<&Catalog>) -> Perfection {
                 have: Some((facts.friends.get(&v.key).copied().unwrap_or(0).max(0) / 250) as u32),
                 need: Some(need(v) as u32),
                 known: None,
+                wiki: None,
             });
             part.missing
                 .sort_by_key(|m| std::cmp::Reverse(m.have.unwrap_or(0)));
@@ -440,6 +444,17 @@ pub fn evaluate(facts: &Facts, catalog: Option<&Catalog>) -> Perfection {
         .map(|p| p.score)
         .sum::<Option<f32>>()
         .map(|s| (s * 10.0).round() / 10.0);
+    for part in &mut parts {
+        for m in &mut part.missing {
+            m.wiki = match part.id {
+                "shipping" | "fish" | "friends" => wiki_title(&m.key),
+                // recipe keys, obelisks and the clock are the English names the pages use
+                "cooking" | "crafting" | "obelisks" | "clock" => Some(m.key.clone()),
+                "slayer" => Some("Adventurer's Guild".to_owned()),
+                _ => None,
+            };
+        }
+    }
     Perfection {
         percent,
         catalog: catalog.map(Catalog::info),

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CheckupSection from "@/components/progress/CheckupSection.vue";
+import WikiName from "@/components/WikiName.vue";
 import {
   saves,
   type Checkup,
@@ -255,7 +256,7 @@ onMounted(async () => {
                 </div>
                 <ul class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-4 gap-y-1">
                   <li v-for="m in shown" :key="m.key" class="flex items-center gap-2 text-sm">
-                    <span class="truncate font-semibold" :title="missingName(p, m)">{{ missingName(p, m) }}</span>
+                    <WikiName :title="m.wiki" class="truncate font-semibold">{{ missingName(p, m) }}</WikiName>
                     <span
                       v-if="m.known === false"
                       class="bg-warning-soft text-destructive shrink-0 rounded px-1.5 text-[10px] font-bold"
