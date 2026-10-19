@@ -407,6 +407,17 @@ mockIPC(
       }
       case "saves_delete":
         return null;
+      case "mod_save_usage":
+        return [
+          {
+            saveId: "Anya_1",
+            farmer: "Аня",
+            farmName: "Ромашка",
+            references: 3,
+            locations: ["Custom_AndyHouse", "Custom_SophiaHouse"],
+            locationCount: 120,
+          },
+        ];
       case "smapi_log_report":
         return {
           written: Math.floor(Date.now() / 1000) - 600,

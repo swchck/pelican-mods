@@ -21,6 +21,7 @@ mod perfection;
 mod profiles;
 mod rosetta;
 mod save_backups;
+mod save_usage;
 mod saves;
 mod saves_commands;
 mod settings;
@@ -105,6 +106,7 @@ pub fn run() {
             mods_commands::mod_rollback,
             mods_commands::mod_set_github,
             mods_commands::mod_install_dependency,
+            mods_commands::mod_save_usage,
             nexus_commands::nexus_search,
             nexus_commands::nexus_mod,
             nexus_commands::nexus_account,

@@ -565,6 +565,23 @@ async fn fetch_and_install(app: AppHandle, w: Wanted) -> AppResult<UpdateOutcome
     Ok(UpdateOutcome::Queued)
 }
 
+/// Lists the saves that still use package `id`: its items and data, or its locations.
+#[tauri::command]
+pub async fn mod_save_usage(
+    app: AppHandle,
+    id: String,
+) -> AppResult<Vec<crate::save_usage::SaveUsage>> {
+    let saves_dir = crate::commands::game_data_dir(&app)?.join("Saves");
+    blocking(app, move |s| {
+        let path = library::package_path(&s.store_root, &id)?;
+        let ids: Vec<String> = library::read_package(id.clone(), path.clone())
+            .map(|p| p.unique_ids().map(str::to_owned).collect())
+            .unwrap_or_default();
+        Ok(crate::save_usage::check(&path, &ids, &saves_dir))
+    })
+    .await
+}
+
 /// Finds mod `unique_id`, which another mod needs, and installs it like an update.
 #[tauri::command]
 pub async fn mod_install_dependency(app: AppHandle, unique_id: String) -> AppResult<UpdateOutcome> {

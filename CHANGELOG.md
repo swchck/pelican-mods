@@ -29,6 +29,7 @@
 
 ### Library and saves
 
+- Before a mod is removed, the app checks which saves still use it, by its items and data or by the locations it adds, warns what the game would drop, and backs those saves up first unless told not to.
 - Removing a mod also sends the copy in the game's Mods folder to the Trash, so it doesn't come back as importable or load when the game starts without the launcher.
 - Saves can be deleted from the Saves screen; the folder goes to the Trash.
 

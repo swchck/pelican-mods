@@ -165,6 +165,13 @@ export default {
     removeTitle: "Remove “{name}”?",
     removeText:
       "The mod folder and its settings are removed from the library in every profile. A copy in the game's Mods folder, if any, goes to the Trash.",
+    usageChecking: "Checking saves…",
+    usageTitle: "Saves use this mod",
+    usageLocations: "{n} of its locations ({list})",
+    usageRefs: "{n} mentions of it",
+    usageText:
+      "Without the mod the game drops its locations, with the villagers and things in them, on the next save, and its items turn into error items.",
+    usageBackup: "Back these saves up first",
     removeWarn: "Other enabled mods need this one: {list}.",
     brokenManifest: "manifest.json can't be read: {error}",
   },

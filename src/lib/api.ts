@@ -190,6 +190,7 @@ export const library = {
   rollback: (uniqueId: string) => invoke<LibraryView>("mod_rollback", { uniqueId }),
   setGithub: (uniqueId: string, repo: string | null) => invoke<LibraryView>("mod_set_github", { uniqueId, repo }),
   installDependency: (uniqueId: string) => invoke<UpdateOutcome>("mod_install_dependency", { uniqueId }),
+  saveUsage: (id: string) => invoke<SaveUsage[]>("mod_save_usage", { id }),
 };
 
 export type NexusSort = "endorsements" | "downloads" | "updated" | "created";
@@ -589,4 +590,16 @@ export interface ModProblems {
   errors: number;
   warnings: number;
   entries: { level: "error" | "warn"; text: string; count: number }[];
+}
+
+/** How one save depends on a mod. */
+export interface SaveUsage {
+  saveId: string;
+  farmer: string;
+  farmName: string;
+  /** Mentions of the mod's UniqueIDs: its items, buildings and data. */
+  references: number;
+  /** The first few of the mod's locations the save has. */
+  locations: string[];
+  locationCount: number;
 }

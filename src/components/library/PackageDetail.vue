@@ -25,7 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { library, type Issue, type PackageView } from "@/lib/api";
+import { library, saves, type Issue, type PackageView, type SaveUsage } from "@/lib/api";
 import DependencyList from "@/components/library/DependencyList.vue";
 import { splitLinks, type Segment } from "@/lib/md-links";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -124,8 +124,29 @@ async function openFolder() {
   }
 }
 
+// saves that still hold the mod's items or locations; checked when the dialog opens
+const usage = ref<SaveUsage[] | null>(null);
+const backupFirst = ref(true);
+watch(confirmRemove, async (open) => {
+  if (!open) return;
+  usage.value = null;
+  backupFirst.value = true;
+  const id = props.pkg.id;
+  const found = await library.saveUsage(id).catch(() => []);
+  if (confirmRemove.value && props.pkg.id === id) usage.value = found;
+});
+
 async function remove() {
   confirmRemove.value = false;
+  if (backupFirst.value && usage.value?.length) {
+    try {
+      for (const u of usage.value) await saves.backup(u.saveId);
+    } catch (e) {
+      // no backup, no removal: the save is what the warning was protecting
+      toast.error(errorText(e), { duration: 10000 });
+      return;
+    }
+  }
   await lib.remove(props.pkg.id);
 }
 </script>
@@ -294,6 +315,28 @@ async function remove() {
         <p v-if="requiredBy.length" class="text-destructive text-sm font-bold">
           {{ t("library.removeWarn", { list: requiredBy.join(", ") }) }}
         </p>
+        <p v-if="usage === null" class="text-muted-foreground flex items-center gap-2 text-sm font-semibold">
+          <Loader2Icon class="size-4 animate-spin" />{{ t("library.usageChecking") }}
+        </p>
+        <div
+          v-else-if="usage.length"
+          class="bg-warning-soft text-destructive flex flex-col gap-1.5 rounded-md border-2 border-[#d98b76] p-3 text-sm font-semibold"
+        >
+          <b>{{ t("library.usageTitle") }}</b>
+          <span v-for="u in usage" :key="u.saveId">
+            {{ u.farmer }} · {{ u.farmName }}:
+            <template v-if="u.locationCount">{{
+              t("library.usageLocations", { n: u.locationCount, list: u.locations.join(", ") })
+            }}</template>
+            <template v-if="u.locationCount && u.references">; </template>
+            <template v-if="u.references">{{ t("library.usageRefs", { n: u.references }) }}</template>
+          </span>
+          <span class="text-xs">{{ t("library.usageText") }}</span>
+          <label class="text-foreground mt-1 flex items-center gap-2">
+            <input v-model="backupFirst" type="checkbox" class="accent-[var(--success)]" />
+            {{ t("library.usageBackup") }}
+          </label>
+        </div>
         <DialogFooter>
           <DialogClose as-child>
             <Button variant="outline">{{ t("common.cancel") }}</Button>
