@@ -1,6 +1,6 @@
 [package]
 name = "pelican-mods"
-version = "0.2.0"
+version = "0.3.0"
 description = "Stardew Valley launcher and mod manager for macOS"
 authors = ["swchck"]
 edition = "2024"
