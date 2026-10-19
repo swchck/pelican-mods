@@ -62,6 +62,7 @@ const status = computed(() => {
 
 <template>
   <div
+    data-test="play-card"
     class="bg-card border-wood-dark flex flex-col gap-2.5 rounded-lg border-[3px] p-3 shadow-[inset_0_0_0_2px_#e8c48a]"
   >
     <div class="text-muted-foreground flex justify-between text-xs font-bold">

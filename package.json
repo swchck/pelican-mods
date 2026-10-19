@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "app:dev": "tauri dev",
+    "test:ui": "playwright test",
     "app:build": "scripts/build-app.sh --bundles app",
     "test": "vitest run",
     "typecheck": "vue-tsc --noEmit",
@@ -44,6 +45,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.63.0",
     "@tauri-apps/cli": "^2.12.3",
     "@types/node": "^26.6.5",
     "@vitejs/plugin-vue": "^6.0.7",

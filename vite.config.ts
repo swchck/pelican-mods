@@ -19,7 +19,8 @@ export default defineConfig(() => ({
     hmr: host ? { protocol: "ws", host, port: 1421 } : undefined,
     watch: { ignored: ["**/src-tauri/**"] },
   },
-  test: { environment: "node" },
+  // e2e/ holds the Playwright screen tests, run with npm run test:ui
+  test: { environment: "node", include: ["src/**/*.test.ts"] },
   // shipped inside the app and read from disk, so one big chunk costs nothing at runtime
   build: { chunkSizeWarningLimit: 2500 },
 }));

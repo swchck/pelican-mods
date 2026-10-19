@@ -26,3 +26,7 @@ dist-ssr
 # companion build output
 companion/**/bin
 companion/**/obj
+
+# playwright
+test-results
+playwright-report

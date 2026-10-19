@@ -161,7 +161,12 @@ mockIPC(
       case "plugin:app|version":
         return "0.1.0";
       case "settings_get":
-        return { gamePath: "/Applications/Stardew Valley.app/Contents/MacOS", locale: null, companionDisabled: false };
+        return {
+          gamePath: "/Applications/Stardew Valley.app/Contents/MacOS",
+          // the WebKit screen tests pick the language here
+          locale: localStorage.getItem("mockLocale"),
+          companionDisabled: false,
+        };
       case "settings_set_companion":
         return {
           gamePath: "/Applications/Stardew Valley.app/Contents/MacOS",
