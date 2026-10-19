@@ -10,6 +10,7 @@ mod launcher;
 mod library;
 mod manifest;
 mod mod_config;
+mod moddrop;
 mod mods_commands;
 mod nexus;
 mod nexus_commands;

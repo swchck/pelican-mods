@@ -12,11 +12,13 @@ use tauri_plugin_opener::OpenerExt;
 use crate::backups;
 use crate::commands::AppState;
 use crate::deps::{self, Issue};
+use crate::downloads;
 use crate::error::{AppError, AppResult};
 use crate::game;
 use crate::library::{self, BrokenMod, Package};
 use crate::manifest::{self, Manifest};
 use crate::mod_config;
+use crate::moddrop;
 use crate::nexus;
 use crate::nexus_commands;
 use crate::profiles::{self, Profiles};
@@ -377,8 +379,8 @@ pub enum UpdateOutcome {
     OpenPage { url: String },
 }
 
-/// Updates package `id` to the version smapi.io suggested: GitHub releases install
-/// right away, Nexus files go through the download queue for Premium accounts.
+/// Updates package `id` to the version smapi.io suggested: GitHub and ModDrop files
+/// install right away, Nexus files go through the download queue for Premium accounts.
 #[tauri::command]
 pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> {
     let state = app.state::<AppState>();
@@ -397,9 +399,22 @@ pub async fn mod_update(app: AppHandle, id: String) -> AppResult<UpdateOutcome> 
         })
     };
     let (name, version, url, nexus_id) = found.ok_or_else(|| AppError::NoDownload(id.clone()))?;
-    if let Some(repo) = updates::github_repo(&url) {
-        let dir = state.work_dir.with_file_name("downloads");
-        let file = updates::download_github(&state.http, &repo, &name, &version, &dir).await?;
+    let dir = state.work_dir.with_file_name("downloads");
+    let file = if let Some(repo) = updates::github_repo(&url) {
+        Some(updates::download_github(&state.http, &repo, &name, &version, &dir).await?)
+    } else if let Some(mod_id) = moddrop::mod_page_id(&url) {
+        let files = moddrop::files(&state.http, mod_id).await?;
+        match moddrop::pick(&files, &version) {
+            Some(f) => {
+                let link = moddrop::download_url(&state.http, f.id).await?;
+                Some(downloads::fetch(&state.http, &link, &dir, |_, _| {}).await?)
+            }
+            None => None,
+        }
+    } else {
+        None
+    };
+    if let Some(file) = file {
         let view = blocking(app, move |s| {
             let _guard = s.library_lock.lock().unwrap();
             let installed = library::install_archive(&s.store_root, &s.backup_root, &file);

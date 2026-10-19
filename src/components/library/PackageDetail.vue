@@ -56,7 +56,10 @@ const update = computed(() => packageUpdate(props.pkg, lib.report));
 const compat = computed(() => packageCompat(props.pkg, lib.report));
 const premium = computed(() => nx.account?.isPremium ?? false);
 // without Premium a Nexus update still lands in the app, via the site's "Mod Manager Download"
-const inApp = computed(() => update.value?.via === "github" || (update.value?.via === "nexus" && premium.value));
+const inApp = computed(() => {
+  const via = update.value?.via;
+  return via === "github" || via === "moddrop" || (via === "nexus" && premium.value);
+});
 const updateHint = computed(() => {
   if (!update.value || inApp.value) return "";
   return update.value.via === "nexus" ? t("updates.nexusManual") : t("updates.manual");

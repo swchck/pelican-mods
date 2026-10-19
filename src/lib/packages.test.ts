@@ -87,7 +87,8 @@ describe("packages", () => {
       via: "nexus",
     });
     expect(packageUpdate(p, info("https://github.com/a/b/releases"))?.via).toBe("github");
-    expect(packageUpdate(p, info("https://www.moddrop.com/stardew-valley/mod/1"))?.via).toBe("page");
+    expect(packageUpdate(p, info("https://www.moddrop.com/stardew-valley/mods/1-x"))?.via).toBe("moddrop");
+    expect(packageUpdate(p, info("https://www.curseforge.com/stardewvalley/mods/x"))?.via).toBe("page");
     expect(packageStatus(p, nexus)).toBe("update");
     expect(packageStatus(p, null)).toBe("off");
     expect(packageCompat(p, nexus)).toBeNull();

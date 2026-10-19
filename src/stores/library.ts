@@ -37,12 +37,12 @@ export const useLibrary = defineStore("library", () => {
   }
 
   const updatable = computed(() => packages.value.filter((p) => packageUpdate(p, report.value)));
-  // what "Update all" can do without a browser: GitHub always, Nexus only with Premium
+  // what "Update all" can do without a browser: GitHub and ModDrop always, Nexus only with Premium
   const directUpdates = computed(() => {
     const premium = useNexus().account?.isPremium ?? false;
     return updatable.value.filter((p) => {
       const via = packageUpdate(p, report.value)?.via;
-      return via === "github" || (via === "nexus" && premium);
+      return via === "github" || via === "moddrop" || (via === "nexus" && premium);
     });
   });
 

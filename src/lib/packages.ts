@@ -1,7 +1,7 @@
 import type { Issue, PackageView, UpdateReport } from "./api";
 import { compareVersions } from "./version";
 
-export type UpdateSource = "github" | "nexus" | "page";
+export type UpdateSource = "github" | "moddrop" | "nexus" | "page";
 
 export type PackageStatus = "ok" | "off" | "issue" | "broken" | "update";
 
@@ -9,7 +9,7 @@ export interface PackageUpdate {
   version: string;
   url: string;
   /**
-   * Where the file comes from: GitHub releases install in place, Nexus files download
+   * Where the file comes from: GitHub and ModDrop files install in place, Nexus files download
    * through the queue (or the site's button without Premium), anything else opens the page.
    */
   via: UpdateSource;
@@ -55,6 +55,7 @@ export function packageUpdate(p: PackageView, report: UpdateReport | null): Pack
 
 function updateSource(url: string): UpdateSource {
   if (url.startsWith("https://github.com/")) return "github";
+  if (/^https:\/\/(www\.)?moddrop\.com\/stardew-valley\/mods?\/\d+/i.test(url)) return "moddrop";
   if (/^https:\/\/(www\.)?nexusmods\.com\/stardewvalley\/mods\/\d+/i.test(url)) return "nexus";
   return "page";
 }
