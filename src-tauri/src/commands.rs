@@ -173,6 +173,22 @@ pub fn wiki_titles(ids: Vec<String>) -> std::collections::HashMap<String, String
         .collect()
 }
 
+/// The game's lists for calendars and fish: the companion's from the last game, or the
+/// built-in ones in the game's language before it has sent any with these lists.
+#[tauri::command]
+pub fn game_catalog(app: AppHandle, state: State<AppState>) -> crate::perfection::Catalog {
+    match state.companion.catalog() {
+        Some(c) if !c.fish_info.is_empty() => c,
+        _ => {
+            let language = game_data_dir(&app)
+                .ok()
+                .and_then(|d| crate::perfection::game_language(&d))
+                .unwrap_or_else(|| "en".to_owned());
+            crate::perfection::Catalog::builtin(&language).clone()
+        }
+    }
+}
+
 /// What SMAPI's log from the last session says went wrong.
 #[tauri::command]
 pub fn smapi_log_report(app: AppHandle) -> AppResult<crate::smapi_log::LogReport> {

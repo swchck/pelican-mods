@@ -2,10 +2,12 @@
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { toast } from "vue-sonner";
-import { CloudSunIcon, GemIcon, Loader2Icon, RefreshCwIcon, StoreIcon } from "@lucide/vue";
+import { CalendarDaysIcon, CloudSunIcon, FishIcon, GemIcon, Loader2Icon, RefreshCwIcon, StoreIcon } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TreasureTable from "@/components/helpers/TreasureTable.vue";
+import CalendarTab from "@/components/helpers/CalendarTab.vue";
+import FishTab from "@/components/helpers/FishTab.vue";
 import WikiName from "@/components/WikiName.vue";
 import { api as appApi, companion as api, isAppError, type Forecast } from "@/lib/api";
 import { bestGrange, grangeScore, itemPoints, place, SLOTS, type GrangeItem } from "@/lib/grange";
@@ -16,7 +18,9 @@ import { useShortcut } from "@/stores/shortcuts";
 const { t, n, te } = useI18n();
 const companion = useCompanion();
 
-const tab = ref<"forecast" | "fair">("forecast");
+const tab = ref<"forecast" | "fair" | "calendar" | "fish">("forecast");
+/** Forecast and fair come from the running game; calendar and fish work from the lists. */
+const needsGame = computed(() => tab.value === "forecast" || tab.value === "fair");
 const forecast = ref<Forecast | null>(null);
 /** English wiki titles of the forecast's base game items, by item id. */
 const titles = ref<Record<string, string>>({});
@@ -29,7 +33,7 @@ const noWorld = ref(false);
 const ready = computed(() => companion.connected && companion.status.state !== null);
 
 async function load() {
-  if (!ready.value) return;
+  if (!ready.value || !needsGame.value) return;
   loading.value = true;
   noWorld.value = false;
   try {
@@ -106,28 +110,33 @@ watch([tab, ready], load, { immediate: true });
   <div class="flex h-full flex-col gap-4">
     <header class="flex items-center gap-3">
       <h1 class="font-pixel text-wood-dark flex-1 text-3xl font-bold">{{ t("helpers.title") }}</h1>
-      <Button variant="outline" :disabled="loading || !ready" @click="load">
+      <Button v-if="needsGame" variant="outline" :disabled="loading || !ready" @click="load">
         <Loader2Icon v-if="loading" class="animate-spin" /><RefreshCwIcon v-else />{{ t("helpers.refresh") }}
       </Button>
     </header>
 
-    <div v-if="!ready || noWorld" class="wood-panel grid flex-1 place-items-center p-8 text-center">
-      <div class="flex max-w-md flex-col items-center gap-3">
-        <GemIcon class="text-wood size-9" />
-        <p class="font-pixel text-wood-dark text-xl font-bold">{{ t("helpers.needGame") }}</p>
-        <p class="text-sm leading-relaxed">
-          {{ companion.connected ? t("helpers.needFarm") : t("helpers.needGameHint") }}
-        </p>
-      </div>
-    </div>
-
-    <Tabs v-else v-model="tab" class="flex min-h-0 flex-1 flex-col">
+    <Tabs v-model="tab" class="flex min-h-0 flex-1 flex-col">
       <TabsList>
         <TabsTrigger value="forecast"><CloudSunIcon />{{ t("helpers.tabs.forecast") }}</TabsTrigger>
         <TabsTrigger value="fair"><StoreIcon />{{ t("helpers.tabs.fair") }}</TabsTrigger>
+        <TabsTrigger value="calendar"><CalendarDaysIcon />{{ t("helpers.tabs.calendar") }}</TabsTrigger>
+        <TabsTrigger value="fish"><FishIcon />{{ t("helpers.tabs.fish") }}</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="forecast" class="min-h-0 flex-1 overflow-auto">
+      <div
+        v-if="needsGame && (!ready || noWorld)"
+        class="wood-panel mt-2 grid flex-1 place-items-center p-8 text-center"
+      >
+        <div class="flex max-w-md flex-col items-center gap-3">
+          <GemIcon class="text-wood size-9" />
+          <p class="font-pixel text-wood-dark text-xl font-bold">{{ t("helpers.needGame") }}</p>
+          <p class="text-sm leading-relaxed">
+            {{ companion.connected ? t("helpers.needFarm") : t("helpers.needGameHint") }}
+          </p>
+        </div>
+      </div>
+
+      <TabsContent v-if="ready && !noWorld" value="forecast" class="min-h-0 flex-1 overflow-auto">
         <div v-if="forecast" class="flex flex-col gap-3">
           <div class="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
             <section class="wood-panel flex flex-col gap-1 p-4">
@@ -197,7 +206,7 @@ watch([tab, ready], load, { immediate: true });
         </div>
       </TabsContent>
 
-      <TabsContent value="fair" class="min-h-0 flex-1 overflow-auto">
+      <TabsContent v-if="ready && !noWorld" value="fair" class="min-h-0 flex-1 overflow-auto">
         <div v-if="items" class="flex flex-col gap-3">
           <section class="wood-panel flex flex-wrap items-center gap-4 p-4">
             <div class="flex flex-col">
@@ -266,6 +275,8 @@ watch([tab, ready], load, { immediate: true });
           </section>
         </div>
       </TabsContent>
+      <TabsContent value="calendar" class="min-h-0 flex-1 overflow-auto"><CalendarTab /></TabsContent>
+      <TabsContent value="fish" class="min-h-0 flex-1 overflow-auto"><FishTab /></TabsContent>
     </Tabs>
   </div>
 </template>

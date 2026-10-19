@@ -6,7 +6,7 @@
 //! from the game through the companion's [`Catalog`]; fixed texts (milestones, rooms,
 //! island upgrades) are labels the UI translates.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use serde::Serialize;
 
@@ -59,6 +59,9 @@ pub struct Item {
     pub note: Option<&'static str>,
     /// English page title on the Stardew wikis, for base game things.
     pub wiki: Option<String>,
+    /// Gifts a villager loves, for birthdays; empty otherwise.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub loves: Vec<String>,
 }
 
 impl Item {
@@ -72,6 +75,7 @@ impl Item {
             done,
             note: None,
             wiki: None,
+            loves: Vec::new(),
         }
     }
 
@@ -85,6 +89,7 @@ impl Item {
             done,
             note: None,
             wiki: None,
+            loves: Vec::new(),
         }
     }
 
@@ -137,7 +142,8 @@ fn section(id: &'static str, groups: Vec<Group>) -> Section {
 }
 
 /// Builds the report for `facts`, with names and totals from `catalog`.
-pub fn build(facts: &Facts, catalog: Option<&Catalog>) -> Checkup {
+/// `season` ("spring"…) is the save's, for the season plan; without it there is none.
+pub fn build(facts: &Facts, catalog: Option<&Catalog>, season: Option<&str>) -> Checkup {
     let empty = Catalog::default();
     let c = catalog.unwrap_or(&empty);
     let names: HashMap<&str, &str> = c
@@ -145,23 +151,161 @@ pub fn build(facts: &Facts, catalog: Option<&Catalog>) -> Checkup {
         .iter()
         .map(|i| (i.id.as_str(), i.name.as_str()))
         .collect();
+    let mut sections = Vec::new();
+    if let Some(season) = season {
+        sections.push(plan(facts, c, &names, season));
+    }
+    sections.extend([
+        achievements(facts, c),
+        skills(facts),
+        community_center(facts, &names),
+        museum(facts, c),
+        friends(facts, c),
+        collections(facts, c),
+        quests(facts, c),
+        monsters(facts, c),
+        island(facts),
+        secrets(facts, &names),
+        grandpa(facts),
+        money(facts),
+    ]);
     Checkup {
-        sections: vec![
-            achievements(facts, c),
-            skills(facts),
-            community_center(facts, &names),
-            museum(facts, c),
-            friends(facts, c),
-            collections(facts, c),
-            quests(facts, c),
-            monsters(facts, c),
-            island(facts),
-            secrets(facts, &names),
-            grandpa(facts),
-            money(facts),
-        ],
+        sections,
         catalog: catalog.map(Catalog::info),
     }
+}
+
+/// What this season still offers toward the goals: crops to ship, bundle items that
+/// grow or bite now, fish to catch, birthdays to gift.
+fn plan(f: &Facts, c: &Catalog, names: &HashMap<&str, &str>, season: &str) -> Section {
+    // a catalog cached by a game before these lists existed has none; the built-in ones
+    // in its language stand in until the game sends a fresh one
+    let c = if c.fish_info.is_empty() {
+        Catalog::builtin(&c.language)
+    } else {
+        c
+    };
+    let name_of = |id: &str| names.get(id).copied().unwrap_or(id).to_owned();
+    let in_season = |seasons: &[String]| seasons.iter().any(|s| s == season);
+
+    let crops: Vec<Item> = c
+        .crops
+        .iter()
+        .filter(|cr| cr.polyculture && in_season(&cr.seasons))
+        .map(|cr| {
+            let have = f.shipped_counts.get(&cr.id).copied().unwrap_or(0) as u64;
+            Item::named(format!("crop-{}", cr.id), name_of(&cr.id), have >= 15)
+                .counted(have, 15)
+                .wiki(wiki_title(&cr.id))
+        })
+        .collect();
+
+    // what's seasonal: a crop of this season, or a fish that bites in it (crab pots always)
+    let crop_ids: HashSet<&str> = c
+        .crops
+        .iter()
+        .filter(|cr| in_season(&cr.seasons))
+        .map(|cr| cr.id.as_str())
+        .collect();
+    let fish_ids: HashSet<&str> = c
+        .fish_info
+        .iter()
+        .filter(|fi| fi.trap || in_season(&fi.seasons))
+        .filter_map(|fi| fi.id.strip_prefix("(O)"))
+        .collect();
+    let mut bundle_items = Vec::new();
+    for (room, cc_flag, joja_flag) in ROOMS {
+        if f.mail.contains(cc_flag) || f.mail.contains(joja_flag) {
+            continue;
+        }
+        for (key, def) in &f.bundle_data {
+            let Some((r, id)) = key.split_once('/') else {
+                continue;
+            };
+            let Ok(id) = id.parse::<u32>() else {
+                continue;
+            };
+            if r != room {
+                continue;
+            }
+            let fields: Vec<&str> = def.split('/').collect();
+            let bundle_name = fields
+                .get(6)
+                .filter(|s| !s.is_empty())
+                .or(fields.first())
+                .copied()
+                .unwrap_or("");
+            let triples: Vec<&str> = fields
+                .get(2)
+                .map(|s| s.split_whitespace().collect())
+                .unwrap_or_default();
+            let state = f.bundles.get(&id);
+            for (i, t) in triples.chunks(3).enumerate() {
+                let item = t[0];
+                let done = state.and_then(|s| s.get(i)).copied().unwrap_or(false);
+                if done || !(crop_ids.contains(item) || fish_ids.contains(item)) {
+                    continue;
+                }
+                bundle_items.push(
+                    Item::named(
+                        format!("bundle-{id}-{i}"),
+                        format!("{} · {bundle_name}", name_of(item)),
+                        false,
+                    )
+                    .wiki(wiki_title(item)),
+                );
+            }
+        }
+    }
+
+    let fish: Vec<Item> = c
+        .fish_info
+        .iter()
+        .filter(|fi| !fi.trap && in_season(&fi.seasons))
+        .map(|fi| {
+            let mut item = Item::named(fi.id.clone(), fi.name.clone(), f.fish.contains(&fi.id))
+                .wiki(wiki_title(&fi.id));
+            item.note = match fi.weather.as_str() {
+                "rainy" => Some("rainOnly"),
+                "sunny" => Some("sunOnly"),
+                _ => None,
+            };
+            item
+        })
+        .collect();
+
+    let mut birthdays: Vec<&crate::perfection::CatalogVillager> = c
+        .villagers
+        .iter()
+        .filter(|v| v.birth_season.as_deref() == Some(season) && v.birth_day > 0)
+        .collect();
+    birthdays.sort_by_key(|v| v.birth_day);
+    let birthdays = birthdays
+        .into_iter()
+        .map(|v| {
+            let max = if v.romance { 8 } else { 10 };
+            let hearts = (f.friends.get(&v.key).copied().unwrap_or(0).max(0) / 250) as u64;
+            let mut item = Item::named(
+                format!("birthday-{}", v.key),
+                format!("{} · {}", v.name, v.birth_day),
+                hearts >= max,
+            )
+            .counted(hearts, max)
+            .wiki(wiki_title(&v.key));
+            item.loves = v.loves.iter().map(|id| name_of(id)).collect();
+            item
+        })
+        .collect();
+
+    section(
+        "plan",
+        vec![
+            group("planCrops", crops),
+            group("planBundles", bundle_items),
+            group("planFish", fish),
+            group("planBirthdays", birthdays),
+        ],
+    )
 }
 
 fn money(f: &Facts) -> Section {
@@ -632,6 +776,7 @@ fn island(f: &Facts) -> Section {
             done: f.mail.contains(*flag),
             note: None,
             wiki: Some("Ginger Island".to_owned()),
+            loves: Vec::new(),
         })
         .collect();
     // journal scraps are secret notes 1001–1011
@@ -924,7 +1069,7 @@ mod tests {
             }],
             ..Catalog::default()
         };
-        let c = build(&f, Some(&catalog));
+        let c = build(&f, Some(&catalog), None);
         let get = |id: &str| c.sections.iter().find(|s| s.id == id).unwrap();
 
         let money = get("money");
@@ -969,7 +1114,7 @@ mod tests {
             .ok()
             .map(|p| serde_json::from_slice(&std::fs::read(p).unwrap()).unwrap());
         let facts = crate::perfection::facts(&dir).unwrap();
-        let c = build(&facts, catalog.as_ref());
+        let c = build(&facts, catalog.as_ref(), Some("summer"));
         if let Ok(out) = std::env::var("PELICAN_TEST_JSON_OUT") {
             std::fs::write(out, serde_json::to_vec_pretty(&c).unwrap()).unwrap();
         }

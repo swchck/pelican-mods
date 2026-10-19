@@ -63,6 +63,7 @@ export const api = {
   setLocale: (locale: string | null) => invoke<Settings>("settings_set_locale", { locale }),
   gameLanguage: () => invoke<string | null>("game_language"),
   logReport: () => invoke<LogReport>("smapi_log_report"),
+  gameCatalog: () => invoke<GameCatalog>("game_catalog"),
   setWiki: (wiki: string) => invoke<Settings>("settings_set_wiki", { wiki }),
   setBackupFolder: (folder: string | null) => invoke<Settings>("settings_set_backup_folder", { folder }),
   wikiTitles: (ids: string[]) => invoke<Record<string, string>>("wiki_titles", { ids }),
@@ -405,6 +406,8 @@ export interface CheckupItem {
   note: string | null;
   /** English page title on the Stardew wikis, for base game things. */
   wiki: string | null;
+  /** Gifts a villager loves, for birthdays. */
+  loves?: string[];
 }
 
 export interface CheckupGroup {
@@ -505,6 +508,8 @@ export interface GameSnapshot {
   time: number;
   money: number;
   location: string | null;
+  /** "sun", "rain", "storm" or "snow"; empty from an older companion. */
+  weather: string;
 }
 
 export interface CompanionStatus {
@@ -633,4 +638,29 @@ export interface ListedMod {
   github: string | null;
   /** The installed version, if any. */
   installed: string | null;
+}
+
+/** The parts of the game's lists the calendar and fish helpers use. */
+export interface GameCatalog {
+  language: string;
+  items: { id: string; name: string }[];
+  villagers: {
+    key: string;
+    name: string;
+    romance: boolean;
+    birthSeason: string | null;
+    birthDay: number;
+    /** Unqualified item ids. */
+    loves: string[];
+  }[];
+  festivals: { season: string; day: number; endDay: number; name: string }[];
+  fishInfo: {
+    id: string;
+    name: string;
+    seasons: string[];
+    weather: "sunny" | "rainy" | "both" | "any";
+    times: [number, number][];
+    locations: string[];
+    trap: boolean;
+  }[];
 }

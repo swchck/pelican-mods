@@ -79,6 +79,9 @@ pub async fn saves_checkup(app: AppHandle, id: String) -> AppResult<crate::check
     blocking(app, move |s| {
         let facts = cached_facts(s, &id, &path)?;
         let catalog = s.companion.catalog();
+        let season = ["spring", "summer", "fall", "winter"]
+            .get(saves::summary(&path)?.season as usize)
+            .copied();
         Ok(crate::checkup::build(
             &facts,
             Some(
@@ -86,6 +89,7 @@ pub async fn saves_checkup(app: AppHandle, id: String) -> AppResult<crate::check
                     .as_ref()
                     .unwrap_or(perfection::Catalog::builtin(&language)),
             ),
+            season,
         ))
     })
     .await

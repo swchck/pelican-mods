@@ -100,7 +100,7 @@ const categoryOf = (g: CheckupGroup, i: number) =>
           <li
             v-for="item in entry.items"
             :key="item.id"
-            class="flex items-center gap-2 text-sm"
+            class="flex flex-wrap items-center gap-x-2 text-sm"
             :class="{ 'text-muted-foreground': item.done }"
           >
             <CheckIcon v-if="item.done" class="text-success size-4 shrink-0" />
@@ -122,6 +122,12 @@ const categoryOf = (g: CheckupGroup, i: number) =>
             >
               <HeartIcon v-if="entry.group.id === 'villagers'" class="size-3 fill-current text-[#d9534f]" />
               {{ progress(item) }}
+            </span>
+            <span
+              v-if="item.loves?.length"
+              class="text-muted-foreground basis-full pl-6 text-[11px] leading-tight font-semibold"
+            >
+              {{ t("checkup.loves", { list: item.loves.join(", ") }) }}
             </span>
           </li>
         </ul>

@@ -73,6 +73,7 @@ pub fn run() {
             commands::settings_set_wiki,
             commands::wiki_titles,
             commands::smapi_log_report,
+            commands::game_catalog,
             companion_commands::settings_set_companion,
             companion_commands::companion_status,
             companion_commands::companion_available,
