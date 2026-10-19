@@ -494,6 +494,41 @@ mod tests {
     use super::*;
     use tokio_tungstenite::connect_async;
 
+    /// Puts the player's files back when a test that starts the real game ends, failed
+    /// or not: SMAPI rewrites its log, and the game its startup preferences, every run.
+    struct PlayerFiles(Vec<(PathBuf, Option<Vec<u8>>)>);
+
+    impl PlayerFiles {
+        fn keep(home: &std::path::Path) -> Self {
+            let data = home.join(".config/StardewValley");
+            Self(
+                [
+                    "startup_preferences",
+                    "ErrorLogs/SMAPI-latest.txt",
+                    "ErrorLogs/SMAPI-crash.txt",
+                ]
+                .iter()
+                .map(|f| {
+                    let path = data.join(f);
+                    let bytes = std::fs::read(&path).ok();
+                    (path, bytes)
+                })
+                .collect(),
+            )
+        }
+    }
+
+    impl Drop for PlayerFiles {
+        fn drop(&mut self) {
+            for (path, bytes) in &self.0 {
+                let _ = match bytes {
+                    Some(b) => std::fs::write(path, b),
+                    None => std::fs::remove_file(path),
+                };
+            }
+        }
+    }
+
     #[derive(Default)]
     struct Recorder {
         statuses: Mutex<Vec<Status>>,
@@ -634,6 +669,7 @@ mod tests {
         let companion = Arc::new(Companion::new(dir.path()));
         let recorder = Arc::new(Recorder::default());
         let home = PathBuf::from(std::env::var("HOME").unwrap());
+        let _player_files = PlayerFiles::keep(&home);
         tauri::async_runtime::block_on(async {
             tauri::async_runtime::spawn(companion.clone().serve(recorder.clone()));
             while companion.url().is_none() {
@@ -783,9 +819,7 @@ mod tests {
         std::fs::create_dir_all(&mods).unwrap();
         std::os::unix::fs::symlink(built, mods.join("PelicanCompanion")).unwrap();
         let home = PathBuf::from(std::env::var("HOME").unwrap());
-        // switching languages makes the game save the last one as the player's own
-        let prefs_file = home.join(".config/StardewValley/startup_preferences");
-        let prefs = std::fs::read(&prefs_file).unwrap();
+        let _player_files = PlayerFiles::keep(&home);
         let own = crate::perfection::game_language(&home.join(".config/StardewValley"))
             .unwrap_or_else(|| "en".to_owned());
         let companion = Arc::new(Companion::new(dir.path()));
@@ -873,7 +907,6 @@ mod tests {
                 }
                 tokio::time::sleep(Duration::from_millis(100)).await;
             }
-            std::fs::write(&prefs_file, &prefs).unwrap();
             if let Err(panic) = result {
                 std::panic::resume_unwind(panic);
             }
@@ -902,6 +935,7 @@ mod tests {
         std::fs::create_dir_all(&mods).unwrap();
         std::os::unix::fs::symlink(built, mods.join("PelicanCompanion")).unwrap();
         let home = PathBuf::from(std::env::var("HOME").unwrap());
+        let _player_files = PlayerFiles::keep(&home);
         let companion = Arc::new(Companion::new(dir.path()));
         tauri::async_runtime::block_on(async {
             tauri::async_runtime::spawn(companion.clone().serve(Arc::new(Recorder::default())));
