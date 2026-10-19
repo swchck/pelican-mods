@@ -15,6 +15,7 @@
 
 - A calendar of birthdays and festivals for each season, today marked from the running game or the last save, with each villager's loved gifts.
 - The calendar lists the week's birthdays and, with the farm loaded in the game, which of each villager's loved gifts you already have and in which chest.
+- A museum helper lists the pieces the save hasn't donated and, with the farm loaded in the game, the chest each found one sits in, ready-to-carry ones first.
 - A fish guide: what bites now by season, weather and time while the game runs, or across the season or year, where, and which fish the save hasn't caught.
 
 - Forecasts in the spirit of Stardew Predictor: night events for the next four weeks (meteorite, fairy, witch, owl, capsule, earthquake and more), the bookseller's days this season, the traveling cart's stock on cart days, and the next mystery boxes alongside the geodes. All of it comes from the game's own code with your mods loaded.

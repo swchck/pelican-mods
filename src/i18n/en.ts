@@ -113,6 +113,13 @@ export default {
     sunny: "Sunny weather only",
     rainy: "Rain only",
   },
+  museumTab: {
+    noSave: "No saves yet.",
+    summary: "{missing} pieces missing; {ready} of them can go to Gunther right now.",
+    needGame: "Load your farm in the game to see which chest each found piece is in.",
+    foundElsewhere: "found, but not in a chest or your backpack now",
+    notFound: "not found yet",
+  },
   fishPlaces: {
     IslandSouth: "Ginger Island south",
     IslandSouthEast: "Ginger Island southeast",
@@ -488,7 +495,7 @@ export default {
     needGameHint:
       "The forecast and the fair picks come from the game itself. Launch it through the launcher and load a farm.",
     needFarm: "The game is connected, but no farm is loaded. Load a save.",
-    tabs: { forecast: "Forecast", fair: "Fair", calendar: "Calendar", fish: "Fish" },
+    tabs: { forecast: "Forecast", fair: "Fair", calendar: "Calendar", fish: "Fish", museum: "Museum" },
     luck: "Luck today",
     luckLevels: {
       great: "The spirits are very happy",
