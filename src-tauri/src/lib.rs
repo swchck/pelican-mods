@@ -10,6 +10,7 @@ mod deps;
 mod downloads;
 mod error;
 mod game;
+mod history;
 mod launcher;
 mod library;
 mod manifest;
@@ -113,6 +114,8 @@ pub fn run() {
             mods_commands::game_preflight,
             mods_commands::game_crash,
             mods_commands::saves_remember_profile,
+            mods_commands::history_list,
+            mods_commands::history_undo,
             mods_commands::library_conflicts,
             mods_commands::mod_changelog,
             mods_commands::modlist_export,

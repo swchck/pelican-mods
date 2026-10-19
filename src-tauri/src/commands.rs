@@ -46,6 +46,10 @@ pub struct AppState {
     /// Nexus files the app sent the user to fetch, with when; their nxm links install
     /// without a second question.
     pub(crate) nxm_expected: Mutex<std::collections::HashMap<(u64, u64), std::time::Instant>>,
+    /// Installs, updates and removals, for the library's history and undo.
+    pub(crate) history: crate::history::History,
+    /// Removed packages, kept so a removal can be undone.
+    pub(crate) removed_root: PathBuf,
     /// Unconfirmed nxm links the UI hasn't collected yet.
     pub(crate) nxm_pending: Mutex<Vec<serde_json::Value>>,
     /// The built companion mod, linked into every profile; `None` when this build lacks it.
@@ -84,6 +88,8 @@ impl AppState {
             companion: std::sync::Arc::new(crate::companion::Companion::new(&cache_dir)),
             companion_dir: std::sync::OnceLock::new(),
             nxm_expected: Mutex::new(Default::default()),
+            history: crate::history::History::load(data_dir.join("history.json")),
+            removed_root: data_dir.join("removed"),
             nxm_pending: Mutex::new(Vec::new()),
         }
     }

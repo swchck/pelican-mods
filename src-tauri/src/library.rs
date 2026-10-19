@@ -141,13 +141,6 @@ pub fn install_dir_into(
     install_staged(root, backups, &staging.path, &name, done)
 }
 
-/// Deletes the package `id` from `root`.
-pub fn remove(root: &Path, id: &str) -> AppResult<()> {
-    let path = package_path(root, id)?;
-    std::fs::remove_dir_all(path)?;
-    Ok(())
-}
-
 /// Resolves a package id to its folder, refusing ids that are not plain folder names.
 pub fn package_path(root: &Path, id: &str) -> AppResult<PathBuf> {
     let plain = !id.is_empty() && !id.starts_with('.') && !id.contains(['/', '\\', ':']);
@@ -521,7 +514,7 @@ mod tests {
         assert_eq!(ids, ["Mod", "Mod (2)"]);
         assert!(package_path(&root, "../etc").is_err());
         assert!(package_path(&root, ".staging-1").is_err());
-        remove(&root, "Mod (2)").unwrap();
+        std::fs::remove_dir_all(package_path(&root, "Mod (2)").unwrap()).unwrap();
         assert_eq!(scan(&root).len(), 1);
     }
 

@@ -200,6 +200,8 @@ export const library = {
   rollback: (uniqueId: string) => invoke<LibraryView>("mod_rollback", { uniqueId }),
   setGithub: (uniqueId: string, repo: string | null) => invoke<LibraryView>("mod_set_github", { uniqueId, repo }),
   rememberProfile: (since: number) => invoke<LibraryView>("saves_remember_profile", { since }),
+  history: () => invoke<HistoryEntry[]>("history_list"),
+  undo: (at: number) => invoke<LibraryView>("history_undo", { at }),
   installDependency: (uniqueId: string, updateKeys?: string[], github?: string | null) =>
     invoke<UpdateOutcome>("mod_install_dependency", { uniqueId, updateKeys, github }),
   exportList: (dest: string) => invoke<void>("modlist_export", { dest }),
@@ -717,4 +719,17 @@ export interface Crash {
   message: string;
   details: string[];
   suspect: string | null;
+}
+
+/** One install, update or removal in the library's history. */
+export interface HistoryEntry {
+  /** Unix milliseconds; also the entry's id. */
+  at: number;
+  kind: "installed" | "updated" | "removed";
+  package: string;
+  name: string;
+  uniqueId: string;
+  version: string;
+  previous: string | null;
+  undone: boolean;
 }

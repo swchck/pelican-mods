@@ -67,6 +67,19 @@ export default {
     tabLog: "Лог",
     tabReport: "Отчёт",
   },
+  history: {
+    title: "История библиотеки",
+    hint: "Установки, обновления и удаления модов. Любое можно отменить: удалённый мод вернётся, обновление откатится.",
+    empty: "Пока ничего не происходило.",
+    kind: {
+      installed: "установлен {version}",
+      updated: "обновлён {previous} → {version}",
+      removed: "удалён ({version})",
+    },
+    undo: "Отменить",
+    wasUndone: "отменено",
+    undone: "«{name}»: отменено",
+  },
   crash: {
     toast: "Игра упала с ошибкой ({source})",
     toastMod: "Игра упала — похоже, из-за мода «{mod}»",

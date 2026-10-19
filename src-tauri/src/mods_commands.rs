@@ -213,7 +213,43 @@ fn record_installs(state: &AppState, installed: &[library::Installed]) -> AppRes
             }
         }
         Ok(())
-    })
+    })?;
+    for i in installed {
+        let Some(pkg) = library::package_path(&state.store_root, &i.id)
+            .ok()
+            .and_then(|path| library::read_package(i.id.clone(), path))
+        else {
+            continue;
+        };
+        let Some(m) = pkg.mods.first() else { continue };
+        let updated = !i.replaced.is_empty();
+        // the install just backed up what it replaced, so the newest backup is that version
+        let previous = updated
+            .then(|| {
+                backups::list(&state.backup_root, &m.manifest.unique_id)
+                    .into_iter()
+                    .next()
+            })
+            .flatten()
+            .map(|b| b.version);
+        state.history.push(crate::history::Entry {
+            at: crate::history::now_ms(),
+            kind: if updated {
+                crate::history::Kind::Updated
+            } else {
+                crate::history::Kind::Installed
+            },
+            package: i.id.clone(),
+            name: m.manifest.name.clone(),
+            unique_id: m.manifest.unique_id.clone(),
+            version: m.manifest.version.clone(),
+            previous,
+            stash: None,
+            was_enabled: true,
+            undone: false,
+        })?;
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -295,7 +331,9 @@ pub async fn library_remove(app: AppHandle, id: String) -> AppResult<LibraryView
         ensure_stopped(s)?;
         let _guard = lock_library(s);
         let path = library::package_path(&s.store_root, &id)?;
-        let ids: std::collections::HashSet<String> = library::read_package(id.clone(), path)
+        let pkg = library::read_package(id.clone(), path.clone());
+        let ids: std::collections::HashSet<String> = pkg
+            .as_ref()
             .map(|p| p.unique_ids().map(str::to_lowercase).collect())
             .unwrap_or_default();
         // an import copies from the game's Mods folder; the original would come back as
@@ -306,10 +344,32 @@ pub async fn library_remove(app: AppHandle, id: String) -> AppResult<LibraryView
         }) {
             trash::delete(&p.path).map_err(|e| AppError::Io(std::io::Error::other(e)))?;
         }
-        library::remove(&s.store_root, &id)?;
+        // kept aside rather than deleted, so the history can put it back
+        let at = crate::history::now_ms();
+        let was_enabled = s.profiles.get().active().enabled.contains(&id);
+        let stash = crate::history::stash(&path, &s.removed_root, at)?;
         s.profiles.update(|p| {
             p.forget_package(&id);
             Ok(())
+        })?;
+        let first = pkg.as_ref().and_then(|p| p.mods.first());
+        s.history.push(crate::history::Entry {
+            at,
+            kind: crate::history::Kind::Removed,
+            package: id.clone(),
+            name: first
+                .map(|m| m.manifest.name.clone())
+                .unwrap_or_else(|| id.clone()),
+            unique_id: first
+                .map(|m| m.manifest.unique_id.clone())
+                .unwrap_or_default(),
+            version: first
+                .map(|m| m.manifest.version.clone())
+                .unwrap_or_default(),
+            previous: None,
+            stash: Some(stash),
+            was_enabled,
+            undone: false,
         })?;
         drop(_guard);
         Ok(build_view(s))
@@ -709,6 +769,82 @@ pub async fn game_crash(app: AppHandle) -> AppResult<Option<crate::smapi_log::Cr
             })
             .collect();
         Ok(crate::smapi_log::last_error(&text, &assemblies))
+    })
+    .await
+}
+
+/// The library's installs, updates and removals, newest first.
+#[tauri::command]
+pub fn history_list(app: AppHandle) -> Vec<crate::history::Entry> {
+    app.state::<AppState>().history.list()
+}
+
+/// Undoes history entry `at`: removes an install, rolls an update back, or puts a
+/// removed package back where it was.
+#[tauri::command]
+pub async fn history_undo(app: AppHandle, at: u64) -> AppResult<LibraryView> {
+    blocking(app, move |s| {
+        ensure_stopped(s)?;
+        let e = s
+            .history
+            .get(at)
+            .filter(|e| !e.undone)
+            .ok_or_else(|| AppError::NotFound(at.to_string()))?;
+        let _guard = lock_library(s);
+        match e.kind {
+            crate::history::Kind::Installed => {
+                let path = library::package_path(&s.store_root, &e.package)?;
+                crate::history::stash(&path, &s.removed_root, crate::history::now_ms())?;
+                s.profiles.update(|p| {
+                    p.forget_package(&e.package);
+                    Ok(())
+                })?;
+            }
+            crate::history::Kind::Updated => {
+                let backup = backups::list(&s.backup_root, &e.unique_id)
+                    .into_iter()
+                    .next()
+                    .ok_or_else(|| AppError::NotFound(e.unique_id.clone()))?;
+                let mut done = Vec::new();
+                let result = library::install_dir_into(
+                    &s.store_root,
+                    &s.backup_root,
+                    &backup.path,
+                    &mut done,
+                );
+                s.profiles.update(|p| {
+                    for i in &done {
+                        p.replace_package(&i.replaced, &i.id);
+                    }
+                    Ok(())
+                })?;
+                result?;
+                backups::discard(&s.backup_root, &backup)?;
+            }
+            crate::history::Kind::Removed => {
+                let stash = e
+                    .stash
+                    .clone()
+                    .ok_or_else(|| AppError::NotFound(e.package.clone()))?;
+                let dest = s.store_root.join(&e.package);
+                if dest.exists() {
+                    return Err(AppError::Io(std::io::Error::other(format!(
+                        "{} is installed again",
+                        e.package
+                    ))));
+                }
+                std::fs::rename(&stash, &dest)?;
+                if e.was_enabled {
+                    s.profiles.update(|p| {
+                        p.set_enabled(&e.package, true);
+                        Ok(())
+                    })?;
+                }
+            }
+        }
+        s.history.mark_undone(at)?;
+        drop(_guard);
+        Ok(build_view(s))
     })
     .await
 }

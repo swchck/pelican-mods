@@ -69,6 +69,19 @@ export default {
     tabLog: "Log",
     tabReport: "Report",
   },
+  history: {
+    title: "Library history",
+    hint: "Mod installs, updates and removals. Any of them can be undone: a removed mod comes back, an update rolls back.",
+    empty: "Nothing has happened yet.",
+    kind: {
+      installed: "installed {version}",
+      updated: "updated {previous} → {version}",
+      removed: "removed ({version})",
+    },
+    undo: "Undo",
+    wasUndone: "undone",
+    undone: "{name}: undone",
+  },
   crash: {
     toast: "The game crashed with an error ({source})",
     toastMod: "The game crashed, apparently because of {mod}",

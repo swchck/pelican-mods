@@ -432,6 +432,19 @@ mockIPC(
         return { source: "github", versions: [{ version: "1.55.0", lines: ["## What's Changed", "* Fixed a crash"] }] };
       case "library_conflicts":
         return [];
+      case "history_list":
+        return [
+          {
+            at: Date.now() - 3600_000,
+            kind: "updated",
+            package: "LookupAnything",
+            name: "Lookup Anything",
+            uniqueId: "Pathoschild.LookupAnything",
+            version: "1.49.0",
+            previous: "1.48.0",
+            undone: false,
+          },
+        ];
       case "game_crash":
         return null;
       case "game_preflight":

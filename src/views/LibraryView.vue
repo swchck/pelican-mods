@@ -5,7 +5,7 @@ import { toast } from "vue-sonner";
 import { open } from "@tauri-apps/plugin-dialog";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import type { UnlistenFn } from "@tauri-apps/api/event";
-import { ArrowUpCircleIcon, DownloadIcon, PackageOpenIcon, RefreshCwIcon, SearchIcon } from "@lucide/vue";
+import { ArrowUpCircleIcon, DownloadIcon, HistoryIcon, PackageOpenIcon, RefreshCwIcon, SearchIcon } from "@lucide/vue";
 import { useIntervalFn, useNow } from "@vueuse/core";
 import { relativeTime } from "@/lib/time";
 import { computed } from "vue";
@@ -15,12 +15,14 @@ import PackageDetail from "@/components/library/PackageDetail.vue";
 import ProfileSwitcher from "@/components/library/ProfileSwitcher.vue";
 import ConflictBanner from "@/components/library/ConflictBanner.vue";
 import DisableWarning from "@/components/library/DisableWarning.vue";
+import HistoryDialog from "@/components/library/HistoryDialog.vue";
 import { useLibrary } from "@/stores/library";
 import { hint, useShortcut } from "@/stores/shortcuts";
 import { matchesFilter } from "@/lib/packages";
 
 const { t, locale } = useI18n();
 const lib = useLibrary();
+const historyOpen = ref(false);
 const dragging = ref(false);
 const filterInput = ref<HTMLInputElement>();
 
@@ -138,6 +140,16 @@ onUnmounted(() => {
       >
         <DownloadIcon /><span class="hidden @2xl:inline">{{ t("library.installZip") }}</span>
       </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        class="shrink-0"
+        :title="t('history.title')"
+        :aria-label="t('history.title')"
+        @click="historyOpen = true"
+      >
+        <HistoryIcon />
+      </Button>
     </header>
 
     <ConflictBanner />
@@ -173,6 +185,7 @@ onUnmounted(() => {
     >
       <span class="font-pixel text-wood-dark text-3xl font-bold">{{ t("library.dropHint") }}</span>
     </div>
+    <HistoryDialog v-model:open="historyOpen" />
     <DisableWarning />
   </div>
 </template>
