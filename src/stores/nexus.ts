@@ -1,6 +1,7 @@
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import { toast } from "vue-sonner";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   isAppError,
   nexus,
@@ -139,8 +140,8 @@ export const useNexus = defineStore("nexus", () => {
         pending.value = { modId, fileId };
         keyDialog.value = true;
       } else if (isAppError(e) && e.kind === "nexus_needs_premium") {
-        await nexus.openFile(modId, fileId);
         toast.info(i18n.global.t("nexus.freeHint"), { duration: 10000 });
+        await openUrl(await nexus.filePage(modId, fileId));
       } else {
         toast.error(errorText(e));
       }

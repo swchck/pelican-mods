@@ -5,6 +5,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { library as api, type LibraryView, type PackageView, type UpdateReport } from "@/lib/api";
 import { packageUpdate } from "@/lib/packages";
 import { errorText, i18n } from "@/i18n";
+import { useNexus } from "./nexus";
 
 export const useLibrary = defineStore("library", () => {
   const view = ref<LibraryView | null>(null);
@@ -52,9 +53,14 @@ export const useLibrary = defineStore("library", () => {
   }
 
   const updatable = computed(() => packages.value.filter((p) => packageUpdate(p, report.value)));
-  // what "Update all" can do without a browser; Nexus files without Premium queue up in
-  // the app's Nexus window, one click each
-  const directUpdates = computed(() => updatable.value.filter((p) => packageUpdate(p, report.value)?.via !== "page"));
+  // what "Update all" can do without a browser: GitHub and ModDrop always, Nexus only with Premium
+  const directUpdates = computed(() => {
+    const premium = useNexus().account?.isPremium ?? false;
+    return updatable.value.filter((p) => {
+      const via = packageUpdate(p, report.value)?.via;
+      return via === "github" || via === "moddrop" || (via === "nexus" && premium);
+    });
+  });
 
   async function checkUpdates(force: boolean) {
     checking.value = true;
@@ -95,8 +101,6 @@ export const useLibrary = defineStore("library", () => {
         toast.success(i18n.global.t("updates.done", vars));
       } else if (outcome.kind === "queued") {
         toast.info(i18n.global.t("updates.queued", vars));
-      } else if (outcome.kind === "nexusWindow") {
-        toast.info(i18n.global.t("nexus.freeHint"), { duration: 10000 });
       } else {
         await openUrl(outcome.url);
       }

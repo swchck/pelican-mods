@@ -87,98 +87,10 @@ pub async fn nexus_download(app: AppHandle, mod_id: u64, file_id: u64) -> AppRes
 
 /// Returns the page where the user fetches this file without Premium; the nxm link it
 /// sends back is then expected and installs without asking again.
-/// Shows file `file_id` of mod `mod_id` in the app's Nexus window, after any files
-/// already waiting there.
 #[tauri::command]
-pub fn nexus_open_file(app: AppHandle, mod_id: u64, file_id: u64) -> AppResult<()> {
-    queue_file_page(&app, mod_id, file_id)
-}
-
-const NEXUS_WINDOW: &str = "nexus";
-
-/// Queues a file for the in-app Nexus window and opens it on the first one.
-///
-/// Without Premium only the site's "Mod Manager Download" button hands out a file, so the
-/// user still clicks it; the window catches the nxm link it sends, moves on to the next
-/// file, and closes when none are left. Clicking for the user would break Nexus' rules.
-pub(crate) fn queue_file_page(app: &AppHandle, mod_id: u64, file_id: u64) -> AppResult<()> {
-    expect_nxm(app, mod_id, file_id);
-    {
-        let state = app.state::<AppState>();
-        let mut queue = state.nexus_queue.lock().unwrap();
-        if !queue.contains(&(mod_id, file_id)) {
-            queue.push_back((mod_id, file_id));
-        }
-    }
-    if let Some(window) = app.get_webview_window(NEXUS_WINDOW) {
-        let _ = window.set_focus();
-        return Ok(());
-    }
-    let url = nexus::file_page(mod_id, file_id)
-        .parse()
-        .map_err(|e| AppError::Io(std::io::Error::other(e)))?;
-    let handle = app.clone();
-    let window =
-        tauri::WebviewWindowBuilder::new(app, NEXUS_WINDOW, tauri::WebviewUrl::External(url))
-            .title("Nexus Mods")
-            .inner_size(1100.0, 820.0)
-            .on_navigation(move |url| {
-                if url.scheme() != "nxm" {
-                    return true;
-                }
-                let (app, link) = (handle.clone(), url.to_string());
-                // the window can't be touched from inside its own navigation callback
-                tauri::async_runtime::spawn(async move {
-                    if let Ok(l) = nexus::parse_nxm(&link) {
-                        let state = app.state::<AppState>();
-                        state
-                            .nexus_queue
-                            .lock()
-                            .unwrap()
-                            .retain(|f| *f != (l.mod_id, l.file_id));
-                    }
-                    if let Err(e) = handle_nxm(&app, &link) {
-                        eprintln!("nexus window: {e}");
-                    }
-                    show_next_file(&app);
-                });
-                false
-            })
-            .build()
-            .map_err(|e| AppError::Io(std::io::Error::other(e)))?;
-    let handle = app.clone();
-    window.on_window_event(move |event| {
-        if matches!(event, tauri::WindowEvent::Destroyed) {
-            handle
-                .state::<AppState>()
-                .nexus_queue
-                .lock()
-                .unwrap()
-                .clear();
-        }
-    });
-    Ok(())
-}
-
-fn show_next_file(app: &AppHandle) {
-    let Some(window) = app.get_webview_window(NEXUS_WINDOW) else {
-        return;
-    };
-    let next = app
-        .state::<AppState>()
-        .nexus_queue
-        .lock()
-        .unwrap()
-        .front()
-        .copied();
-    match next.and_then(|(m, f)| nexus::file_page(m, f).parse().ok()) {
-        Some(url) => {
-            let _ = window.navigate(url);
-        }
-        None => {
-            let _ = window.close();
-        }
-    }
+pub fn nexus_file_page(app: AppHandle, mod_id: u64, file_id: u64) -> String {
+    expect_nxm(&app, mod_id, file_id);
+    nexus::file_page(mod_id, file_id)
 }
 
 /// Starts the download of an `nxm://` link the user pasted or confirmed in the app.

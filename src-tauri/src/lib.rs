@@ -108,7 +108,7 @@ pub fn run() {
             nexus_commands::nexus_set_key,
             nexus_commands::nexus_clear_key,
             nexus_commands::nexus_download,
-            nexus_commands::nexus_open_file,
+            nexus_commands::nexus_file_page,
             nexus_commands::nxm_open,
             nexus_commands::nxm_take_pending,
             nexus_commands::downloads_list,

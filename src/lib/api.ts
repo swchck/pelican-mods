@@ -147,10 +147,7 @@ export interface UpdateInfo {
 }
 
 export type UpdateOutcome =
-  | { kind: "installed"; view: LibraryView }
-  | { kind: "queued" }
-  | { kind: "nexusWindow" }
-  | { kind: "openPage"; url: string };
+  { kind: "installed"; view: LibraryView } | { kind: "queued" } | { kind: "openPage"; url: string };
 
 export interface UpdateReport {
   /** Unix seconds; 0 means never checked. */
@@ -280,8 +277,7 @@ export const nexus = {
   setKey: (key: string) => invoke<NexusAccount>("nexus_set_key", { key }),
   clearKey: () => invoke<void>("nexus_clear_key"),
   download: (modId: number, fileId: number) => invoke<void>("nexus_download", { modId, fileId }),
-  /** Shows the file in the app's Nexus window, where "Mod Manager Download" installs it. */
-  openFile: (modId: number, fileId: number) => invoke<void>("nexus_open_file", { modId, fileId }),
+  filePage: (modId: number, fileId: number) => invoke<string>("nexus_file_page", { modId, fileId }),
   openNxm: (url: string) => invoke<void>("nxm_open", { url }),
   takePendingNxm: () => invoke<NxmLink[]>("nxm_take_pending"),
   downloads: () => invoke<Download[]>("downloads_list"),

@@ -74,8 +74,12 @@ const single = computed(() => (props.pkg.mods.length === 1 ? props.pkg.mods[0] :
 const description = computed(() => single.value?.manifest.description ?? "");
 const update = computed(() => packageUpdate(props.pkg, lib.report));
 const compat = computed(() => packageCompat(props.pkg, lib.report));
-// without Premium a Nexus update still lands in the app, via "Mod Manager Download" in its Nexus window
-const inApp = computed(() => update.value !== null && update.value.via !== "page");
+const premium = computed(() => nx.account?.isPremium ?? false);
+// without Premium a Nexus update still lands in the app, via the site's "Mod Manager Download"
+const inApp = computed(() => {
+  const via = update.value?.via;
+  return via === "github" || via === "moddrop" || (via === "nexus" && premium.value);
+});
 const updateHint = computed(() => {
   if (!update.value || inApp.value) return "";
   return update.value.via === "nexus" ? t("updates.nexusManual") : t("updates.manual");
