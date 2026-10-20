@@ -240,7 +240,12 @@ export default {
     companionWaiting: "El juego funciona sin el complemento o aún está cargando",
     title: "Ajustes",
     game: "Carpeta del juego",
-    change: "Cambiar…",
+    gameActive: "En uso",
+    gameUse: "Jugar con esta",
+    gameForget: "Olvidar",
+    gameAdd: "Añadir carpeta…",
+    gameHint:
+      "Los mods, perfiles y partidas se comparten entre todas las instalaciones; SMAPI se instala en cada una por separado.",
     language: "Idioma",
     languageSystem: "El mismo que el juego",
     backupFolder: "Copiar partidas a una carpeta",

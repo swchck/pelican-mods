@@ -241,7 +241,12 @@ export default {
     companionWaiting: "A játék a kísérőmod nélkül fut, vagy még töltődik",
     title: "Beállítások",
     game: "Játék mappája",
-    change: "Módosítás…",
+    gameActive: "Használatban",
+    gameUse: "Ezzel játszom",
+    gameForget: "Elfelejtés",
+    gameAdd: "Mappa hozzáadása…",
+    gameHint:
+      "A modok, profilok és mentések minden telepítésnél közösek; az SMAPI-t mindegyikbe külön kell telepíteni.",
     language: "Nyelv",
     languageSystem: "Ugyanaz, mint a játékban",
     backupFolder: "Mentések másolása egy mappába",

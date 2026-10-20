@@ -13,6 +13,10 @@ use crate::error::AppResult;
 pub struct Settings {
     /// Folder holding `Stardew Valley.dll`; `None` until the user picks or confirms one.
     pub game_path: Option<PathBuf>,
+    /// Every game folder the user picked, so a second copy (a beta, another store's)
+    /// stays one click away after switching.
+    #[serde(default)]
+    pub game_paths: Vec<PathBuf>,
     /// UI language code; `None` follows the system language.
     pub locale: Option<String>,
     /// Keeps the companion mod out of the game; it's on unless turned off.

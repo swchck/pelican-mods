@@ -154,6 +154,26 @@ const gmcmOption = (path: string[], name: string, kind: string, section: string)
   choices: null,
 });
 
+const games = [
+  {
+    path: "/Applications/Stardew Valley.app/Contents/MacOS",
+    version: "1.6.15.24356",
+    store: "gog",
+    smapiVersion: "4.5.2",
+    modsPath: "/mock/Mods",
+    needsRosetta: false,
+  },
+  {
+    path: "/mock/Steam/steamapps/common/Stardew Valley/Contents/MacOS",
+    version: "1.6.16.24380",
+    store: "steam",
+    smapiVersion: null,
+    modsPath: "/mock/Steam/Mods",
+    needsRosetta: false,
+  },
+];
+let currentGame = games[0].path;
+
 mockWindows("main");
 mockIPC(
   (cmd, payload) => {
@@ -257,14 +277,14 @@ mockIPC(
       case "companion_apply":
         return { ok: true, method: "gmcm", error: null };
       case "game_current":
-        return {
-          path: "/Applications/Stardew Valley.app/Contents/MacOS",
-          version: "1.6.15.24356",
-          store: "gog",
-          smapiVersion: "4.5.2",
-          modsPath: "/mock/Mods",
-          needsRosetta: false,
-        };
+        return games.find((g) => g.path === currentGame);
+      case "game_detect":
+        return games;
+      case "game_set_path":
+        currentGame = (a as { path: string }).path;
+        return games.find((g) => g.path === currentGame);
+      case "game_forget":
+        return null;
       case "game_state":
         return { state: "idle" };
       case "game_log":

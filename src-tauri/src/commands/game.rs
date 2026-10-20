@@ -6,7 +6,7 @@ use std::sync::atomic::Ordering;
 use serde::Deserialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
-use super::{AppState, EventSink, blocking, game_data_dir};
+use super::{AppState, EventSink, blocking, ensure_stopped, game_data_dir};
 use crate::error::{AppError, AppResult};
 use crate::game::{self, GameInstall};
 use crate::launcher::{LogLine, RunState, SmapiRun};
@@ -36,15 +36,36 @@ pub fn smapi_log_report(app: AppHandle) -> AppResult<crate::smapi_log::LogReport
 }
 
 #[tauri::command]
-pub fn game_detect(app: AppHandle) -> AppResult<Vec<GameInstall>> {
+pub fn game_detect(app: AppHandle, state: State<AppState>) -> AppResult<Vec<GameInstall>> {
     let home = app
         .path()
         .home_dir()
         .map_err(|e| AppError::Io(std::io::Error::other(e)))?;
-    Ok(game::detect(&home)
+    let settings = state.settings.get();
+    let mut found: Vec<GameInstall> = Vec::new();
+    let candidates = settings
+        .game_path
         .iter()
-        .filter_map(|p| game::inspect(p).ok())
-        .collect())
+        .chain(&settings.game_paths)
+        .cloned();
+    for p in candidates.chain(game::detect(&home)) {
+        // the .app and its Contents/MacOS are one install
+        if let Ok(g) = game::inspect(&p)
+            && !found.iter().any(|f| f.path == g.path)
+        {
+            found.push(g);
+        }
+    }
+    Ok(found)
+}
+
+/// Drops game folder `path` from the remembered ones; the active one stays.
+#[tauri::command]
+pub fn game_forget(state: State<AppState>, path: PathBuf) -> AppResult<()> {
+    state
+        .settings
+        .update(|s| s.game_paths.retain(|p| *p != path))?;
+    Ok(())
 }
 
 #[tauri::command]
@@ -55,10 +76,15 @@ pub fn game_current(state: State<AppState>) -> Option<GameInstall> {
 
 #[tauri::command]
 pub fn game_set_path(state: State<AppState>, path: PathBuf) -> AppResult<GameInstall> {
+    // the running game's SMAPI and mods folder belong to the old install
+    ensure_stopped(&state)?;
     let install = game::inspect(&path)?;
-    state
-        .settings
-        .update(|s| s.game_path = Some(install.path.clone()))?;
+    state.settings.update(|s| {
+        s.game_path = Some(install.path.clone());
+        if !s.game_paths.contains(&install.path) {
+            s.game_paths.push(install.path.clone());
+        }
+    })?;
     Ok(install)
 }
 

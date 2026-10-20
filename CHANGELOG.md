@@ -25,6 +25,7 @@
 
 ### Settings
 
+- The launcher remembers every game folder it has seen, found or added by hand (a Steam and a GOG copy, a beta), and Settings switches between them in a click. Mods, profiles and saves stay shared; SMAPI goes into each install.
 - The app speaks every language the game ships: German, Spanish, French, Portuguese, Italian, Japanese, Korean, Chinese, Turkish and Hungarian join Russian and English, and it follows the game's language out of the box. The new translations haven't been reviewed by native speakers yet.
 
 ### Security

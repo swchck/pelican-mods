@@ -24,6 +24,7 @@ import { errorText, setLocale } from "@/i18n";
 import { setWikiSource, wikiSource } from "@/lib/wiki";
 import StorageCard from "@/components/settings/StorageCard.vue";
 import { useGame } from "@/stores/game";
+import GameInstalls from "@/components/settings/GameInstalls.vue";
 import { useCompanion } from "@/stores/companion";
 
 const { t } = useI18n();
@@ -91,15 +92,6 @@ async function changeWiki(value: unknown) {
   }
 }
 
-async function changeGame() {
-  const path = await open({
-    title: t("setup.pickTitle"),
-    defaultPath: "/Applications",
-    filters: [{ name: "Stardew Valley", extensions: ["app"] }],
-  });
-  if (path) await game.choose(path);
-}
-
 async function uninstall() {
   confirmUninstall.value = false;
   await game.smapi("uninstall");
@@ -110,17 +102,7 @@ async function uninstall() {
   <div class="flex max-w-[760px] flex-col gap-4">
     <h1 class="font-pixel text-wood-dark text-3xl font-bold">{{ t("settings.title") }}</h1>
 
-    <section class="wood-panel flex flex-col gap-3 p-5">
-      <h2 class="font-pixel text-wood-dark text-xl font-bold">{{ t("settings.game") }}</h2>
-      <div class="flex items-center gap-3">
-        <code class="bg-parchment border-border-soft min-w-0 flex-1 truncate rounded-md border-2 px-3 py-2 text-xs">
-          {{ game.install?.path }}
-        </code>
-        <Button variant="outline" :disabled="game.running || game.busy" @click="changeGame">
-          <FolderOpenIcon />{{ t("settings.change") }}
-        </Button>
-      </div>
-    </section>
+    <GameInstalls />
 
     <section class="wood-panel flex flex-col gap-3 p-5">
       <h2 class="font-pixel text-wood-dark text-xl font-bold">{{ t("settings.smapi") }}</h2>

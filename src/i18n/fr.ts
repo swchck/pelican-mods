@@ -240,7 +240,12 @@ export default {
     companionWaiting: "Le jeu tourne sans le compagnon ou est encore en train de charger",
     title: "Paramètres",
     game: "Dossier du jeu",
-    change: "Changer…",
+    gameActive: "Utilisée",
+    gameUse: "Jouer avec celle-ci",
+    gameForget: "Oublier",
+    gameAdd: "Ajouter un dossier…",
+    gameHint:
+      "Mods, profils et sauvegardes sont communs à toutes les installations ; SMAPI s'installe dans chacune séparément.",
     language: "Langue",
     languageSystem: "Comme le jeu",
     backupFolder: "Copier les sauvegardes dans un dossier",

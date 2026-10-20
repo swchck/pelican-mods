@@ -75,6 +75,7 @@ export const api = {
   detectGames: () => invoke<GameInstall[]>("game_detect"),
   currentGame: () => invoke<GameInstall | null>("game_current"),
   setGamePath: (path: string) => invoke<GameInstall>("game_set_path", { path }),
+  forgetGame: (path: string) => invoke<void>("game_forget", { path }),
   smapiLatest: () => invoke<SmapiRelease>("smapi_latest"),
   smapiRun: (action: "install" | "uninstall") => invoke<GameInstall>("smapi_run", { action }),
   launch: (modded: boolean) => invoke<RunState>("game_launch", { modded }),

@@ -61,6 +61,15 @@ test("library filters by status and tag", async ({ page }) => {
   await expect(rows).toHaveCount(4);
 });
 
+test("settings switch between game installs", async ({ page }) => {
+  await open(page, "/settings", "ru");
+  await expect(page.getByText("Используется")).toHaveCount(1);
+  await page.getByRole("button", { name: "Играть в этой" }).click();
+  // the Steam copy is now the active one, and the GOG one offers itself back
+  await expect(page.locator("li").filter({ hasText: "Steam" })).toContainText("Используется");
+  await expect(page.locator("li").filter({ hasText: "GOG" })).toContainText("Играть в этой");
+});
+
 for (const locale of ["de", "es", "fr", "pt", "it", "ja", "ko", "zh", "tr", "hu"]) {
   test(`library and progress render in ${locale}`, async ({ page }) => {
     const errors = await open(page, "/", locale);

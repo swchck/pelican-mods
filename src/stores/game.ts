@@ -136,6 +136,25 @@ export const useGame = defineStore("game", () => {
     }
   }
 
+  /** Makes another install the one the launcher plays, then reloads what depends on it. */
+  async function switchTo(path: string) {
+    await choose(path);
+    await Promise.all([loadInstalls(), useLibrary().load()]);
+  }
+
+  async function loadInstalls() {
+    detected.value = await api.detectGames().catch(() => detected.value);
+  }
+
+  async function forget(path: string) {
+    try {
+      await api.forgetGame(path);
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+    await loadInstalls();
+  }
+
   async function checkSmapi() {
     try {
       latest.value = await api.smapiLatest();
@@ -221,6 +240,9 @@ export const useGame = defineStore("game", () => {
     init,
     refresh,
     choose,
+    switchTo,
+    loadInstalls,
+    forget,
     checkSmapi,
     smapi,
     installRosetta,

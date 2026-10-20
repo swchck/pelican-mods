@@ -87,6 +87,7 @@ pub fn run() {
             commands::game::game_detect,
             commands::game::game_current,
             commands::game::game_set_path,
+            commands::game::game_forget,
             commands::game::smapi_latest,
             commands::game::smapi_run,
             commands::game::game_launch,
