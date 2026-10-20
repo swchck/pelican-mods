@@ -218,6 +218,22 @@ export type BisectStep =
   | { kind: "found"; package: string; with: string | null; cleared: string[] }
   | { kind: "clean" };
 
+/** A partner on the local network sharing their mod list. */
+export interface LanHost {
+  name: string;
+  addr: string;
+  port: number;
+}
+
+export const lan = {
+  /** Shares the active profile's list until stopped. */
+  shareStart: () => invoke<void>("lan_share_start"),
+  shareStop: () => invoke<void>("lan_share_stop"),
+  discover: () => invoke<LanHost[]>("lan_discover"),
+  /** Fetches a host's list; `file` is where it's kept for reading again after installs. */
+  fetch: (addr: string, port: number) => invoke<{ file: string; view: ModListView }>("lan_fetch", { addr, port }),
+};
+
 export const library = {
   get: () => invoke<LibraryView>("library_get"),
   install: (paths: string[]) => invoke<LibraryView>("library_install", { paths }),

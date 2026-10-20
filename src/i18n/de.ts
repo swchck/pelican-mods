@@ -311,6 +311,19 @@ export default {
     WitchSwamp: "Hexensumpf",
     Submarine: "U-Boot vom Nachtmarkt",
   },
+  coop: {
+    open: "Koop im Netzwerk…",
+    title: "Koop im lokalen Netzwerk",
+    hint: "Gleiche Mods mit einem Freund im selben Netzwerk ab: Einer teilt seine Liste, der andere findet sie und installiert, was fehlt.",
+    share: "Meine Liste teilen",
+    shareHint:
+      "Freunde in diesem Netzwerk können deine Modliste finden. Es gehen nur Namen und Versionen raus, keine Dateien.",
+    sharing: "Deine Liste ist im Netzwerk sichtbar, solange dieses Fenster offen ist.",
+    find: "Host finden",
+    search: "Suchen",
+    nobody: "Niemand in diesem Netzwerk teilt eine Liste. Bitte deinen Freund, „Meine Liste teilen“ einzuschalten.",
+    compare: "Vergleichen",
+  },
   modList: {
     export: "Mod-Liste exportieren…",
     import: "Mod-Liste importieren…",
@@ -1205,6 +1218,8 @@ export default {
     installer_failed: "Der SMAPI-Installer ist fehlgeschlagen:\n{detail}",
     bad_manifest: "manifest.json kann nicht gelesen werden: {detail}",
     no_download: "Kein direkter Download: {detail}",
+    local_network_denied:
+      "macOS lässt die App nicht ins lokale Netzwerk. Erlaube Pelican Mods unter Systemeinstellungen → Datenschutz & Sicherheit → Lokales Netzwerk.",
     bad_mod_list: "Keine Pelican-Mod-Liste: {detail}",
     bad_repo: "Kein GitHub-Repo: {detail}. Füge owner/repo oder einen github.com-Link ein.",
     no_mods: "Keine Mods im Archiv gefunden (keine manifest.json)",

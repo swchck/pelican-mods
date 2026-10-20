@@ -309,6 +309,18 @@ export default {
     WitchSwamp: "Witch's Swamp",
     Submarine: "Night Market submarine",
   },
+  coop: {
+    open: "Co-op on the network…",
+    title: "Co-op on the local network",
+    hint: "Match mods with a friend on the same network: one shares their list, the other finds it and installs what's missing.",
+    share: "Share my list",
+    shareHint: "Friends on this network can find your mod list. Only names and versions go out, no files.",
+    sharing: "Your list is visible on the network while this window is open.",
+    find: "Find a host",
+    search: "Search",
+    nobody: "Nobody on this network is sharing a list. Ask your friend to turn on “Share my list”.",
+    compare: "Compare",
+  },
   modList: {
     export: "Export mod list…",
     import: "Import mod list…",
@@ -1188,6 +1200,8 @@ export default {
     installer_failed: "The SMAPI installer failed:\n{detail}",
     bad_manifest: "manifest.json can't be read: {detail}",
     no_download: "No direct download: {detail}",
+    local_network_denied:
+      "macOS keeps the app off the local network. Allow Pelican Mods in System Settings → Privacy & Security → Local Network.",
     bad_mod_list: "Not a Pelican mod list: {detail}",
     bad_repo: "Not a GitHub repo: {detail}. Paste owner/repo or a github.com link.",
     no_mods: "No mods found in the archive (no manifest.json)",

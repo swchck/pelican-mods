@@ -94,11 +94,15 @@ pub fn build(
 
 /// Reads a list from `file`, refusing JSON that isn't one.
 pub fn read(file: &Path) -> AppResult<ModList> {
-    let text = std::fs::read_to_string(file)?;
+    parse(&std::fs::read(file)?, &file.display().to_string())
+}
+
+/// Parses list JSON from `source`, refusing JSON that isn't one.
+pub fn parse(bytes: &[u8], source: &str) -> AppResult<ModList> {
     let list: ModList =
-        serde_json::from_str(&text).map_err(|e| AppError::BadModList(e.to_string()))?;
+        serde_json::from_slice(bytes).map_err(|e| AppError::BadModList(e.to_string()))?;
     if list.format != FORMAT {
-        return Err(AppError::BadModList(file.display().to_string()));
+        return Err(AppError::BadModList(source.to_owned()));
     }
     Ok(list)
 }

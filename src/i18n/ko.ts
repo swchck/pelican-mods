@@ -308,6 +308,19 @@ export default {
     WitchSwamp: "마녀의 늪",
     Submarine: "야시장 잠수함",
   },
+  coop: {
+    open: "네트워크 협동…",
+    title: "로컬 네트워크 협동",
+    hint: "같은 네트워크의 친구와 모드를 맞춥니다. 한 사람이 목록을 공유하면 다른 사람이 찾아서 부족한 것을 설치합니다.",
+    share: "내 목록 공유",
+    shareHint:
+      "이 네트워크의 친구들이 내 모드 목록을 찾을 수 있습니다. 이름과 버전만 전송되고 파일은 전송되지 않습니다.",
+    sharing: "이 창이 열려 있는 동안 목록이 네트워크에 표시됩니다.",
+    find: "호스트 찾기",
+    search: "검색",
+    nobody: "이 네트워크에서 목록을 공유하는 사람이 없습니다. 친구에게 '내 목록 공유'를 켜 달라고 하세요.",
+    compare: "비교",
+  },
   modList: {
     export: "모드 목록 내보내기…",
     import: "모드 목록 가져오기…",
@@ -1181,6 +1194,8 @@ export default {
     installer_failed: "SMAPI 설치 프로그램이 실패했어요:\n{detail}",
     bad_manifest: "manifest.json을 읽을 수 없어요: {detail}",
     no_download: "직접 다운로드할 수 없어요: {detail}",
+    local_network_denied:
+      "macOS가 앱의 로컬 네트워크 접근을 막고 있습니다. 시스템 설정 → 개인정보 보호 및 보안 → 로컬 네트워크에서 Pelican Mods를 허용하세요.",
     bad_mod_list: "Pelican 모드 목록이 아니에요: {detail}",
     bad_repo: "GitHub 저장소가 아니에요: {detail}. owner/repo 또는 github.com 링크를 붙여 넣으세요.",
     no_mods: "압축 파일에서 모드를 찾지 못했어요 (manifest.json 없음)",

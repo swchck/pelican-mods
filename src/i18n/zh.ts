@@ -307,6 +307,18 @@ export default {
     WitchSwamp: "女巫沼泽",
     Submarine: "夜市潜水艇",
   },
+  coop: {
+    open: "局域网联机…",
+    title: "局域网联机",
+    hint: "和同一网络里的朋友对齐模组：一方分享列表，另一方找到它并安装缺少的模组。",
+    share: "分享我的列表",
+    shareHint: "这个网络里的朋友可以找到你的模组列表。只发送名称和版本，不发送文件。",
+    sharing: "此窗口打开期间，你的列表在网络中可见。",
+    find: "寻找主机",
+    search: "搜索",
+    nobody: "这个网络里没有人在分享列表。请朋友打开“分享我的列表”。",
+    compare: "比较",
+  },
   modList: {
     export: "导出模组列表…",
     import: "导入模组列表…",
@@ -1161,6 +1173,8 @@ export default {
     installer_failed: "SMAPI 安装程序出错：\n{detail}",
     bad_manifest: "无法读取 manifest.json：{detail}",
     no_download: "没有直接下载：{detail}",
+    local_network_denied:
+      "macOS 不允许此应用访问本地网络。请在“系统设置 → 隐私与安全性 → 本地网络”中允许 Pelican Mods。",
     bad_mod_list: "不是 Pelican 模组列表：{detail}",
     bad_repo: "不是 GitHub 仓库：{detail}。请粘贴 owner/repo 或 github.com 链接。",
     no_mods: "压缩包中没有找到模组（没有 manifest.json）",

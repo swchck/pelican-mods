@@ -716,6 +716,39 @@ mockIPC(
             { key: "(O)404", name: "Шампиньон", from: 70, to: 53 },
           ],
         };
+      case "lan_share_start":
+      case "lan_share_stop":
+        return null;
+      case "lan_discover":
+        return [{ name: "Борис · Ферма у реки", addr: "192.168.1.23", port: 51234 }];
+      case "lan_fetch":
+        return {
+          file: "/mock/cache/lan/192_168_1_23-51234.json",
+          view: {
+            name: "Ферма у реки",
+            game: "1.6.15",
+            smapi: "4.5.2",
+            mods: [
+              {
+                uniqueId: "Pathoschild.LookupAnything",
+                name: "Lookup Anything",
+                version: "1.40.0",
+                updateKeys: ["Nexus:541"],
+                github: null,
+                installed: "1.40.0",
+              },
+              {
+                uniqueId: "Pathoschild.Automate",
+                name: "Automate",
+                version: "2.4.0",
+                updateKeys: ["Nexus:1063"],
+                github: null,
+                installed: null,
+              },
+            ],
+            extra: [],
+          },
+        };
       case "saves_map": {
         if (a.location === "IslandWest") throw { kind: "not_found", detail: "IslandWest", message: "IslandWest" };
         const f = (x: number, y: number, kind: string, extra: object = {}) => ({

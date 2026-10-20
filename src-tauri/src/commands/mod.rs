@@ -64,6 +64,8 @@ pub struct AppState {
     pub(crate) profile_configs_root: PathBuf,
     /// Each save's money and progress by in-game day.
     pub(crate) farm_history_root: PathBuf,
+    /// The mod list handed to partners on the local network, while the player shares it.
+    pub(crate) lan_share: Mutex<Option<crate::lan::Share>>,
     /// Unconfirmed nxm links the UI hasn't collected yet.
     pub(crate) nxm_pending: Mutex<Vec<serde_json::Value>>,
     /// The built companion mod, linked into every profile; `None` when this build lacks it.
@@ -123,6 +125,7 @@ impl AppState {
             translations_root: data_dir.join("translations"),
             profile_configs_root: data_dir.join("profile-configs"),
             farm_history_root: data_dir.join("farm-history"),
+            lan_share: Mutex::new(None),
             nxm_pending: Mutex::new(Vec::new()),
         }
     }

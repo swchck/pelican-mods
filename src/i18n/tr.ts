@@ -316,6 +316,18 @@ export default {
     WitchSwamp: "Cadı Bataklığı",
     Submarine: "Gece Pazarı denizaltısı",
   },
+  coop: {
+    open: "Ağda ortak oyun…",
+    title: "Yerel ağda ortak oyun",
+    hint: "Aynı ağdaki bir arkadaşınızla modları eşleyin: biri listesini paylaşır, diğeri onu bulup eksikleri kurar.",
+    share: "Listemi paylaş",
+    shareHint: "Bu ağdaki arkadaşlarınız mod listenizi bulabilir. Yalnızca adlar ve sürümler gider, dosya gitmez.",
+    sharing: "Bu pencere açık kaldıkça listeniz ağda görünür.",
+    find: "Sunucu bul",
+    search: "Ara",
+    nobody: "Bu ağda liste paylaşan kimse yok. Arkadaşınızdan “Listemi paylaş”ı açmasını isteyin.",
+    compare: "Karşılaştır",
+  },
   modList: {
     export: "Mod listesini dışa aktar…",
     import: "Mod listesini içe aktar…",
@@ -1204,6 +1216,8 @@ export default {
     installer_failed: "SMAPI kurulum programı başarısız oldu:\n{detail}",
     bad_manifest: "manifest.json okunamıyor: {detail}",
     no_download: "Doğrudan indirme yok: {detail}",
+    local_network_denied:
+      "macOS uygulamanın yerel ağa erişmesine izin vermiyor. Sistem Ayarları → Gizlilik ve Güvenlik → Yerel Ağ bölümünden Pelican Mods'a izin verin.",
     bad_mod_list: "Bu bir Pelican mod listesi değil: {detail}",
     bad_repo: "Bu bir GitHub deposu değil: {detail}. owner/repo ya da bir github.com bağlantısı yapıştır.",
     no_mods: "Arşivde mod bulunamadı (manifest.json yok)",

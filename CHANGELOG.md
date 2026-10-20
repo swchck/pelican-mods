@@ -4,6 +4,7 @@
 
 ### Library and saves
 
+- "Co-op on the network" in the profile menu shares your mod list with friends on the same network and finds theirs, opening the usual comparison to install what's missing. Only names and versions go out, and only while the window is open.
 - Saves have a History chart: total earned, money, perfection and skills by in-game day, noted on every look at a save and filled in from its snapshots.
 - After each session a notice offers what changed on the farm since the game started, compared against the copy taken before launch.
 - A profile can keep mod settings of its own: switching away saves every mod's config.json for it, and coming back puts them back, so "SVE hard" and "SVE cozy" can set the same mods differently.

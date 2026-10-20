@@ -316,6 +316,19 @@ export default {
     WitchSwamp: "Palude della strega",
     Submarine: "Sottomarino del Mercato notturno",
   },
+  coop: {
+    open: "Cooperativa in rete…",
+    title: "Cooperativa in rete locale",
+    hint: "Allinea le mod con un amico sulla stessa rete: uno condivide la lista, l'altro la trova e installa ciò che manca.",
+    share: "Condividi la mia lista",
+    shareHint:
+      "Gli amici su questa rete potranno trovare la tua lista di mod. Escono solo nomi e versioni, nessun file.",
+    sharing: "La tua lista è visibile in rete finché questa finestra è aperta.",
+    find: "Trova un host",
+    search: "Cerca",
+    nobody: "Nessuno su questa rete condivide una lista. Chiedi al tuo amico di attivare «Condividi la mia lista».",
+    compare: "Confronta",
+  },
   modList: {
     export: "Esporta elenco mod…",
     import: "Importa elenco mod…",
@@ -1216,6 +1229,8 @@ export default {
     installer_failed: "L'installer di SMAPI non è riuscito:\n{detail}",
     bad_manifest: "Impossibile leggere manifest.json: {detail}",
     no_download: "Nessun download diretto: {detail}",
+    local_network_denied:
+      "macOS non lascia l'app accedere alla rete locale. Consenti Pelican Mods in Impostazioni di Sistema → Privacy e sicurezza → Rete locale.",
     bad_mod_list: "Non è un elenco di mod di Pelican: {detail}",
     bad_repo: "Non è un repo GitHub: {detail}. Incolla owner/repo o un link github.com.",
     no_mods: "Nessuna mod trovata nell'archivio (manca manifest.json)",

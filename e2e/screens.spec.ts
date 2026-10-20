@@ -96,6 +96,18 @@ test("map shows the farm and what's ready", async ({ page }) => {
   await expect(page.getByText("Этого места в сохранении пока нет.")).toBeVisible();
 });
 
+test("co-op finds a host on the network and compares lists", async ({ page }) => {
+  await open(page, "/", "ru");
+  await page.getByRole("button", { name: "Профиль" }).last().click();
+  await page.getByRole("menuitem", { name: "Кооп по сети…" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("switch", { name: "Делиться моим списком" }).click();
+  await expect(dialog.getByText(/пока открыто это окно/)).toBeVisible();
+  await dialog.getByRole("button", { name: "Искать" }).click();
+  await dialog.getByRole("button", { name: "Сравнить" }).click();
+  await expect(page.getByRole("dialog").getByText("Automate")).toBeVisible();
+});
+
 test("walnut tracker shows only with spoilers on", async ({ page }) => {
   await open(page, "/helpers", "ru");
   await expect(page.getByRole("tab", { name: "Орехи" })).toHaveCount(0);

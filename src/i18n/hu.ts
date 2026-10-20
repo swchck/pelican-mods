@@ -311,6 +311,19 @@ export default {
     WitchSwamp: "Boszorkánymocsár",
     Submarine: "Éjszakai piac tengeralattjárója",
   },
+  coop: {
+    open: "Közös játék hálózaton…",
+    title: "Közös játék helyi hálózaton",
+    hint: "Hangold össze a modokat egy barátoddal ugyanazon a hálózaton: az egyik megosztja a listáját, a másik megtalálja és felteszi, ami hiányzik.",
+    share: "A listám megosztása",
+    shareHint: "A hálózaton lévő barátaid megtalálhatják a modlistádat. Csak nevek és verziók mennek ki, fájlok nem.",
+    sharing: "A listád látható a hálózaton, amíg ez az ablak nyitva van.",
+    find: "Gazda keresése",
+    search: "Keresés",
+    nobody:
+      "Ezen a hálózaton senki sem oszt meg listát. Kérd meg a barátodat, hogy kapcsolja be „A listám megosztása” lehetőséget.",
+    compare: "Összevetés",
+  },
   modList: {
     export: "Modlista exportálása…",
     import: "Modlista importálása…",
@@ -1207,6 +1220,8 @@ export default {
     installer_failed: "A SMAPI telepítője hibát jelzett:\n{detail}",
     bad_manifest: "A manifest.json nem olvasható: {detail}",
     no_download: "Nincs közvetlen letöltés: {detail}",
+    local_network_denied:
+      "A macOS nem engedi az alkalmazást a helyi hálózatra. Engedélyezd a Pelican Mods-ot: Rendszerbeállítások → Adatvédelem és biztonság → Helyi hálózat.",
     bad_mod_list: "Ez nem Pelican modlista: {detail}",
     bad_repo: "Ez nem GitHub-tároló: {detail}. Illessz be egy owner/repo azonosítót vagy github.com-linket.",
     no_mods: "Az archívumban nincs mod (nincs manifest.json)",

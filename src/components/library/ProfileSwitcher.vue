@@ -10,10 +10,12 @@ import {
   Trash2Icon,
   SearchCheckIcon,
   UsersIcon,
+  WifiIcon,
 } from "@lucide/vue";
 import { open as openFile, save } from "@tauri-apps/plugin-dialog";
 import { toast } from "vue-sonner";
 import ModListDialog from "@/components/library/ModListDialog.vue";
+import CoopDialog from "@/components/library/CoopDialog.vue";
 import { library } from "@/lib/api";
 import { errorText } from "@/i18n";
 import { Button } from "@/components/ui/button";
@@ -54,6 +56,12 @@ const nameOf = (p: Profile) => p.name ?? t("profiles.default");
 
 const imported = ref<{ file: string; view: ModListView; mode: "import" | "compare" } | null>(null);
 const importOpen = ref(false);
+const coopOpen = ref(false);
+
+function compareWith(file: string, view: ModListView) {
+  imported.value = { file, view, mode: "compare" };
+  importOpen.value = true;
+}
 
 async function exportList() {
   const base = lib.activeProfile ? nameOf(lib.activeProfile) : "mods";
@@ -136,6 +144,7 @@ async function submit() {
         <DropdownMenuItem @select="exportList"><FileUpIcon />{{ t("modList.export") }}</DropdownMenuItem>
         <DropdownMenuItem @select="importList()"><FileDownIcon />{{ t("modList.import") }}</DropdownMenuItem>
         <DropdownMenuItem @select="importList('compare')"><UsersIcon />{{ t("modList.compare") }}</DropdownMenuItem>
+        <DropdownMenuItem @select="coopOpen = true"><WifiIcon />{{ t("coop.open") }}</DropdownMenuItem>
         <DropdownMenuItem :disabled="!!lib.view?.bisect" @select="lib.bisectStart(t('bisect.profileName'))"
           ><SearchCheckIcon />{{ t("bisect.start") }}</DropdownMenuItem
         >
@@ -188,6 +197,7 @@ async function submit() {
         </form>
       </DialogContent>
     </Dialog>
+    <CoopDialog v-model:open="coopOpen" @compare="compareWith" />
     <ModListDialog
       v-if="imported"
       :key="imported.file"

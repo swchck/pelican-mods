@@ -35,6 +35,9 @@ pub enum AppError {
     BadModList(String),
     #[error("no mods found in the archive")]
     NoMods,
+    /// macOS refused the app the local network (Privacy & Security, Local Network).
+    #[error("local network access is off")]
+    LocalNetworkDenied,
     #[error("not found: {0}")]
     NotFound(String),
     #[error("profile name is empty or taken: {0}")]
@@ -86,6 +89,7 @@ impl AppError {
             Self::InstallerFailed(_) => "installer_failed",
             Self::BadManifest(_) => "bad_manifest",
             Self::NoMods => "no_mods",
+            Self::LocalNetworkDenied => "local_network_denied",
             Self::NoDownload(_) => "no_download",
             Self::BadRepo(_) => "bad_repo",
             Self::BadModList(_) => "bad_mod_list",

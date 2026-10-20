@@ -309,6 +309,20 @@ export default {
     WitchSwamp: "魔女の沼",
     Submarine: "ナイトマーケットの潜水艦",
   },
+  coop: {
+    open: "ネットワークで協力プレイ…",
+    title: "ローカルネットワークで協力プレイ",
+    hint: "同じネットワークの友だちとMODを揃えます。片方がリストを共有し、もう片方がそれを見つけて足りないものを入れます。",
+    share: "自分のリストを共有",
+    shareHint:
+      "このネットワークの友だちがあなたのMODリストを見つけられます。送られるのは名前とバージョンだけで、ファイルは送られません。",
+    sharing: "このウィンドウを開いている間、リストがネットワークに表示されます。",
+    find: "ホストを探す",
+    search: "検索",
+    nobody:
+      "このネットワークでリストを共有している人はいません。友だちに「自分のリストを共有」をオンにしてもらってください。",
+    compare: "比較",
+  },
   modList: {
     export: "MODリストを書き出す…",
     import: "MODリストを読み込む…",
@@ -1194,6 +1208,8 @@ export default {
     installer_failed: "SMAPIのインストーラーが失敗しました:\n{detail}",
     bad_manifest: "manifest.jsonを読み込めません: {detail}",
     no_download: "直接ダウンロードできません: {detail}",
+    local_network_denied:
+      "macOSがこのアプリのローカルネットワーク接続を許可していません。システム設定 → プライバシーとセキュリティ → ローカルネットワーク で Pelican Mods を許可してください。",
     bad_mod_list: "PelicanのMODリストではありません: {detail}",
     bad_repo: "GitHubリポジトリではありません: {detail}。owner/repoまたはgithub.comのリンクを貼り付けてください。",
     no_mods: "アーカイブにMODが見つかりません（manifest.jsonがありません）",

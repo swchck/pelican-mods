@@ -315,6 +315,19 @@ export default {
     WitchSwamp: "Pântano da Bruxa",
     Submarine: "Submarino do Mercado Noturno",
   },
+  coop: {
+    open: "Cooperativo na rede…",
+    title: "Cooperativo na rede local",
+    hint: "Combine os mods com um amigo na mesma rede: um compartilha a lista, o outro a encontra e instala o que falta.",
+    share: "Compartilhar minha lista",
+    shareHint: "Amigos nesta rede poderão encontrar sua lista de mods. Só nomes e versões são enviados, sem arquivos.",
+    sharing: "Sua lista fica visível na rede enquanto esta janela estiver aberta.",
+    find: "Encontrar anfitrião",
+    search: "Procurar",
+    nobody:
+      "Ninguém nesta rede está compartilhando uma lista. Peça ao seu amigo para ativar “Compartilhar minha lista”.",
+    compare: "Comparar",
+  },
   modList: {
     export: "Exportar lista de mods…",
     import: "Importar lista de mods…",
@@ -1207,6 +1220,8 @@ export default {
     installer_failed: "O instalador do SMAPI falhou:\n{detail}",
     bad_manifest: "Não foi possível ler o manifest.json: {detail}",
     no_download: "Sem download direto: {detail}",
+    local_network_denied:
+      "O macOS não deixa o app usar a rede local. Permita o Pelican Mods em Ajustes do Sistema → Privacidade e Segurança → Rede Local.",
     bad_mod_list: "Não é uma lista de mods do Pelican: {detail}",
     bad_repo: "Não é um repositório do GitHub: {detail}. Cole dono/repositório ou um link do github.com.",
     no_mods: "Nenhum mod encontrado no arquivo (sem manifest.json)",

@@ -15,6 +15,7 @@ mod farm_map;
 mod game;
 mod history;
 mod jsonc;
+mod lan;
 mod launcher;
 mod library;
 mod manifest;
@@ -140,6 +141,10 @@ pub fn run() {
             commands::library::history_undo,
             commands::library::library_conflicts,
             commands::updates::mod_changelog,
+            commands::modlist::lan_share_start,
+            commands::modlist::lan_share_stop,
+            commands::modlist::lan_discover,
+            commands::modlist::lan_fetch,
             commands::modlist::modlist_export,
             commands::modlist::modlist_read,
             commands::modlist::modlist_profile,
