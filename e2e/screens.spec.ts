@@ -136,11 +136,14 @@ test("walnut tracker shows only with spoilers on", async ({ page }) => {
   await expect(page.getByText("Песня русалки на флейтовых блоках")).toBeVisible();
 });
 
-test("library shows Nexus pictures", async ({ page }) => {
+test("library shows a Nexus picture in the details only", async ({ page }) => {
   await open(page, "/", "ru");
   const row = page.getByRole("option").filter({ hasText: "Lookup Anything" });
-  await expect(row.locator("img")).toHaveAttribute("src", /^data:image/);
-  await expect(page.getByRole("option").filter({ hasText: "Console Commands" }).locator("img")).toHaveCount(0);
+  await expect(row.locator("img")).toHaveCount(0);
+  await row.click();
+  await expect(page.locator('img[src^="data:image"]')).toHaveCount(1);
+  await page.getByRole("option").filter({ hasText: "Console Commands" }).click();
+  await expect(page.locator('img[src^="data:image"]')).toHaveCount(0);
 });
 
 test("browse reads a Nexus collection", async ({ page }) => {
