@@ -84,6 +84,40 @@ pub async fn nexus_download(app: AppHandle, mod_id: u64, file_id: u64) -> AppRes
     Ok(())
 }
 
+/// A collection and the Nexus mods of it the library already has.
+#[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CollectionView {
+    pub collection: nexus::Collection,
+    pub installed: Vec<u64>,
+}
+
+/// Reads the collection a link or code points at.
+#[tauri::command]
+pub async fn nexus_collection(app: AppHandle, input: String) -> AppResult<CollectionView> {
+    let slug = nexus::collection_slug(&input).ok_or_else(|| AppError::NotFound(input.clone()))?;
+    let http = app.state::<AppState>().http.clone();
+    let collection = nexus::collection(&http, &slug).await?;
+    let store = app.state::<AppState>().store_root.clone();
+    let installed = crate::library::scan(&store)
+        .iter()
+        .flat_map(|p| p.mods.iter())
+        .flat_map(|m| m.manifest.update_keys.iter())
+        .filter_map(|k| {
+            let (site, rest) = k.split_once(':')?;
+            let id = rest.split('@').next()?.trim();
+            site.trim()
+                .eq_ignore_ascii_case("nexus")
+                .then(|| id.parse().ok())
+                .flatten()
+        })
+        .collect();
+    Ok(CollectionView {
+        collection,
+        installed,
+    })
+}
+
 /// Returns the page where the user fetches this file without Premium; the nxm link it
 /// sends back is then expected and installs without asking again.
 #[tauri::command]

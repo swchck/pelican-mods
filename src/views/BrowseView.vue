@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import CollectionDialog from "@/components/browse/CollectionDialog.vue";
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { watchDebounced } from "@vueuse/core";
-import { DownloadIcon, HeartIcon, Loader2Icon, SearchIcon, SlidersHorizontalIcon } from "@lucide/vue";
+import { DownloadIcon, HeartIcon, Loader2Icon, SearchIcon, LibraryBigIcon, SlidersHorizontalIcon } from "@lucide/vue";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ const visible = computed(() =>
   nx.hideInstalled ? nx.results.filter((m) => !installed.value.has(m.modId)) : nx.results,
 );
 const showFilters = ref(nx.filtersActive);
+const collectionOpen = ref(false);
 const updatedOptions = ["any", "week", "month", "year"] as const;
 const endorsementOptions = [0, 100, 1000, 10000];
 
@@ -111,6 +113,15 @@ onMounted(() => {
         />
         <Loader2Icon v-if="nx.searching" class="text-muted-foreground size-4 animate-spin" />
       </label>
+      <Button
+        variant="outline"
+        size="icon"
+        class="size-10 shrink-0"
+        :title="t('collection.title')"
+        :aria-label="t('collection.button')"
+        @click="collectionOpen = true"
+        ><LibraryBigIcon
+      /></Button>
       <Button variant="outline" :aria-pressed="showFilters" @click="showFilters = !showFilters">
         <SlidersHorizontalIcon />{{ t("nexus.filters.title") }}
         <span v-if="nx.filtersActive" class="bg-gold border-wood-dark size-2 rounded-full border" />
@@ -253,5 +264,6 @@ onMounted(() => {
         <span v-else>{{ t("nexus.select") }}</span>
       </div>
     </div>
+    <CollectionDialog v-model:open="collectionOpen" />
   </div>
 </template>

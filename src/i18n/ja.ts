@@ -466,6 +466,21 @@ export default {
     pasted: "キーをクリップボードから取得しました",
     keychain: "キーはmacOSのキーチェーンに保存され、Nexus以外には送信されません。",
   },
+  collection: {
+    button: "コレクション",
+    title: "Nexus コレクション",
+    hint: "Nexus コレクションのリンクかコードを貼ると、足りない MOD を表示してインストールします。",
+    placeholder: "コレクションのリンクまたはコード",
+    open: "開く",
+    summary: "MOD：{total} 件、所持 {have} 件、不足 {missing} 件",
+    optional: "オプションも含める",
+    downloadAll: "不足分をダウンロード（{n}）",
+    openNext: "次を開く：{name}",
+    openPage: "{name} のページを開く",
+    noPremium:
+      "Premium なしでは Nexus はサイト経由でしかファイルを渡しません。ページを 1 つずつ開いて「Mod Manager Download」を押すと、MOD は自動でインストールされます。",
+    queued: "ダウンロード待ち：{n} 件",
+  },
   translate: {
     open: "自分で翻訳する",
     title: "「{mod}」の翻訳：{language}",

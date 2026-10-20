@@ -366,6 +366,24 @@ mockIPC(
       case "bisect_cancel":
         library.bisect = null;
         return structuredClone(library);
+      case "nexus_collection":
+        return {
+          collection: {
+            slug: "tckf0m",
+            name: "Cozy Valley",
+            author: "Someone",
+            revision: 7,
+            files: [
+              { modId: 541, fileId: 1, modName: "Lookup Anything", version: "1.55.0", optional: false },
+              { modId: 1915, fileId: 2, modName: "Content Patcher", version: "2.5.3", optional: false },
+              { modId: 3753, fileId: 3, modName: "Stardew Valley Expanded", version: "1.15.11", optional: false },
+              { modId: 2400, fileId: 4, modName: "SMAPI Extras", version: "1.0.0", optional: true },
+            ],
+          },
+          installed: [541, 1915],
+        };
+      case "nexus_file_page":
+        return "https://www.nexusmods.com/stardewvalley/mods/3753?tab=files&file_id=3";
       case "mod_translation_get":
         return [
           { key: "config.title", source: "Lookup Anything settings", text: "" },

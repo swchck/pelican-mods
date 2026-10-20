@@ -22,6 +22,10 @@
 
 - A morning briefing in the game: at the start of each day the HUD names whose birthday it is and which of their loved gifts you already have, a festival, the traveling cart, the bookseller and a notable luck. It can be turned off in Settings.
 
+### Updates
+
+- Nexus collections import from their link or code: the app shows which of the collection's mods you have, downloads the missing ones with Premium, or opens their file pages one after another without it, and installs what Nexus sends back.
+
 ## 0.4.0 — 2026-10-20
 
 ### Progress

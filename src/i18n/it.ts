@@ -468,6 +468,21 @@ export default {
     pasted: "Chiave presa dagli appunti",
     keychain: "La chiave è conservata nel Portachiavi di macOS e viene inviata solo a Nexus.",
   },
+  collection: {
+    button: "Collezione",
+    title: "Collezione Nexus",
+    hint: "Incolla il link di una collezione Nexus o il suo codice per vedere quali mod mancano e installarle.",
+    placeholder: "Link o codice della collezione",
+    open: "Apri",
+    summary: "Mod: {total}, già presenti: {have}, mancanti: {missing}",
+    optional: "Incluse le facoltative",
+    downloadAll: "Scarica le mancanti ({n})",
+    openNext: "Apri la prossima: {name}",
+    openPage: "Apri la pagina di {name}",
+    noPremium:
+      "Senza Premium, Nexus fornisce i file solo dal sito: apri le pagine una alla volta e premi «Mod Manager Download»: la mod si installa da sola.",
+    queued: "In coda per il download: {n}",
+  },
   translate: {
     open: "Tradurla io",
     title: "Traduzione di «{mod}»: {language}",

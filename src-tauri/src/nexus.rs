@@ -221,6 +221,116 @@ async fn graphql<T: for<'de> Deserialize<'de>>(
     }
 }
 
+/// A Nexus collection's latest published revision.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Collection {
+    pub slug: String,
+    pub name: String,
+    pub author: Option<String>,
+    pub revision: u32,
+    pub files: Vec<CollectionFile>,
+}
+
+/// One mod file a collection installs.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CollectionFile {
+    pub mod_id: u64,
+    pub file_id: u64,
+    pub mod_name: String,
+    pub version: Option<String>,
+    pub optional: bool,
+}
+
+/// Reads a collection's code from a link to it ("…/collections/tckf0m", on either of
+/// Nexus' sites) or the bare six-character code.
+pub fn collection_slug(input: &str) -> Option<String> {
+    let s = input.trim().trim_end_matches('/');
+    let slug = match s.split_once("/collections/") {
+        Some((_, rest)) => rest.split(['/', '?', '#']).next()?,
+        None => s,
+    };
+    let plain = slug.len() == 6 && slug.chars().all(|c| c.is_ascii_alphanumeric());
+    plain.then(|| slug.to_ascii_lowercase())
+}
+
+/// Fetches collection `slug`'s latest published revision; public, so no key is needed.
+pub async fn collection(client: &reqwest::Client, slug: &str) -> AppResult<Collection> {
+    #[derive(Deserialize)]
+    struct Data {
+        collection: Raw,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Raw {
+        slug: String,
+        name: String,
+        user: Option<User>,
+        latest_published_revision: Option<Revision>,
+    }
+    #[derive(Deserialize)]
+    struct User {
+        name: String,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Revision {
+        revision_number: u32,
+        mod_files: Vec<RawFile>,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct RawFile {
+        optional: bool,
+        #[serde(deserialize_with = "lenient_u64")]
+        file_id: Option<u64>,
+        file: Option<FileInfo>,
+    }
+    #[derive(Deserialize)]
+    struct FileInfo {
+        version: Option<String>,
+        #[serde(rename = "mod")]
+        owner: ModRef,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct ModRef {
+        #[serde(deserialize_with = "lenient_u64")]
+        mod_id: Option<u64>,
+        name: String,
+    }
+    const QUERY: &str = "query($slug: String!) { collection(slug: $slug, domainName: \"stardewvalley\") { \
+        slug name user { name } latestPublishedRevision { revisionNumber \
+        modFiles { optional fileId file { version mod { modId name } } } } } }";
+    let data: Data = graphql(client, QUERY, json!({ "slug": slug })).await?;
+    let raw = data.collection;
+    let revision = raw
+        .latest_published_revision
+        .ok_or_else(|| AppError::NotFound(slug.to_owned()))?;
+    Ok(Collection {
+        slug: raw.slug,
+        name: raw.name,
+        author: raw.user.map(|u| u.name),
+        revision: revision.revision_number,
+        files: revision
+            .mod_files
+            .into_iter()
+            // files from outside Nexus (an author's own site) have no Nexus ids to fetch by
+            .filter_map(|f| {
+                let file = f.file?;
+                Some(CollectionFile {
+                    mod_id: file.owner.mod_id?,
+                    file_id: f.file_id?,
+                    mod_name: file.owner.name,
+                    version: file.version,
+                    optional: f.optional,
+                })
+            })
+            .collect(),
+    })
+}
+
 /// Searches Stardew Valley mods by name; an empty `query` lists the whole catalogue.
 pub async fn search(
     client: &reqwest::Client,
@@ -628,6 +738,39 @@ pub fn clear_key() -> AppResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reads_collection_codes() {
+        for input in [
+            "https://next.nexusmods.com/stardewvalley/collections/tckf0m",
+            "https://www.nexusmods.com/games/stardewvalley/collections/TCKF0M/mods?tab=x",
+            " tckf0m ",
+        ] {
+            assert_eq!(collection_slug(input).as_deref(), Some("tckf0m"), "{input}");
+        }
+        assert_eq!(
+            collection_slug("https://www.nexusmods.com/stardewvalley/mods/1915"),
+            None
+        );
+        assert_eq!(collection_slug("../etc"), None);
+    }
+
+    // cargo test -- --ignored real_collection --nocapture
+    #[test]
+    #[ignore]
+    fn real_collection() {
+        let c =
+            tauri::async_runtime::block_on(collection(&reqwest::Client::new(), "tckf0m")).unwrap();
+        eprintln!(
+            "{} by {:?}, rev {}, {} files, e.g. {:?}",
+            c.name,
+            c.author,
+            c.revision,
+            c.files.len(),
+            c.files.first()
+        );
+        assert!(!c.files.is_empty());
+    }
 
     fn file(id: u64, name: &str, version: Option<&str>, category: &str) -> ModFile {
         ModFile {

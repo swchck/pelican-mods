@@ -458,6 +458,21 @@ export default {
     pasted: "Key taken from the clipboard",
     keychain: "The key is kept in the macOS Keychain and sent nowhere but Nexus.",
   },
+  collection: {
+    button: "Collection",
+    title: "Nexus collection",
+    hint: "Paste a Nexus collection link or its code to see which mods you lack and install them.",
+    placeholder: "Collection link or code",
+    open: "Open",
+    summary: "Mods: {total}, you have {have}, missing {missing}",
+    optional: "Including optional ones",
+    downloadAll: "Download the missing ({n})",
+    openNext: "Open the next one: {name}",
+    openPage: "Open the page of {name}",
+    noPremium:
+      "Without Premium, Nexus hands files out only through its site: open the pages one by one and press “Mod Manager Download” — the mod installs by itself.",
+    queued: "Queued for download: {n}",
+  },
   translate: {
     open: "Translate it myself",
     title: "Translating “{mod}”: {language}",

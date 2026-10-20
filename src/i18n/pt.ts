@@ -468,6 +468,21 @@ export default {
     pasted: "Chave obtida da área de transferência",
     keychain: "A chave fica guardada nas Chaves do macOS e só é enviada ao Nexus.",
   },
+  collection: {
+    button: "Coleção",
+    title: "Coleção do Nexus",
+    hint: "Cole o link de uma coleção do Nexus ou o código dela para ver quais mods faltam e instalá-los.",
+    placeholder: "Link ou código da coleção",
+    open: "Abrir",
+    summary: "Mods: {total}, você tem {have}, faltam {missing}",
+    optional: "Incluindo os opcionais",
+    downloadAll: "Baixar os que faltam ({n})",
+    openNext: "Abrir o próximo: {name}",
+    openPage: "Abrir a página de {name}",
+    noPremium:
+      "Sem Premium, o Nexus só entrega arquivos pelo site: abra as páginas uma a uma e clique em “Mod Manager Download” — o mod se instala sozinho.",
+    queued: "Na fila de download: {n}",
+  },
   translate: {
     open: "Traduzir eu mesmo",
     title: "Traduzir “{mod}”: {language}",

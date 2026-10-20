@@ -458,6 +458,21 @@ export default {
     pasted: "클립보드에서 키를 가져왔어요",
     keychain: "키는 macOS 키체인에 보관되고 Nexus 외에는 어디에도 보내지 않아요.",
   },
+  collection: {
+    button: "컬렉션",
+    title: "Nexus 컬렉션",
+    hint: "Nexus 컬렉션 링크나 코드를 붙여 넣으면 없는 모드를 보여 주고 설치합니다.",
+    placeholder: "컬렉션 링크 또는 코드",
+    open: "열기",
+    summary: "모드: {total}개, 보유 {have}개, 부족 {missing}개",
+    optional: "선택 모드 포함",
+    downloadAll: "부족한 모드 받기 ({n})",
+    openNext: "다음 열기: {name}",
+    openPage: "{name} 페이지 열기",
+    noPremium:
+      "Premium이 없으면 Nexus는 사이트를 통해서만 파일을 줍니다. 페이지를 하나씩 열고 “Mod Manager Download”를 누르면 모드가 알아서 설치됩니다.",
+    queued: "다운로드 대기: {n}개",
+  },
   translate: {
     open: "직접 번역하기",
     title: "「{mod}」 번역: {language}",

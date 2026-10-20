@@ -462,6 +462,21 @@ export default {
     pasted: "Kulcs átvéve a vágólapról",
     keychain: "A kulcs a macOS-kulcskarikában van tárolva, és csak a Nexusnak kerül elküldésre.",
   },
+  collection: {
+    button: "Gyűjtemény",
+    title: "Nexus-gyűjtemény",
+    hint: "Illeszd be egy Nexus-gyűjtemény linkjét vagy kódját: megmutatjuk, mely modok hiányoznak, és feltelepítjük őket.",
+    placeholder: "A gyűjtemény linkje vagy kódja",
+    open: "Megnyitás",
+    summary: "Modok: {total}, megvan {have}, hiányzik {missing}",
+    optional: "Az opcionálisakkal együtt",
+    downloadAll: "Hiányzók letöltése ({n})",
+    openNext: "Következő megnyitása: {name}",
+    openPage: "{name} oldalának megnyitása",
+    noPremium:
+      "Premium nélkül a Nexus csak a weboldalán át adja a fájlokat: nyisd meg az oldalakat egyenként, és nyomd meg a „Mod Manager Download” gombot — a mod magától települ.",
+    queued: "Letöltési sorban: {n}",
+  },
   translate: {
     open: "Lefordítom magam",
     title: "„{mod}” fordítása: {language}",

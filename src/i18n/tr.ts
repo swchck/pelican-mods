@@ -465,6 +465,21 @@ export default {
     pasted: "Anahtar panodan alındı",
     keychain: "Anahtar macOS Anahtar Zinciri'nde saklanır ve Nexus dışında hiçbir yere gönderilmez.",
   },
+  collection: {
+    button: "Koleksiyon",
+    title: "Nexus koleksiyonu",
+    hint: "Eksik modları görmek ve kurmak için bir Nexus koleksiyonu bağlantısı ya da kodu yapıştırın.",
+    placeholder: "Koleksiyon bağlantısı ya da kodu",
+    open: "Aç",
+    summary: "Mod: {total}, sende {have}, eksik {missing}",
+    optional: "İsteğe bağlılar dahil",
+    downloadAll: "Eksikleri indir ({n})",
+    openNext: "Sıradakini aç: {name}",
+    openPage: "{name} sayfasını aç",
+    noPremium:
+      "Premium olmadan Nexus dosyaları yalnızca sitesinden verir: sayfaları tek tek açıp “Mod Manager Download”a basın — mod kendiliğinden kurulur.",
+    queued: "İndirme sırasına alındı: {n}",
+  },
   translate: {
     open: "Kendim çevireyim",
     title: "“{mod}” çevirisi: {language}",

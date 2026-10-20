@@ -469,6 +469,21 @@ export default {
     pasted: "Clave tomada del portapapeles",
     keychain: "La clave se guarda en el Llavero de macOS y solo se envía a Nexus.",
   },
+  collection: {
+    button: "Colección",
+    title: "Colección de Nexus",
+    hint: "Pega un enlace a una colección de Nexus o su código para ver qué mods te faltan e instalarlos.",
+    placeholder: "Enlace o código de la colección",
+    open: "Abrir",
+    summary: "Mods: {total}, tienes {have}, faltan {missing}",
+    optional: "Incluidos los opcionales",
+    downloadAll: "Descargar los que faltan ({n})",
+    openNext: "Abrir el siguiente: {name}",
+    openPage: "Abrir la página de {name}",
+    noPremium:
+      "Sin Premium, Nexus solo entrega archivos a través de su web: abre las páginas una a una y pulsa «Mod Manager Download»; el mod se instala solo.",
+    queued: "En cola de descarga: {n}",
+  },
   translate: {
     open: "Traducirlo yo",
     title: "Traducir «{mod}»: {language}",

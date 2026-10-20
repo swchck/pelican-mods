@@ -470,6 +470,21 @@ export default {
     pasted: "Clé récupérée dans le presse-papiers",
     keychain: "La clé est conservée dans le trousseau macOS et n'est envoyée qu'à Nexus.",
   },
+  collection: {
+    button: "Collection",
+    title: "Collection Nexus",
+    hint: "Collez le lien d'une collection Nexus ou son code pour voir les mods qui vous manquent et les installer.",
+    placeholder: "Lien ou code de la collection",
+    open: "Ouvrir",
+    summary: "Mods : {total}, déjà là : {have}, manquants : {missing}",
+    optional: "Y compris les facultatifs",
+    downloadAll: "Télécharger les manquants ({n})",
+    openNext: "Ouvrir le suivant : {name}",
+    openPage: "Ouvrir la page de {name}",
+    noPremium:
+      "Sans Premium, Nexus ne donne les fichiers que via son site : ouvrez les pages une par une et cliquez sur « Mod Manager Download » — le mod s'installe tout seul.",
+    queued: "En file de téléchargement : {n}",
+  },
   translate: {
     open: "Le traduire moi-même",
     title: "Traduire « {mod} » : {language}",

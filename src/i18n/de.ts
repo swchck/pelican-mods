@@ -463,6 +463,21 @@ export default {
     pasted: "Schlüssel aus der Zwischenablage übernommen",
     keychain: "Der Schlüssel liegt im macOS-Schlüsselbund und wird nur an Nexus gesendet.",
   },
+  collection: {
+    button: "Sammlung",
+    title: "Nexus-Sammlung",
+    hint: "Füge einen Link zu einer Nexus-Sammlung oder ihren Code ein, um zu sehen, welche Mods fehlen, und sie zu installieren.",
+    placeholder: "Link oder Code der Sammlung",
+    open: "Öffnen",
+    summary: "Mods: {total}, vorhanden: {have}, fehlen: {missing}",
+    optional: "Einschließlich optionaler",
+    downloadAll: "Fehlende herunterladen ({n})",
+    openNext: "Nächste öffnen: {name}",
+    openPage: "Seite von {name} öffnen",
+    noPremium:
+      "Ohne Premium gibt Nexus Dateien nur über die Website heraus: Öffne die Seiten nacheinander und klicke „Mod Manager Download“ – die Mod installiert sich von selbst.",
+    queued: "Zum Download eingereiht: {n}",
+  },
   translate: {
     open: "Selbst übersetzen",
     title: "„{mod}“ übersetzen: {language}",

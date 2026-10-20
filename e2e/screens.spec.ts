@@ -61,6 +61,19 @@ test("library filters by status and tag", async ({ page }) => {
   await expect(rows).toHaveCount(4);
 });
 
+test("browse reads a Nexus collection", async ({ page }) => {
+  await open(page, "/browse", "ru");
+  await page.getByRole("button", { name: "Коллекция" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog
+    .getByLabel("Ссылка или код коллекции")
+    .fill("https://next.nexusmods.com/stardewvalley/collections/tckf0m");
+  await dialog.getByRole("button", { name: "Открыть" }).click();
+  await expect(dialog.getByText("Модов: 4, уже есть: 2, не хватает: 1")).toBeVisible();
+  await dialog.getByLabel("Включая необязательные").check();
+  await expect(dialog.getByText("Модов: 4, уже есть: 2, не хватает: 2")).toBeVisible();
+});
+
 test("library translates a mod without the language", async ({ page }) => {
   await open(page, "/", "ru");
   await page.getByRole("option").filter({ hasText: "Lookup Anything" }).click();

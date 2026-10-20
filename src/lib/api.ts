@@ -325,6 +325,7 @@ export const nexus = {
   clearKey: () => invoke<void>("nexus_clear_key"),
   download: (modId: number, fileId: number) => invoke<void>("nexus_download", { modId, fileId }),
   filePage: (modId: number, fileId: number) => invoke<string>("nexus_file_page", { modId, fileId }),
+  collection: (input: string) => invoke<CollectionView>("nexus_collection", { input }),
   openNxm: (url: string) => invoke<void>("nxm_open", { url }),
   takePendingNxm: () => invoke<NxmLink[]>("nxm_take_pending"),
   downloads: () => invoke<Download[]>("downloads_list"),
@@ -864,4 +865,17 @@ export interface SaveDiff {
   firsts: { kind: "shipped" | "fish" | "cooked" | "crafted" | "donated" | "achievement"; names: string[] }[];
   /** Stored item totals, biggest change first. */
   items: SaveChange[];
+}
+
+/** A Nexus collection's latest revision and which of its mods the library has. */
+export interface CollectionView {
+  collection: {
+    slug: string;
+    name: string;
+    author: string | null;
+    revision: number;
+    files: { modId: number; fileId: number; modName: string; version: string | null; optional: boolean }[];
+  };
+  /** Nexus mod ids found in the library's update keys. */
+  installed: number[];
 }
