@@ -84,13 +84,14 @@ export default {
       removed:
         "Beiseitegelegt, damit sich das Entfernen rückgängig machen lässt; nach dem Aufräumen geht das nicht mehr.",
       saveBackups:
-        "Schnappschüsse vor jedem Start und von Hand; beim Aufräumen bleiben pro Spielstand die 5 neuesten erhalten.",
+        "Schnappschüsse vor jedem Start und von Hand; das Aufräumen behält pro Spielstand die 5 neuesten automatischen und lässt Kopien von Hand oder vor einer Wiederherstellung unberührt.",
       downloads: "Mod-Archive, die von Installationen übrig sind.",
     },
     confirm: {
       modBackups: "Alle früheren Mod-Versionen außer der neuesten pro Mod löschen?",
       removed: "Entfernte Mods endgültig löschen? Das Entfernen lässt sich danach nicht mehr rückgängig machen.",
-      saveBackups: "Die 5 neuesten Kopien jedes Spielstands behalten und den Rest löschen?",
+      saveBackups:
+        "Pro Spielstand die 5 neuesten automatischen Kopien behalten und ältere löschen? Kopien von Hand oder vor einer Wiederherstellung bleiben.",
       downloads: "Heruntergeladene Archive löschen?",
     },
   },

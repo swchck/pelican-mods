@@ -404,6 +404,8 @@ pub async fn profile_rename(app: AppHandle, id: String, name: String) -> AppResu
 #[tauri::command]
 pub async fn profile_delete(app: AppHandle, id: String) -> AppResult<LibraryView> {
     blocking(app, move |s| {
+        // its folder may be the one the running game reads its mods from
+        ensure_stopped(s)?;
         s.profiles.update(|p| p.delete(&id))?;
         let _ = std::fs::remove_dir_all(s.deploy_root.join(&id));
         Ok(build_view(s))
@@ -411,19 +413,54 @@ pub async fn profile_delete(app: AppHandle, id: String) -> AppResult<LibraryView
     .await
 }
 
+/// Makes profile `id` the active one; refused while the game runs, since the session's
+/// saves are remembered with the active profile when it ends.
 #[tauri::command]
 pub async fn profile_activate(app: AppHandle, id: String) -> AppResult<LibraryView> {
     blocking(app, move |s| {
+        ensure_stopped(s)?;
         s.profiles.update(|p| p.activate(&id))?;
         Ok(build_view(s))
     })
     .await
 }
 
+/// A history entry and whether [`history_undo`] can still take it back.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryItem {
+    #[serde(flatten)]
+    pub entry: crate::history::Entry,
+    pub can_undo: bool,
+}
+
 /// The library's installs, updates and removals, newest first.
 #[tauri::command]
-pub fn history_list(app: AppHandle) -> Vec<crate::history::Entry> {
-    app.state::<AppState>().history.list()
+pub fn history_list(app: AppHandle) -> Vec<HistoryItem> {
+    let s = app.state::<AppState>();
+    s.history
+        .list()
+        .into_iter()
+        .map(|entry| {
+            let can_undo = !entry.undone
+                && match entry.kind {
+                    crate::history::Kind::Installed => true,
+                    crate::history::Kind::Updated => previous_backup(&s, &entry).is_some(),
+                    crate::history::Kind::Removed => {
+                        entry.stash.as_ref().is_some_and(|p| p.exists())
+                    }
+                };
+            HistoryItem { entry, can_undo }
+        })
+        .collect()
+}
+
+// the copy an update replaced, by version: the newest backup may belong to a later update
+fn previous_backup(s: &AppState, e: &crate::history::Entry) -> Option<backups::Backup> {
+    let previous = e.previous.as_deref()?;
+    backups::list(&s.backup_root, &e.unique_id)
+        .into_iter()
+        .find(|b| b.version == previous)
 }
 
 /// Undoes history entry `at`: removes an install, rolls an update back, or puts a
@@ -432,12 +469,13 @@ pub fn history_list(app: AppHandle) -> Vec<crate::history::Entry> {
 pub async fn history_undo(app: AppHandle, at: u64) -> AppResult<LibraryView> {
     blocking(app, move |s| {
         ensure_stopped(s)?;
+        // before reading the entry: a second click waiting here must see it undone
+        let _guard = lock_library(s);
         let e = s
             .history
             .get(at)
             .filter(|e| !e.undone)
             .ok_or_else(|| AppError::NotFound(at.to_string()))?;
-        let _guard = lock_library(s);
         match e.kind {
             crate::history::Kind::Installed => {
                 let path = library::package_path(&s.store_root, &e.package)?;
@@ -448,10 +486,13 @@ pub async fn history_undo(app: AppHandle, at: u64) -> AppResult<LibraryView> {
                 })?;
             }
             crate::history::Kind::Updated => {
-                let backup = backups::list(&s.backup_root, &e.unique_id)
-                    .into_iter()
-                    .next()
-                    .ok_or_else(|| AppError::NotFound(e.unique_id.clone()))?;
+                let backup = previous_backup(s, &e).ok_or_else(|| {
+                    AppError::NotFound(format!(
+                        "{} {}",
+                        e.unique_id,
+                        e.previous.as_deref().unwrap_or("")
+                    ))
+                })?;
                 let mut done = Vec::new();
                 let result = library::install_dir_into(
                     &s.store_root,
@@ -474,7 +515,11 @@ pub async fn history_undo(app: AppHandle, at: u64) -> AppResult<LibraryView> {
                     .clone()
                     .ok_or_else(|| AppError::NotFound(e.package.clone()))?;
                 let dest = s.store_root.join(&e.package);
-                if dest.exists() {
+                let reinstalled = library::scan(&s.store_root).iter().any(|p| {
+                    p.unique_ids()
+                        .any(|id| id.eq_ignore_ascii_case(&e.unique_id))
+                });
+                if dest.exists() || reinstalled {
                     return Err(AppError::Io(std::io::Error::other(format!(
                         "{} is installed again",
                         e.package

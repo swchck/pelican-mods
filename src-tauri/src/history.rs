@@ -90,12 +90,14 @@ impl History {
         self.save(&entries)
     }
 
-    /// Forgets every stashed removal after the stash folder was emptied; those can't be
-    /// undone any more.
+    /// Forgets stashed removals whose folder is gone, as after the stash folder was
+    /// emptied; those can't be undone any more.
     pub fn forget_stashes(&self) -> AppResult<()> {
         let mut entries = self.entries.lock().unwrap();
         for e in entries.iter_mut() {
-            e.stash = None;
+            if e.stash.as_ref().is_some_and(|s| !s.exists()) {
+                e.stash = None;
+            }
         }
         self.save(&entries)
     }

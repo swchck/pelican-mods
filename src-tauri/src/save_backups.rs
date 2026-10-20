@@ -135,23 +135,32 @@ pub fn snapshot_changed(root: &Path, saves_dir: &Path) -> AppResult<usize> {
 }
 
 /// Copies every save changed since its newest copy in `folder` there, keeping the
-/// `keep` newest per save; returns how many it copied.
+/// `keep` newest per save; returns how many it copied, or the first error once every
+/// save had its try.
 ///
 /// `folder` is the user's (iCloud Drive, a backup disk), so its layout matches the
 /// app's own snapshots and any copy imports back as a save.
 pub fn mirror(folder: &Path, saves_dir: &Path, keep: usize) -> AppResult<usize> {
     let mut n = 0;
+    let mut failed = None;
+    // one unreadable save mustn't keep the others from their copies
     for s in saves::list(saves_dir) {
-        let newest = list(folder, &s.id).first().map(|b| b.created / 1000);
-        if newest.is_none_or(|t| s.modified > t) {
-            create(folder, &s.path, Reason::Mirror)?;
-            n += 1;
-        }
-        for old in list(folder, &s.id).into_iter().skip(keep) {
-            std::fs::remove_file(&old.file)?;
+        let result = (|| {
+            let newest = list(folder, &s.id).first().map(|b| b.created / 1000);
+            if newest.is_none_or(|t| s.modified > t) {
+                create(folder, &s.path, Reason::Mirror)?;
+                n += 1;
+            }
+            for old in list(folder, &s.id).into_iter().skip(keep) {
+                std::fs::remove_file(&old.file)?;
+            }
+            AppResult::Ok(())
+        })();
+        if let Err(e) = result {
+            failed.get_or_insert(e);
         }
     }
-    Ok(n)
+    failed.map_or(Ok(n), Err)
 }
 
 /// Writes save `dir` to a zip at `dest` for sharing or moving to another machine.

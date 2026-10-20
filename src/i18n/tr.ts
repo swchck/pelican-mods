@@ -83,13 +83,14 @@ export default {
       modBackups: "Güncellemeleri geri almak için; temizlik her moddan en sonuncusunu tutar.",
       removed: "Kaldırma işlemi geri alınabilsin diye saklanır; temizlikten sonra geri alınamaz.",
       saveBackups:
-        "Her başlatmadan önce ve elle alınan anlık kopyalar; temizlik her kayıttan en yeni 5 tanesini tutar.",
+        "Her açılıştan önce ve elle alınan kopyalar; temizlik her kayıt için en yeni 5 otomatik kopyayı tutar, elle alınanlara ve geri yüklemeden önceki kopyalara dokunmaz.",
       downloads: "Kurulumlardan kalan mod arşivleri.",
     },
     confirm: {
       modBackups: "Her modun en son sürümü dışındaki tüm eski sürümler silinsin mi?",
       removed: "Kaldırılan modlar tamamen silinsin mi? Bundan sonra kaldırma işlemi geri alınamaz.",
-      saveBackups: "Her kaydın en yeni 5 kopyası tutulup geri kalanı silinsin mi?",
+      saveBackups:
+        "Her kaydın en yeni 5 otomatik kopyası kalsın, eskiler silinsin mi? Elle alınan ve geri yüklemeden önceki kopyalar kalır.",
       downloads: "İndirilen arşivler silinsin mi?",
     },
   },

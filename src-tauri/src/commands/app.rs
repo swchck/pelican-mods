@@ -4,7 +4,7 @@ use serde::Deserialize;
 use tauri::{AppHandle, State};
 use tauri_plugin_opener::OpenerExt;
 
-use super::{AppState, game_data_dir};
+use super::{AppState, game_data_dir, lock_library};
 use crate::error::{AppError, AppResult};
 use crate::settings::Settings;
 
@@ -54,16 +54,25 @@ pub async fn storage_usage(app: AppHandle) -> AppResult<Vec<crate::storage::Usag
 /// Trims one kind of kept data: old mod and save backups, set-aside removals, downloads.
 #[tauri::command]
 pub async fn storage_clean(app: AppHandle, kind: String) -> AppResult<u32> {
-    crate::commands::blocking(app, move |s| match kind.as_str() {
-        "modBackups" => crate::storage::prune(&s.backup_root, KEEP_MOD_BACKUPS),
-        "saveBackups" => crate::storage::prune(&s.save_backup_root, KEEP_SAVE_BACKUPS),
-        "removed" => {
-            let n = crate::storage::clear(&s.removed_root)?;
-            s.history.forget_stashes()?;
-            Ok(n)
+    crate::commands::blocking(app, move |s| {
+        // an update, rollback or undo may be reading these folders
+        let _guard = lock_library(s);
+        match kind.as_str() {
+            "modBackups" => crate::storage::prune(&s.backup_root, KEEP_MOD_BACKUPS, |_| true),
+            // the automatic ones only: a manual copy or the state a restore replaced may
+            // be the one the player is counting on
+            "saveBackups" => crate::storage::prune(&s.save_backup_root, KEEP_SAVE_BACKUPS, |n| {
+                n.ends_with("@launch.zip")
+            }),
+            "removed" => {
+                let cleared = crate::storage::clear(&s.removed_root);
+                // even a partial clear leaves stashes history can't put back any more
+                s.history.forget_stashes()?;
+                cleared
+            }
+            "downloads" => crate::storage::clear(&s.work_dir.with_file_name("downloads")),
+            other => Err(AppError::NotFound(other.to_owned())),
         }
-        "downloads" => crate::storage::clear(&s.work_dir.with_file_name("downloads")),
-        other => Err(AppError::NotFound(other.to_owned())),
     })
     .await
 }

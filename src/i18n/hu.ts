@@ -82,13 +82,15 @@ export default {
     hint: {
       modBackups: "Frissítések visszavonásához; takarításkor modonként a legutóbbi marad meg.",
       removed: "Félretéve, hogy az eltávolítás visszavonható legyen; takarítás után már nem az.",
-      saveBackups: "Pillanatképek minden indítás előtt és kézzel; takarításkor mentésenként az 5 legújabb marad.",
+      saveBackups:
+        "Pillanatképek minden indítás előtt és kézzel; a takarítás mentésenként az 5 legújabb automatikusat tartja meg, a kézi és a visszaállítás előtti másolatokhoz nem nyúl.",
       downloads: "Telepítésekből megmaradt modarchívumok.",
     },
     confirm: {
       modBackups: "Törlöd az összes korábbi modverziót, modonként a legutóbbit kivéve?",
       removed: "Végleg törlöd az eltávolított modokat? Ezután az eltávolításuk nem vonható vissza.",
-      saveBackups: "Mentésenként megtartod az 5 legújabb másolatot, és törlöd a többit?",
+      saveBackups:
+        "Mentésenként megtartod az 5 legújabb automatikus másolatot, a régebbieket pedig törlöd? A kézi és a visszaállítás előtti másolatok megmaradnak.",
       downloads: "Törlöd a letöltött archívumokat?",
     },
   },

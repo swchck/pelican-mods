@@ -82,13 +82,15 @@ export default {
     hint: {
       modBackups: "Servono per annullare gli aggiornamenti; la pulizia tiene l'ultima per ogni mod.",
       removed: "Messe da parte per poter annullare la rimozione; dopo la pulizia non si potrà più.",
-      saveBackups: "Istantanee prima di ogni avvio e manuali; la pulizia tiene le 5 più recenti per salvataggio.",
+      saveBackups:
+        "Istantanee prima di ogni avvio e a mano; la pulizia tiene le 5 automatiche più recenti per salvataggio e non tocca mai le copie a mano né quelle prima di un ripristino.",
       downloads: "Archivi delle mod rimasti dalle installazioni.",
     },
     confirm: {
       modBackups: "Eliminare tutte le versioni precedenti delle mod tranne l'ultima per ciascuna?",
       removed: "Eliminare definitivamente le mod rimosse? Dopo non potrai più annullarne la rimozione.",
-      saveBackups: "Tenere le 5 copie più recenti di ogni salvataggio ed eliminare il resto?",
+      saveBackups:
+        "Tenere le 5 copie automatiche più recenti di ogni salvataggio ed eliminare le più vecchie? Le copie a mano e quelle prima di un ripristino restano.",
       downloads: "Eliminare gli archivi scaricati?",
     },
   },

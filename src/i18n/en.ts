@@ -82,13 +82,15 @@ export default {
     hint: {
       modBackups: "For rolling updates back; cleaning keeps the latest one per mod.",
       removed: "Set aside so a removal can be undone; after cleaning it can't be.",
-      saveBackups: "Snapshots before each launch and by hand; cleaning keeps the 5 newest per save.",
+      saveBackups:
+        "Snapshots before each launch and by hand; cleaning keeps the 5 newest automatic ones per save and never touches copies made by hand or before a restore.",
       downloads: "Mod archives left over from installs.",
     },
     confirm: {
       modBackups: "Delete every earlier mod version except the latest one per mod?",
       removed: "Delete the removed mods for good? Their removal can't be undone after this.",
-      saveBackups: "Keep the 5 newest copies of each save and delete the rest?",
+      saveBackups:
+        "Keep the 5 newest automatic copies of each save and delete the older ones? Copies made by hand or before a restore stay.",
       downloads: "Delete the downloaded archives?",
     },
   },

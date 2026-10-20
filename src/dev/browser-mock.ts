@@ -452,6 +452,7 @@ mockIPC(
             version: "1.49.0",
             previous: "1.48.0",
             undone: false,
+            canUndo: true,
           },
         ];
       case "game_crash":

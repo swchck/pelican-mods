@@ -83,13 +83,14 @@ export default {
       modBackups: "Para revertir actualizaciones; al limpiar se conserva la más reciente de cada mod.",
       removed: "Apartados para poder deshacer la eliminación; tras limpiar ya no se podrá.",
       saveBackups:
-        "Instantáneas antes de cada inicio y manuales; al limpiar se conservan las 5 más recientes de cada partida.",
+        "Copias antes de cada inicio y a mano; la limpieza deja las 5 automáticas más recientes por partida y no toca las hechas a mano ni las previas a una restauración.",
       downloads: "Archivos de mods que quedaron de las instalaciones.",
     },
     confirm: {
       modBackups: "¿Borrar todas las versiones anteriores de los mods salvo la más reciente de cada uno?",
       removed: "¿Borrar definitivamente los mods eliminados? Después ya no se podrá deshacer su eliminación.",
-      saveBackups: "¿Conservar las 5 copias más recientes de cada partida y borrar el resto?",
+      saveBackups:
+        "¿Conservar las 5 copias automáticas más recientes de cada partida y borrar las anteriores? Las copias a mano y las previas a una restauración se quedan.",
       downloads: "¿Borrar los archivos descargados?",
     },
   },

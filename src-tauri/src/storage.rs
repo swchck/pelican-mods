@@ -41,8 +41,9 @@ pub fn measure(kind: &'static str, dir: &Path) -> Usage {
     Usage { kind, bytes, files }
 }
 
-/// Keeps the `keep` newest entries in each folder under `root`; returns how many went.
-pub fn prune(root: &Path, keep: usize) -> AppResult<u32> {
+/// Keeps the `keep` newest entries in each folder under `root` among those whose file
+/// name `counts`; the rest are never touched. Returns how many went.
+pub fn prune(root: &Path, keep: usize, counts: impl Fn(&str) -> bool) -> AppResult<u32> {
     let mut removed = 0;
     for group in std::fs::read_dir(root).into_iter().flatten().flatten() {
         if !group.path().is_dir() {
@@ -52,6 +53,9 @@ pub fn prune(root: &Path, keep: usize) -> AppResult<u32> {
             .flatten()
             .filter_map(|e| {
                 let name = e.file_name().to_string_lossy().into_owned();
+                if !counts(&name) {
+                    return None;
+                }
                 let stamp = name.split(['@', '-']).next()?.parse().ok()?;
                 Some((stamp, e.path()))
             })
@@ -96,17 +100,26 @@ mod tests {
         for t in [100, 300, 200] {
             std::fs::write(saves.join(format!("{t}@launch.zip")), [0u8; 10]).unwrap();
         }
+        std::fs::write(saves.join("50@manual.zip"), [0u8; 10]).unwrap();
         let mods = dir.path().join("backups/pathoschild.automate");
         for t in [5, 9] {
             std::fs::create_dir_all(mods.join(format!("{t}@2.0.{t}/Automate"))).unwrap();
             std::fs::write(mods.join(format!("{t}@2.0.{t}/Automate/a.dll")), [0u8; 4]).unwrap();
         }
         let u = measure("saveBackups", &dir.path().join("save-backups"));
-        assert_eq!((u.bytes, u.files), (30, 3));
+        assert_eq!((u.bytes, u.files), (40, 4));
 
-        assert_eq!(prune(&dir.path().join("save-backups"), 1).unwrap(), 2);
+        let launch = |n: &str| n.ends_with("@launch.zip");
+        assert_eq!(
+            prune(&dir.path().join("save-backups"), 1, launch).unwrap(),
+            2
+        );
         assert!(saves.join("300@launch.zip").exists());
-        assert_eq!(prune(&dir.path().join("backups"), 1).unwrap(), 1);
+        assert!(
+            saves.join("50@manual.zip").exists(),
+            "older, but kept on purpose"
+        );
+        assert_eq!(prune(&dir.path().join("backups"), 1, |_| true).unwrap(), 1);
         assert!(mods.join("9@2.0.9").exists() && !mods.join("5@2.0.5").exists());
 
         assert_eq!(clear(&dir.path().join("backups")).unwrap(), 1);

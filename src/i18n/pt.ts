@@ -83,13 +83,14 @@ export default {
       modBackups: "Para desfazer atualizações; a limpeza mantém a mais recente de cada mod.",
       removed: "Guardados para que uma remoção possa ser desfeita; depois da limpeza, não pode mais.",
       saveBackups:
-        "Cópias feitas antes de cada inicialização e manualmente; a limpeza mantém as 5 mais recentes por save.",
+        "Cópias antes de cada início e manuais; a limpeza mantém as 5 automáticas mais recentes por save e nunca mexe nas manuais nem nas feitas antes de uma restauração.",
       downloads: "Arquivos de mods que sobraram das instalações.",
     },
     confirm: {
       modBackups: "Apagar todas as versões anteriores dos mods, exceto a mais recente de cada um?",
       removed: "Apagar de vez os mods removidos? A remoção deles não poderá mais ser desfeita.",
-      saveBackups: "Manter as 5 cópias mais recentes de cada save e apagar o resto?",
+      saveBackups:
+        "Manter as 5 cópias automáticas mais recentes de cada save e apagar as mais antigas? As cópias manuais e as feitas antes de uma restauração ficam.",
       downloads: "Apagar os arquivos baixados?",
     },
   },

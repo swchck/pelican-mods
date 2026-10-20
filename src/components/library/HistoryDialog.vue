@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { library, type HistoryEntry } from "@/lib/api";
 import { relativeTime } from "@/lib/time";
-import { errorText } from "@/i18n";
 import { useGame } from "@/stores/game";
 import { useLibrary } from "@/stores/library";
 
@@ -25,11 +24,8 @@ watch(open, async (on) => {
 async function undo(e: HistoryEntry) {
   busy.value = true;
   try {
-    lib.view = await library.undo(e.at);
-    entries.value = await library.history();
-    toast.success(t("history.undone", { name: e.name }));
-  } catch (err) {
-    toast.error(errorText(err));
+    if (await lib.undo(e.at)) toast.success(t("history.undone", { name: e.name }));
+    entries.value = await library.history().catch(() => entries.value);
   } finally {
     busy.value = false;
   }
@@ -59,7 +55,7 @@ async function undo(e: HistoryEntry) {
             </span>
           </div>
           <span v-if="e.undone" class="text-muted-foreground text-xs font-bold">{{ t("history.wasUndone") }}</span>
-          <Button v-else size="sm" variant="outline" :disabled="busy || game.running" @click="undo(e)">
+          <Button v-else-if="e.canUndo" size="sm" variant="outline" :disabled="busy || game.running" @click="undo(e)">
             <Undo2Icon />{{ t("history.undo") }}
           </Button>
         </li>

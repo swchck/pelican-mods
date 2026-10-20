@@ -31,8 +31,12 @@ watch(
     const ids = all.filter((id) => !asked.has(id));
     if (!ids.length) return;
     ids.forEach((id) => asked.add(id));
-    const found = await api.compatForNexus(ids).catch(() => ({}));
-    verdicts.value = { ...verdicts.value, ...found };
+    try {
+      verdicts.value = { ...verdicts.value, ...(await api.compatForNexus(ids)) };
+    } catch {
+      // offline or the list didn't load: the next search asks for these again
+      ids.forEach((id) => asked.delete(id));
+    }
   },
   { immediate: true },
 );

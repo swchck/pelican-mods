@@ -83,13 +83,14 @@ export default {
       modBackups: "Pour annuler des mises à jour ; le nettoyage garde la plus récente de chaque mod.",
       removed: "Mis de côté pour pouvoir annuler une suppression ; après le nettoyage, ce ne sera plus possible.",
       saveBackups:
-        "Instantanés pris avant chaque lancement et à la main ; le nettoyage garde les 5 plus récents par sauvegarde.",
+        "Instantanés avant chaque lancement et à la main ; le nettoyage garde les 5 automatiques les plus récents par sauvegarde et ne touche jamais aux copies manuelles ni à celles d'avant une restauration.",
       downloads: "Archives de mods restées après les installations.",
     },
     confirm: {
       modBackups: "Supprimer toutes les anciennes versions des mods, sauf la plus récente de chacun ?",
       removed: "Supprimer définitivement les mods supprimés ? Leur suppression ne pourra plus être annulée.",
-      saveBackups: "Garder les 5 copies les plus récentes de chaque sauvegarde et supprimer le reste ?",
+      saveBackups:
+        "Garder les 5 copies automatiques les plus récentes de chaque sauvegarde et supprimer les plus anciennes ? Les copies manuelles et celles d'avant une restauration restent.",
       downloads: "Supprimer les archives téléchargées ?",
     },
   },

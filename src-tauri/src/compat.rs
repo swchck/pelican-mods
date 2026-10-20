@@ -93,8 +93,12 @@ pub async fn verdicts(client: &reqwest::Client, cache: &Path) -> AppResult<HashM
         .ok()
         .and_then(|t| SystemTime::now().duration_since(t).ok())
         .is_some_and(|age| age < MAX_AGE);
-    if let Some(text) = fresh.then(|| std::fs::read_to_string(cache).ok()).flatten() {
-        return parse(&text);
+    // a cache that doesn't parse (cut short by a crash mid-write) is as good as stale
+    if let Some(Ok(v)) = fresh
+        .then(|| std::fs::read_to_string(cache).ok().map(|t| parse(&t)))
+        .flatten()
+    {
+        return Ok(v);
     }
     let text = client
         .get(LIST)
@@ -103,11 +107,12 @@ pub async fn verdicts(client: &reqwest::Client, cache: &Path) -> AppResult<HashM
         .error_for_status()?
         .text()
         .await?;
+    let verdicts = parse(&text)?;
     if let Some(dir) = cache.parent() {
         std::fs::create_dir_all(dir)?;
     }
     std::fs::write(cache, &text)?;
-    parse(&text)
+    Ok(verdicts)
 }
 
 #[cfg(test)]

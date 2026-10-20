@@ -737,6 +737,8 @@ export interface HistoryEntry {
   version: string;
   previous: string | null;
   undone: boolean;
+  /** False once what undoing needs is gone: a cleaned-up backup or removed mod. */
+  canUndo: boolean;
 }
 
 /** How much one kind of the launcher's kept data takes. */

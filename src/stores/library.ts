@@ -207,6 +207,7 @@ export const useLibrary = defineStore("library", () => {
     installDependency,
     profileFromList: (name: string, uniqueIds: string[]) => run(() => api.profileFromList(name, uniqueIds)),
     rollback: (uniqueId: string) => run(() => api.rollback(uniqueId)),
+    undo: (at: number) => run(() => api.undo(at)),
     /** Attaches or (with null) detaches a GitHub repo, then asks smapi.io again with it. */
     async setGithub(uniqueId: string, repo: string | null) {
       if (await run(() => api.setGithub(uniqueId, repo))) await checkUpdates(true);
