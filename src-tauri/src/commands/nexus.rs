@@ -5,7 +5,6 @@ use tauri::{AppHandle, Emitter, Manager};
 use crate::commands::AppState;
 use crate::downloads::{self, Download, State};
 use crate::error::{AppError, AppResult};
-use crate::mods_commands;
 use crate::nexus::{self, Account, LinkGrant, ModDetails, SearchFilters, SearchPage, Sort};
 
 // the Keychain can stop to ask for the login password; that wait belongs on a blocking
@@ -223,9 +222,9 @@ async fn run(
     }
     state.downloads.set(id, State::Installing);
     changed(app);
-    let installed = mods_commands::blocking(app.clone(), {
+    let installed = crate::commands::blocking(app.clone(), {
         let file = file.clone();
-        move |s| mods_commands::install_paths(s, std::slice::from_ref(&file))
+        move |s| crate::commands::library::install_paths(s, std::slice::from_ref(&file))
     })
     .await;
     let _ = tokio::fs::remove_file(&file).await;

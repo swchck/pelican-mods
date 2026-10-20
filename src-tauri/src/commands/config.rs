@@ -7,11 +7,11 @@ use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
 use crate::commands::{AppState, EventSink, game_data_dir};
+use crate::commands::{blocking, library::deploy_active};
 use crate::error::{AppError, AppResult};
 use crate::launcher::{RunState, SmapiRun};
 use crate::library;
 use crate::mod_config::{self, ModConfig};
-use crate::mods_commands::{blocking, deploy_active};
 
 /// How long a config-generating run may take to reach "Mods loaded and ready".
 const GENERATE_TIMEOUT: Duration = Duration::from_secs(90);

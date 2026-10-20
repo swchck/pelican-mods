@@ -6,10 +6,10 @@ use std::sync::Mutex;
 
 use tauri::AppHandle;
 
+use crate::commands::blocking;
 use crate::commands::{AppState, game_data_dir};
 use crate::error::{AppError, AppResult};
 use crate::launcher::RunState;
-use crate::mods_commands::blocking;
 use crate::perfection::{self, Perfection};
 use crate::save_backups::{self, Reason, Snapshot};
 use crate::saves::{self, Progress, SaveSummary};
