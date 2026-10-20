@@ -466,6 +466,14 @@ export default {
     pasted: "キーをクリップボードから取得しました",
     keychain: "キーはmacOSのキーチェーンに保存され、Nexus以外には送信されません。",
   },
+  translate: {
+    open: "自分で翻訳する",
+    title: "「{mod}」の翻訳：{language}",
+    hint: "左が MOD の元の文、右があなたの訳です。空の行はそのままになります。訳は MOD に保存され、更新後も戻ります。",
+    search: "行を探す…",
+    save: "翻訳を保存",
+    saved: "翻訳を保存しました。次の起動から反映されます",
+  },
   bisect: {
     start: "問題の原因 MOD を探す",
     profileName: "原因探し",

@@ -31,6 +31,7 @@ mod settings;
 mod smapi;
 mod smapi_log;
 mod storage;
+mod translations;
 mod updates;
 mod version;
 
@@ -161,6 +162,8 @@ pub fn run() {
             commands::saves::saves_mirror,
             commands::saves::settings_set_backup_folder,
             commands::config::mod_config_get,
+            commands::config::mod_translation_get,
+            commands::config::mod_translation_save,
             commands::config::mod_config_save,
             commands::config::mod_config_defaults,
             commands::config::mods_generate_configs,

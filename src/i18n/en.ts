@@ -458,6 +458,14 @@ export default {
     pasted: "Key taken from the clipboard",
     keychain: "The key is kept in the macOS Keychain and sent nowhere but Nexus.",
   },
+  translate: {
+    open: "Translate it myself",
+    title: "Translating “{mod}”: {language}",
+    hint: "The mod's text on the left, your translation on the right. Empty lines stay as they are; the translation goes into the mod and comes back after its updates.",
+    search: "Find a line…",
+    save: "Save translation",
+    saved: "Translation saved; it applies on the next launch",
+  },
   bisect: {
     start: "Find the mod behind a problem",
     profileName: "Problem search",

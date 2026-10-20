@@ -19,6 +19,7 @@ import {
   packageUpdate,
   type StatusFilter,
 } from "@/lib/packages";
+import { translations as translationsApi } from "@/lib/api";
 import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
 import { errorText, i18n } from "@/i18n";
 import { useNexus } from "./nexus";
@@ -236,6 +237,8 @@ export const useLibrary = defineStore("library", () => {
     profileFromList: (name: string, uniqueIds: string[]) => run(() => api.profileFromList(name, uniqueIds)),
     rollback: (uniqueId: string) => run(() => api.rollback(uniqueId)),
     undo: (at: number) => run(() => api.undo(at)),
+    saveTranslation: (pkg: string, relPath: string, language: string, texts: Record<string, string>) =>
+      run(() => translationsApi.save(pkg, relPath, language, texts)),
     bisectStart: (name: string) => run(() => api.bisectStart(name)),
     bisectCancel: () => run(() => api.bisectCancel()),
     /** The last finished search's answer, until the player acts on it. */

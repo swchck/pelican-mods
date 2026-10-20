@@ -196,6 +196,8 @@ pub fn deploy_active(state: &AppState) -> AppResult<PathBuf> {
 }
 
 pub(crate) fn record_installs(state: &AppState, installed: &[library::Installed]) -> AppResult<()> {
+    // an update brings the mod's folder fresh, without the player's translation in it
+    crate::translations::reapply(&state.translations_root, &library::scan(&state.store_root));
     state.profiles.update(|p| {
         for i in installed {
             if i.replaced.is_empty() {

@@ -465,6 +465,14 @@ export default {
     pasted: "Anahtar panodan alındı",
     keychain: "Anahtar macOS Anahtar Zinciri'nde saklanır ve Nexus dışında hiçbir yere gönderilmez.",
   },
+  translate: {
+    open: "Kendim çevireyim",
+    title: "“{mod}” çevirisi: {language}",
+    hint: "Solda modun metni, sağda sizin çeviriniz. Boş satırlar olduğu gibi kalır; çeviri moda yazılır ve güncellemelerden sonra geri gelir.",
+    search: "Satır bul…",
+    save: "Çeviriyi kaydet",
+    saved: "Çeviri kaydedildi; bir sonraki açılışta geçerli olur",
+  },
   bisect: {
     start: "Sorunun arkasındaki modu bul",
     profileName: "Sorun arama",

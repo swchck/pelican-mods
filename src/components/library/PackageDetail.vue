@@ -9,6 +9,7 @@ import {
   ExternalLinkIcon,
   FolderIcon,
   GitBranchIcon,
+  PencilLineIcon,
   LanguagesIcon,
   SearchIcon,
   Loader2Icon,
@@ -30,6 +31,7 @@ import {
 import { library, saves, type Changelog, type Issue, type PackageView, type SaveUsage } from "@/lib/api";
 import DependencyList from "@/components/library/DependencyList.vue";
 import PackageTags from "@/components/library/PackageTags.vue";
+import TranslateDialog from "@/components/library/TranslateDialog.vue";
 import { splitLinks, type Segment } from "@/lib/md-links";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useNexus } from "@/stores/nexus";
@@ -114,7 +116,9 @@ const tags = computed(() => {
 });
 
 // a mod that translates into some languages but not the game's; packs check their parts
-const missingLanguage = computed(() => props.pkg.mods.find((m) => m.missingTranslation)?.missingTranslation ?? null);
+const untranslated = computed(() => props.pkg.mods.find((m) => m.missingTranslation) ?? null);
+const missingLanguage = computed(() => untranslated.value?.missingTranslation ?? null);
+const translating = ref(false);
 const languageName = (code: string, in_: string) => new Intl.DisplayNames([in_], { type: "language" }).of(code) ?? code;
 function findTranslation() {
   if (!missingLanguage.value) return;
@@ -216,16 +220,27 @@ async function remove() {
 
     <div
       v-if="missingLanguage"
-      class="border-border-soft bg-parchment flex items-center gap-2 rounded-md border-2 border-dashed p-2.5 text-[13px]"
+      class="border-border-soft bg-parchment flex flex-wrap items-center gap-2 rounded-md border-2 border-dashed p-2.5 text-[13px]"
     >
       <LanguagesIcon class="text-muted-foreground size-4 shrink-0" />
-      <span class="flex-1 font-semibold">{{
+      <span class="min-w-40 flex-1 font-semibold">{{
         t("library.noTranslation", { language: languageName(missingLanguage, locale) })
       }}</span>
       <Button size="xs" variant="outline" @click="findTranslation"
         ><SearchIcon />{{ t("library.findTranslation") }}</Button
       >
+      <Button size="xs" variant="outline" @click="translating = true"
+        ><PencilLineIcon />{{ t("translate.open") }}</Button
+      >
     </div>
+    <TranslateDialog
+      v-if="untranslated && missingLanguage"
+      v-model:open="translating"
+      :pkg="pkg.id"
+      :rel-path="untranslated.relPath"
+      :title="untranslated.manifest.name"
+      :language="missingLanguage"
+    />
 
     <div
       v-if="update"

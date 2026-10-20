@@ -641,6 +641,20 @@ export interface PatchedMethod {
   patches: { owner: string; kind: "prefix" | "postfix" | "transpiler" | "finalizer"; canSkip: boolean }[];
 }
 
+/** One line of a mod's own text to translate. */
+export interface TranslationLine {
+  key: string;
+  source: string;
+  text: string;
+}
+
+export const translations = {
+  get: (pkg: string, relPath: string, language: string) =>
+    invoke<TranslationLine[]>("mod_translation_get", { package: pkg, relPath, language }),
+  save: (pkg: string, relPath: string, language: string, texts: Record<string, string>) =>
+    invoke<LibraryView>("mod_translation_save", { package: pkg, relPath, language, texts }),
+};
+
 export const modConfig = {
   get: (pkg: string, relPath: string, locale: string) =>
     invoke<ModConfig>("mod_config_get", { package: pkg, relPath, locale }),

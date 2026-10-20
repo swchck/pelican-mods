@@ -37,6 +37,7 @@ const pkg = (id: string, m: ReturnType<typeof manifest>, extra: Record<string, u
       requiredBy: [],
       hasConfig: true,
       hasSchema: false,
+      missingTranslation: m.uniqueId === "Pathoschild.LookupAnything" ? "ru" : null,
     },
   ],
   broken: [],
@@ -364,6 +365,13 @@ mockIPC(
       }
       case "bisect_cancel":
         library.bisect = null;
+        return structuredClone(library);
+      case "mod_translation_get":
+        return [
+          { key: "config.title", source: "Lookup Anything settings", text: "" },
+          { key: "hud.hint", source: "Press F1 to look things up", text: "" },
+        ];
+      case "mod_translation_save":
         return structuredClone(library);
       case "library_set_tags": {
         const { id, tags } = a as { id: string; tags: string[] };

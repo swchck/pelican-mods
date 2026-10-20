@@ -445,6 +445,14 @@ export default {
     pasted: "已从剪贴板获取密钥",
     keychain: "密钥保存在 macOS 钥匙串中，只会发送给 Nexus。",
   },
+  translate: {
+    open: "自己翻译",
+    title: "翻译“{mod}”：{language}",
+    hint: "左侧是模组原文，右侧是你的译文。空行保持不变；译文会写入模组，更新后也会恢复。",
+    search: "查找条目…",
+    save: "保存翻译",
+    saved: "译文已保存，下次启动生效",
+  },
   bisect: {
     start: "查找导致问题的模组",
     profileName: "问题排查",

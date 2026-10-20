@@ -468,6 +468,14 @@ export default {
     pasted: "Chave obtida da área de transferência",
     keychain: "A chave fica guardada nas Chaves do macOS e só é enviada ao Nexus.",
   },
+  translate: {
+    open: "Traduzir eu mesmo",
+    title: "Traduzir “{mod}”: {language}",
+    hint: "À esquerda, o texto do mod; à direita, sua tradução. Linhas vazias ficam como estão; a tradução vai para o mod e volta após as atualizações.",
+    search: "Procurar uma linha…",
+    save: "Salvar tradução",
+    saved: "Tradução salva; vale a partir do próximo início",
+  },
   bisect: {
     start: "Encontrar o mod por trás de um problema",
     profileName: "Busca do problema",

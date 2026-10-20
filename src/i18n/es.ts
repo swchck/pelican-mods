@@ -469,6 +469,14 @@ export default {
     pasted: "Clave tomada del portapapeles",
     keychain: "La clave se guarda en el Llavero de macOS y solo se envía a Nexus.",
   },
+  translate: {
+    open: "Traducirlo yo",
+    title: "Traducir «{mod}»: {language}",
+    hint: "A la izquierda, el texto del mod; a la derecha, tu traducción. Las líneas vacías se quedan como están; la traducción va al mod y vuelve tras sus actualizaciones.",
+    search: "Buscar una línea…",
+    save: "Guardar traducción",
+    saved: "Traducción guardada; se aplica en el próximo inicio",
+  },
   bisect: {
     start: "Buscar el mod que causa un problema",
     profileName: "Búsqueda del problema",

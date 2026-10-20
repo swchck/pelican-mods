@@ -61,6 +61,18 @@ test("library filters by status and tag", async ({ page }) => {
   await expect(rows).toHaveCount(4);
 });
 
+test("library translates a mod without the language", async ({ page }) => {
+  await open(page, "/", "ru");
+  await page.getByRole("option").filter({ hasText: "Lookup Anything" }).click();
+  await page.getByRole("button", { name: "Перевести самому" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByText("Press F1 to look things up")).toBeVisible();
+  await dialog.getByLabel("hud.hint").fill("Нажмите F1, чтобы узнать подробности");
+  await expect(dialog.getByText("1 / 2")).toBeVisible();
+  await dialog.getByRole("button", { name: "Сохранить перевод" }).click();
+  await expect(page.getByText(/Перевод сохранён/)).toBeVisible();
+});
+
 test("library halves its way to a problem's mod", async ({ page }) => {
   await open(page, "/", "ru");
   await page.getByRole("button", { name: "Профиль" }).last().click();

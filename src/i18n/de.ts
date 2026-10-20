@@ -463,6 +463,14 @@ export default {
     pasted: "Schlüssel aus der Zwischenablage übernommen",
     keychain: "Der Schlüssel liegt im macOS-Schlüsselbund und wird nur an Nexus gesendet.",
   },
+  translate: {
+    open: "Selbst übersetzen",
+    title: "„{mod}“ übersetzen: {language}",
+    hint: "Links der Text der Mod, rechts deine Übersetzung. Leere Zeilen bleiben, wie sie sind; die Übersetzung landet in der Mod und kommt nach Updates zurück.",
+    search: "Zeile suchen…",
+    save: "Übersetzung speichern",
+    saved: "Übersetzung gespeichert; sie gilt ab dem nächsten Start",
+  },
   bisect: {
     start: "Mod hinter einem Problem finden",
     profileName: "Problemsuche",

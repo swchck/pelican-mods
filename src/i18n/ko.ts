@@ -458,6 +458,14 @@ export default {
     pasted: "클립보드에서 키를 가져왔어요",
     keychain: "키는 macOS 키체인에 보관되고 Nexus 외에는 어디에도 보내지 않아요.",
   },
+  translate: {
+    open: "직접 번역하기",
+    title: "「{mod}」 번역: {language}",
+    hint: "왼쪽은 모드 원문, 오른쪽은 내 번역입니다. 빈 줄은 그대로 둡니다. 번역은 모드에 저장되고 업데이트 후에도 돌아옵니다.",
+    search: "줄 찾기…",
+    save: "번역 저장",
+    saved: "번역을 저장했습니다. 다음 실행부터 적용됩니다",
+  },
   bisect: {
     start: "문제를 일으키는 모드 찾기",
     profileName: "문제 찾기",

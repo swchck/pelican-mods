@@ -462,6 +462,14 @@ export default {
     pasted: "Kulcs átvéve a vágólapról",
     keychain: "A kulcs a macOS-kulcskarikában van tárolva, és csak a Nexusnak kerül elküldésre.",
   },
+  translate: {
+    open: "Lefordítom magam",
+    title: "„{mod}” fordítása: {language}",
+    hint: "Balra a mod szövege, jobbra a fordításod. Az üres sorok maradnak; a fordítás a modba kerül, és frissítés után is visszajön.",
+    search: "Sor keresése…",
+    save: "Fordítás mentése",
+    saved: "Fordítás mentve; a következő indítástól érvényes",
+  },
   bisect: {
     start: "A problémát okozó mod keresése",
     profileName: "Hibakeresés",

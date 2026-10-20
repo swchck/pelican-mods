@@ -58,6 +58,8 @@ pub struct AppState {
     pub(crate) bisect: crate::bisect::BisectStore,
     /// Removed packages, kept so a removal can be undone.
     pub(crate) removed_root: PathBuf,
+    /// The player's own mod translations, kept across updates.
+    pub(crate) translations_root: PathBuf,
     /// Unconfirmed nxm links the UI hasn't collected yet.
     pub(crate) nxm_pending: Mutex<Vec<serde_json::Value>>,
     /// The built companion mod, linked into every profile; `None` when this build lacks it.
@@ -114,6 +116,7 @@ impl AppState {
             history: crate::history::History::load(data_dir.join("history.json")),
             bisect: crate::bisect::BisectStore::new(data_dir.join("bisect.json")),
             removed_root: data_dir.join("removed"),
+            translations_root: data_dir.join("translations"),
             nxm_pending: Mutex::new(Vec::new()),
         }
     }

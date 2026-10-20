@@ -468,6 +468,14 @@ export default {
     pasted: "Chiave presa dagli appunti",
     keychain: "La chiave è conservata nel Portachiavi di macOS e viene inviata solo a Nexus.",
   },
+  translate: {
+    open: "Tradurla io",
+    title: "Traduzione di «{mod}»: {language}",
+    hint: "A sinistra il testo della mod, a destra la tua traduzione. Le righe vuote restano così; la traduzione va nella mod e torna dopo gli aggiornamenti.",
+    search: "Cerca una riga…",
+    save: "Salva traduzione",
+    saved: "Traduzione salvata; vale dal prossimo avvio",
+  },
   bisect: {
     start: "Trova la mod dietro un problema",
     profileName: "Ricerca del problema",

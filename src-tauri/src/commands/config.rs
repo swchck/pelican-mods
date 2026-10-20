@@ -44,6 +44,41 @@ fn mod_dir(state: &AppState, package: &str, rel_path: &str) -> AppResult<PathBuf
     Ok(dir)
 }
 
+/// The lines of mod `rel_path` in `package` to translate into `language`, with what's
+/// translated so far.
+#[tauri::command]
+pub async fn mod_translation_get(
+    app: AppHandle,
+    package: String,
+    rel_path: String,
+    language: String,
+) -> AppResult<Vec<crate::translations::Line>> {
+    blocking(app, move |s| {
+        let dir = mod_dir(s, &package, &rel_path)?;
+        let id = crate::manifest::read(&dir)?.unique_id;
+        crate::translations::load(&s.translations_root, &id, &dir, &language)
+    })
+    .await
+}
+
+/// Saves the player's `texts` as the mod's `language` translation.
+#[tauri::command]
+pub async fn mod_translation_save(
+    app: AppHandle,
+    package: String,
+    rel_path: String,
+    language: String,
+    texts: std::collections::BTreeMap<String, String>,
+) -> AppResult<crate::commands::library::LibraryView> {
+    blocking(app, move |s| {
+        let dir = mod_dir(s, &package, &rel_path)?;
+        let id = crate::manifest::read(&dir)?.unique_id;
+        crate::translations::save(&s.translations_root, &id, &dir, &language, &texts)?;
+        Ok(crate::commands::library::build_view(s))
+    })
+    .await
+}
+
 #[tauri::command]
 pub async fn mod_config_get(
     app: AppHandle,

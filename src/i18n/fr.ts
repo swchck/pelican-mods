@@ -470,6 +470,14 @@ export default {
     pasted: "Clé récupérée dans le presse-papiers",
     keychain: "La clé est conservée dans le trousseau macOS et n'est envoyée qu'à Nexus.",
   },
+  translate: {
+    open: "Le traduire moi-même",
+    title: "Traduire « {mod} » : {language}",
+    hint: "À gauche le texte du mod, à droite votre traduction. Les lignes vides restent telles quelles ; la traduction va dans le mod et revient après ses mises à jour.",
+    search: "Chercher une ligne…",
+    save: "Enregistrer la traduction",
+    saved: "Traduction enregistrée ; elle s'applique au prochain lancement",
+  },
   bisect: {
     start: "Trouver le mod à l'origine d'un problème",
     profileName: "Recherche du problème",
