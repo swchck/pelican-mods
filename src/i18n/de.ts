@@ -261,6 +261,9 @@ export default {
   },
   settings: {
     companion: "Spielverbindung",
+    briefing: "Morgenbericht im Spiel",
+    briefingHint:
+      "Zu Tagesbeginn: wer Geburtstag hat und welche Lieblingsgeschenke du schon hast, Feste, Reisewagen, Buchhändler und Glück. Ab dem nächsten Start.",
     companionHint:
       "Ein kleiner Begleit-Mod zeigt, was im Spiel passiert, übernimmt Namen und Grenzen von Einstellungen aus den Menüs der Mods und wendet neue Einstellungen ohne Neustart an. Ein- oder Ausschalten wirkt beim nächsten Spielstart.",
     companionConnected: "Das Spiel ist verbunden",

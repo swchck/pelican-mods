@@ -1,0 +1,11 @@
+{
+  "briefing.festival": "Oggi: {{name}}",
+  "briefing.birthday": "Compleanno di {{name}}! Adora: {{gifts}}",
+  "briefing.birthdayHave": "Compleanno di {{name}}! Hai: {{gifts}}",
+  "briefing.cart": "Oggi il carretto ambulante è nel bosco",
+  "briefing.bookseller": "Oggi il libraio è in città",
+  "briefing.luck.great": "Oggi gli spiriti sono molto contenti",
+  "briefing.luck.good": "Oggi gli spiriti sono di buon umore",
+  "briefing.luck.bad": "Oggi gli spiriti sono un po' irritati",
+  "briefing.luck.awful": "Oggi gli spiriti sono molto scontenti"
+}

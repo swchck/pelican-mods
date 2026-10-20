@@ -26,11 +26,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Translations Include="i18n/*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="PelicanCompanion.Tests" />
   </ItemGroup>
 
   <Target Name="CopyToDist" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
     <MakeDir Directories="$(DistDir)" />
     <Copy SourceFiles="$(TargetPath);manifest.json" DestinationFolder="$(DistDir)" />
+    <Copy SourceFiles="@(Translations)" DestinationFolder="$(DistDir)/i18n" />
   </Target>
 </Project>

@@ -259,6 +259,9 @@ export default {
   },
   settings: {
     companion: "Game link",
+    briefing: "Morning briefing in the game",
+    briefingHint:
+      "At the start of each day: whose birthday it is and which loved gifts you already have, a festival, the traveling cart, the bookseller and luck. From the next launch.",
     companionHint:
       "A small companion mod shows what's happening in the game, takes setting names and limits from mods' menus and applies new settings without a restart. Turning it on or off takes effect on the next game launch.",
     companionConnected: "The game is connected",

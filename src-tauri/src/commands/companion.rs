@@ -75,6 +75,14 @@ pub fn settings_set_companion(app: AppHandle, enabled: bool) -> AppResult<Settin
         .update(|s| s.companion_disabled = !enabled)
 }
 
+/// Turns the companion's start-of-day lines in the game's HUD on or off, from the next launch.
+#[tauri::command]
+pub fn settings_set_briefing(app: AppHandle, enabled: bool) -> AppResult<Settings> {
+    app.state::<AppState>()
+        .settings
+        .update(|s| s.briefing_disabled = !enabled)
+}
+
 /// Luck, tomorrow's weather and the next geodes, from the loaded save.
 #[tauri::command]
 pub async fn companion_forecast(app: AppHandle) -> AppResult<Value> {

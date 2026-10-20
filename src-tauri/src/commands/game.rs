@@ -157,11 +157,15 @@ pub async fn game_launch(
             .companion_enabled()
             .then(|| state.companion.url())
             .flatten();
+        let mut env: Vec<(String, String)> = companion
+            .map(|url| (crate::companion::URL_VAR.to_owned(), url.to_owned()))
+            .into_iter()
+            .collect();
+        if state.settings.get().briefing_disabled {
+            env.push(("PELICAN_BRIEFING".to_owned(), "0".to_owned()));
+        }
         Some(SmapiRun {
-            env: companion
-                .map(|url| (crate::companion::URL_VAR.to_owned(), url.to_owned()))
-                .into_iter()
-                .collect(),
+            env,
             log: game_data_dir(&app)?.join("ErrorLogs/SMAPI-latest.txt"),
             mods_path: Some(crate::commands::library::deploy_active(&state)?),
         })

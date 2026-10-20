@@ -33,17 +33,27 @@ const locale = ref("system");
 const confirmUninstall = ref(false);
 const companion = useCompanion();
 const companionOn = ref(true);
+const briefingOn = ref(true);
 
 onMounted(async () => {
   try {
     const s = await api.settings();
     locale.value = s.locale ?? "system";
     companionOn.value = !s.companionDisabled;
+    briefingOn.value = !s.briefingDisabled;
     backupFolder.value = s.backupFolder;
   } catch (e) {
     toast.error(errorText(e));
   }
 });
+
+async function toggleBriefing() {
+  try {
+    briefingOn.value = !(await companionApi.setBriefing(!briefingOn.value)).briefingDisabled;
+  } catch (e) {
+    toast.error(errorText(e));
+  }
+}
 
 async function toggleCompanion() {
   try {
@@ -137,6 +147,13 @@ async function uninstall() {
         <PixelToggle :checked="companionOn" :label="t('settings.companion')" @toggle="toggleCompanion" />
       </div>
       <p class="text-muted-foreground text-sm leading-relaxed font-semibold">{{ t("settings.companionHint") }}</p>
+      <div v-if="companionOn" class="flex items-center gap-3 text-sm">
+        <span class="flex flex-1 flex-col">
+          <span class="font-extrabold">{{ t("settings.briefing") }}</span>
+          <span class="text-muted-foreground text-xs font-semibold">{{ t("settings.briefingHint") }}</span>
+        </span>
+        <PixelToggle :checked="briefingOn" :label="t('settings.briefing')" @toggle="toggleBriefing" />
+      </div>
       <p v-if="game.running && companionOn" class="text-muted-foreground text-xs font-bold">
         {{ companion.connected ? t("settings.companionConnected") : t("settings.companionWaiting") }}
       </p>

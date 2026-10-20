@@ -1,0 +1,11 @@
+{
+  "briefing.festival": "Сегодня: {{name}}",
+  "briefing.birthday": "День рождения: {{name}}! Любит: {{gifts}}",
+  "briefing.birthdayHave": "День рождения: {{name}}! У вас есть: {{gifts}}",
+  "briefing.cart": "Сегодня в лесу торговка",
+  "briefing.bookseller": "Сегодня в городе книготорговец",
+  "briefing.luck.great": "Духи сегодня очень довольны",
+  "briefing.luck.good": "Духи сегодня в хорошем настроении",
+  "briefing.luck.bad": "Духи сегодня немного раздражены",
+  "briefing.luck.awful": "Духи сегодня очень недовольны"
+}

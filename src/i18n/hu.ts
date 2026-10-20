@@ -261,6 +261,9 @@ export default {
   },
   settings: {
     companion: "Kapcsolat a játékkal",
+    briefing: "Reggeli összefoglaló a játékban",
+    briefingHint:
+      "Minden nap elején: kinek van születésnapja és mely kedvenc ajándékai vannak már meg, ünnep, vándorkocsi, könyvárus és szerencse. A következő indítástól.",
     companionHint:
       "Egy kis kísérőmod megmutatja, mi történik a játékban, átveszi a beállítások nevét és határait a modok menüiből, és újraindítás nélkül alkalmazza az új beállításokat. A be- vagy kikapcsolás a következő játékindításkor lép életbe.",
     companionConnected: "A játék csatlakozott",

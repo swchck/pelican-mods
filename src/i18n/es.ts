@@ -266,6 +266,9 @@ export default {
   },
   settings: {
     companion: "Conexión con el juego",
+    briefing: "Resumen matutino en el juego",
+    briefingHint:
+      "Al empezar el día: quién cumple años y qué regalos favoritos ya tienes, festivales, la carreta ambulante, el librero y la suerte. Desde el próximo inicio.",
     companionHint:
       "Un pequeño mod complementario muestra lo que pasa en el juego, toma los nombres y límites de los ajustes de los menús de los mods y aplica ajustes nuevos sin reiniciar. Activarlo o desactivarlo surte efecto en el siguiente inicio del juego.",
     companionConnected: "El juego está conectado",

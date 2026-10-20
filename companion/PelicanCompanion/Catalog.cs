@@ -99,7 +99,7 @@ internal static class Catalog
         return list;
     }
 
-    private static List<CatalogVillager> Villagers(Type game1)
+    internal static List<CatalogVillager> Villagers(Type game1)
     {
         var data = (IDictionary)game1.GetField("characterData", Static)!.GetValue(null)!;
         var tastes = (IDictionary<string, string>)game1.GetField("NPCGiftTastes", Static)!.GetValue(null)!;
@@ -248,7 +248,7 @@ internal static class Catalog
     }
 
     // NPCGiftTastes: "love text/love ids/like text/like ids/…"; negative ids are categories
-    private static List<string> Loves(IDictionary<string, string> tastes, string npc)
+    internal static List<string> Loves(IDictionary<string, string> tastes, string npc)
     {
         if (!tastes.TryGetValue(npc, out string? raw))
             return new List<string>();
@@ -264,7 +264,7 @@ internal static class Catalog
         return Find("StardewValley.DataLoader")!.GetMethod(method, Static)!.Invoke(null, new[] { content })!;
     }
 
-    private static List<CatalogFestival> Festivals()
+    internal static List<CatalogFestival> Festivals()
     {
         var list = new List<CatalogFestival>();
         // "spring13" → "Egg Festival"

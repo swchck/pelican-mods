@@ -267,6 +267,9 @@ export default {
   },
   settings: {
     companion: "Collegamento al gioco",
+    briefing: "Riepilogo del mattino nel gioco",
+    briefingHint:
+      "A inizio giornata: chi compie gli anni e quali regali preferiti hai già, feste, carretto ambulante, libraio e fortuna. Dal prossimo avvio.",
     companionHint:
       "Una piccola mod di supporto mostra cosa succede nel gioco, prende nomi e limiti delle impostazioni dai menu delle mod e applica le nuove impostazioni senza riavviare. Attivarla o disattivarla ha effetto al prossimo avvio del gioco.",
     companionConnected: "Il gioco è collegato",

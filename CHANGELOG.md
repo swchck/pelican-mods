@@ -16,6 +16,10 @@
 
 - "What changed" on the Saves screen compares two states of a farm, the day before, any copy or now: money, playtime and perfection, skill levels, hearts, firsts shipped, caught, cooked, crafted and donated, new achievements, and what came into or left the chests.
 
+### Game link
+
+- A morning briefing in the game: at the start of each day the HUD names whose birthday it is and which of their loved gifts you already have, a festival, the traveling cart, the bookseller and a notable luck. It can be turned off in Settings.
+
 ## 0.4.0 — 2026-10-20
 
 ### Progress

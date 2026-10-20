@@ -1,0 +1,11 @@
+{
+  "briefing.festival": "Bugün: {{name}}",
+  "briefing.birthday": "{{name}} için doğum günü! Bayıldığı: {{gifts}}",
+  "briefing.birthdayHave": "{{name}} için doğum günü! Sende var: {{gifts}}",
+  "briefing.cart": "Bugün gezgin satıcı ormanda",
+  "briefing.bookseller": "Bugün kitapçı kasabada",
+  "briefing.luck.great": "Ruhlar bugün çok mutlu",
+  "briefing.luck.good": "Ruhlar bugün keyifli",
+  "briefing.luck.bad": "Ruhlar bugün biraz huysuz",
+  "briefing.luck.awful": "Ruhlar bugün çok hoşnutsuz"
+}

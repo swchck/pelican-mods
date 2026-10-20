@@ -27,6 +27,8 @@ internal sealed class ModEntry : Mod
     private volatile bool Resend;
     private bool Launched;
     private bool LocaleDirty;
+    /// <summary>Ticks until today's briefing shows; 0 when there's none to show.</summary>
+    private int BriefingIn;
     private CatalogMessage? CachedCatalog;
     private ConfigDefaultsMessage? CachedDefaults;
     private string? CachedLanguage;
@@ -43,6 +45,8 @@ internal sealed class ModEntry : Mod
         helper.Events.GameLoop.GameLaunched += (_, _) => this.Launched = true;
         helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => this.SendState(force: true);
+        // the HUD drops messages during the fade-in; two seconds in they're seen
+        helper.Events.GameLoop.DayStarted += (_, _) => this.BriefingIn = Briefing.Enabled ? 120 : 0;
         // the game applies the player's language after GameLaunched; names follow it. The
         // event fires before the game reloads its achievements, so the catalog waits a tick
         helper.Events.Content.LocaleChanged += (_, _) => this.LocaleDirty = true;
@@ -57,6 +61,18 @@ internal sealed class ModEntry : Mod
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
     {
         Bridge bridge = this.Bridge!;
+        if (this.BriefingIn > 0 && --this.BriefingIn == 0)
+        {
+            try
+            {
+                foreach (string line in Briefing.Lines(this.Helper.Translation))
+                    Game.Notify(line);
+            }
+            catch (Exception ex)
+            {
+                this.Monitor.Log($"couldn't put together today's briefing: {ex}", LogLevel.Trace);
+            }
+        }
         if (this.LocaleDirty && this.Launched)
         {
             this.LocaleDirty = false;
@@ -124,6 +140,9 @@ internal sealed class ModEntry : Mod
                 break;
             case "profileStop":
                 this.Answer(command.Id, Profiler.Stop, needsWorld: false);
+                break;
+            case "briefing":
+                this.Answer(command.Id, () => Briefing.Lines(this.Helper.Translation));
                 break;
             case "patches":
                 this.Answer(command.Id, Profiler.SharedPatches, needsWorld: false);

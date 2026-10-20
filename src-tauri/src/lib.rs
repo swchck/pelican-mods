@@ -81,6 +81,7 @@ pub fn run() {
             commands::app::storage_clean,
             commands::updates::compat_for_nexus,
             commands::companion::settings_set_companion,
+            commands::companion::settings_set_briefing,
             commands::companion::companion_status,
             commands::companion::companion_available,
             commands::companion::companion_apply,

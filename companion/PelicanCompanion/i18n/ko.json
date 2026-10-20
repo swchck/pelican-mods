@@ -1,0 +1,11 @@
+{
+  "briefing.festival": "오늘: {{name}}",
+  "briefing.birthday": "{{name}}의 생일! 좋아하는 것: {{gifts}}",
+  "briefing.birthdayHave": "{{name}}의 생일! 가진 선물: {{gifts}}",
+  "briefing.cart": "오늘은 숲에 떠돌이 상인이 왔어요",
+  "briefing.bookseller": "오늘은 마을에 책장수가 왔어요",
+  "briefing.luck.great": "오늘은 영혼들이 아주 기뻐해요",
+  "briefing.luck.good": "오늘은 영혼들의 기분이 좋아요",
+  "briefing.luck.bad": "오늘은 영혼들이 조금 짜증이 났어요",
+  "briefing.luck.awful": "오늘은 영혼들이 몹시 언짢아해요"
+}

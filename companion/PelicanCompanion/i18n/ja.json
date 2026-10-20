@@ -1,0 +1,11 @@
+{
+  "briefing.festival": "今日は{{name}}",
+  "briefing.birthday": "{{name}}の誕生日！好きなもの：{{gifts}}",
+  "briefing.birthdayHave": "{{name}}の誕生日！持っているもの：{{gifts}}",
+  "briefing.cart": "今日は森に行商人が来ています",
+  "briefing.bookseller": "今日は町に本屋が来ています",
+  "briefing.luck.great": "今日は精霊たちがとても上機嫌です",
+  "briefing.luck.good": "今日は精霊たちの機嫌がいいようです",
+  "briefing.luck.bad": "今日は精霊たちが少しいら立っています",
+  "briefing.luck.awful": "今日は精霊たちがとても不機嫌です"
+}

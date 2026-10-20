@@ -1,0 +1,11 @@
+{
+  "briefing.festival": "Ma: {{name}}",
+  "briefing.birthday": "{{name}} születésnapja! Imádja: {{gifts}}",
+  "briefing.birthdayHave": "{{name}} születésnapja! Neked van: {{gifts}}",
+  "briefing.cart": "Ma a vándorkocsi az erdőben van",
+  "briefing.bookseller": "Ma a könyvárus a városban van",
+  "briefing.luck.great": "A szellemek ma nagyon elégedettek",
+  "briefing.luck.good": "A szellemek ma jó kedvükben vannak",
+  "briefing.luck.bad": "A szellemek ma kissé bosszúsak",
+  "briefing.luck.awful": "A szellemek ma nagyon elégedetlenek"
+}

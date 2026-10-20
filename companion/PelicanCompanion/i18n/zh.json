@@ -1,0 +1,11 @@
+{
+  "briefing.festival": "今天：{{name}}",
+  "briefing.birthday": "今天是{{name}}的生日！最爱：{{gifts}}",
+  "briefing.birthdayHave": "今天是{{name}}的生日！你有：{{gifts}}",
+  "briefing.cart": "今天流动货车在森林里",
+  "briefing.bookseller": "今天书商在镇上",
+  "briefing.luck.great": "今天精灵们非常高兴",
+  "briefing.luck.good": "今天精灵们心情不错",
+  "briefing.luck.bad": "今天精灵们有点烦躁",
+  "briefing.luck.awful": "今天精灵们非常不满"
+}

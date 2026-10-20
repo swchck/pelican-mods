@@ -17,6 +17,7 @@ export interface Settings {
   locale: string | null;
   /** The companion mod is linked into the game unless this is set. */
   companionDisabled: boolean;
+  briefingDisabled?: boolean;
   /** "official", "fandom" or "off"; null is the official wiki. */
   wiki: string | null;
   /** Folder changed saves are copied to after each session. */
@@ -584,6 +585,7 @@ export const companion = {
   status: () => invoke<CompanionStatus>("companion_status"),
   available: () => invoke<boolean>("companion_available"),
   setEnabled: (enabled: boolean) => invoke<Settings>("settings_set_companion", { enabled }),
+  setBriefing: (enabled: boolean) => invoke<Settings>("settings_set_briefing", { enabled }),
   apply: (uniqueId: string, values: unknown, notice: string | null) =>
     invoke<Applied>("companion_apply", { uniqueId, values, notice }),
   onStatus: (cb: (s: CompanionStatus) => void): Promise<UnlistenFn> =>

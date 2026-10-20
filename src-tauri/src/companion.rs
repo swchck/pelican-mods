@@ -1077,6 +1077,9 @@ mod tests {
                     );
                     eprintln!("nights {}", f["nights"]);
                     eprintln!("cart {}", f["cart"]);
+                    let briefing = companion.query("briefing").await.unwrap();
+                    eprintln!("briefing {briefing:#}");
+                    assert!(briefing.is_array());
                     let items = companion.query("items").await.unwrap();
                     let list = items.as_array().unwrap();
                     eprintln!("items {}: first {:?}", list.len(), list.first());

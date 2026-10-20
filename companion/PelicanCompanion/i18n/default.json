@@ -1,0 +1,11 @@
+{
+  "briefing.festival": "Today: {{name}}",
+  "briefing.birthday": "{{name}}'s birthday! Loves {{gifts}}",
+  "briefing.birthdayHave": "{{name}}'s birthday! You have {{gifts}}",
+  "briefing.cart": "The traveling cart is in the forest today",
+  "briefing.bookseller": "The bookseller is in town today",
+  "briefing.luck.great": "The spirits are very happy today",
+  "briefing.luck.good": "The spirits are in good humor today",
+  "briefing.luck.bad": "The spirits are somewhat annoyed today",
+  "briefing.luck.awful": "The spirits are very displeased today"
+}

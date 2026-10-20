@@ -265,6 +265,9 @@ export default {
   },
   settings: {
     companion: "Oyun bağlantısı",
+    briefing: "Oyunda sabah özeti",
+    briefingHint:
+      "Her günün başında: kimin doğum günü olduğu ve sevdiği hediyelerden hangilerinin sende olduğu, festival, gezgin satıcı, kitapçı ve şans. Bir sonraki açılıştan itibaren.",
     companionHint:
       "Küçük bir yardımcı mod oyunda neler olduğunu gösterir, ayar adlarını ve sınırlarını modların menülerinden alır ve yeni ayarları yeniden başlatmadan uygular. Açıp kapatmak bir sonraki oyun açılışında etkili olur.",
     companionConnected: "Oyun bağlı",

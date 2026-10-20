@@ -254,6 +254,8 @@ export default {
   },
   settings: {
     companion: "游戏连接",
+    briefing: "游戏内晨间简报",
+    briefingHint: "每天开始时显示：谁过生日、你已有哪些他们最爱的礼物、节日、流动货车、书商和运势。下次启动起生效。",
     companionHint:
       "一个小型伴随模组可以显示游戏内的情况，从模组菜单中获取设置名称和取值范围，并无需重启即可应用新设置。开启或关闭会在下次启动游戏时生效。",
     companionConnected: "游戏已连接",

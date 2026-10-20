@@ -21,6 +21,9 @@ pub struct Settings {
     pub locale: Option<String>,
     /// Keeps the companion mod out of the game; it's on unless turned off.
     pub companion_disabled: bool,
+    /// Keeps the companion's start-of-day lines out of the game's HUD.
+    #[serde(default)]
+    pub briefing_disabled: bool,
     /// GitHub repos ("owner/repo") users attached to mods, by lowercased UniqueID; they
     /// win over a repo in the manifest.
     pub github_repos: std::collections::BTreeMap<String, String>,
