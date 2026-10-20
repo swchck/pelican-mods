@@ -123,12 +123,11 @@ test("saves compare two states of a farm", async ({ page }) => {
 test("helpers find items across chests", async ({ page }) => {
   await open(page, "/helpers", "ru");
   await page.getByRole("tab", { name: "Сундуки" }).click();
-  await page.getByLabel("Найти предмет…").fill("iridium");
-  await expect(page.getByText("×134")).toBeVisible();
-  await expect(page.getByText("Big Shed (10, 9)")).toBeVisible();
-  await page.getByLabel("Найти предмет…").fill("salad");
-  // the farmhouse has no name in the game's lists, so the app names it
-  await expect(page.getByText("Дом на ферме")).toBeVisible();
+  // the mock's game runs with a farm, so the tab reads it live instead of the save
+  await expect(page.getByText(/Сейчас в игре/)).toBeVisible();
+  await page.getByLabel("Найти предмет…").fill("вино");
+  await expect(page.getByText("Подвал")).toBeVisible();
+  await expect(page.getByText("Тыква")).toHaveCount(0);
 });
 
 test("console measures mods and lists shared patches", async ({ page }) => {

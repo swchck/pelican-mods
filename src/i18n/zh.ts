@@ -162,6 +162,8 @@ export default {
   },
   chestsTab: {
     search: "查找物品…",
+    live: "直接来自游戏：箱子此刻的内容。",
+    junimo: "祝尼魔箱",
     asOfSave: "以最近一次存档为准：游戏在你睡觉时记录箱子内容。",
     nothing: "没有找到。",
     more: "还有 {n} 项，请缩小搜索范围",

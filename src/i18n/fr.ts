@@ -164,6 +164,8 @@ export default {
   },
   chestsTab: {
     search: "Chercher un objet…",
+    live: "En direct du jeu : les coffres tels qu'ils sont maintenant.",
+    junimo: "Coffres junimo",
     asOfSave: "D'après la dernière sauvegarde : le jeu note les coffres quand vous allez dormir.",
     nothing: "Rien trouvé.",
     more: "et {n} de plus — affinez la recherche",

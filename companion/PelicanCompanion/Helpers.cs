@@ -209,7 +209,7 @@ internal static class Helpers
         Type chest = Find("StardewValley.Objects.Chest");
         var items = new List<object>();
 
-        void Add(IEnumerable? source, string where)
+        void Add(IEnumerable? source, string where, string kind = "chest", object? tile = null)
         {
             if (source is null)
                 return;
@@ -227,12 +227,14 @@ internal static class Helpers
                     price = (int)o.sellToStorePrice(-1L),
                     stack = (int)o.Stack,
                     where,
+                    kind,
+                    tile,
                 });
             }
         }
 
         dynamic player = Member(game1, "player")!;
-        Add((IEnumerable)player.Items, "inventory");
+        Add((IEnumerable)player.Items, "inventory", "inventory");
         var locations = new List<object>();
         // Func<object, bool> passes for Func<GameLocation, bool> through delegate variance
         Func<object, bool> collect = l =>
@@ -244,15 +246,29 @@ internal static class Helpers
         foreach (dynamic location in locations)
         {
             string name = location.DisplayName ?? location.Name;
-            foreach (object placed in (IEnumerable)location.objects.Values)
+            foreach (dynamic placed in (IEnumerable)location.objects.Values)
             {
-                if (chest.IsInstanceOfType(placed))
-                    Add((IEnumerable)((dynamic)placed).Items, name);
+                object tile = new { x = (int)placed.TileLocation.X, y = (int)placed.TileLocation.Y };
+                // a Junimo chest's Items are the shared inventory, listed once below
+                bool isChest = chest.IsInstanceOfType((object)placed);
+                bool global = isChest && !string.IsNullOrEmpty((string?)placed.GlobalInventoryId);
+                if (isChest && !global)
+                    Add((IEnumerable)placed.Items, name, "chest", tile);
+                // an auto-grabber keeps what it collects in a chest held as its output
+                object? held = Safe(() => (object?)placed.heldObject.Value);
+                if (held is not null && chest.IsInstanceOfType(held))
+                    Add((IEnumerable)((dynamic)held).Items, name, "grabber", tile);
             }
             // the farmhouse fridge is a chest that isn't placed anywhere
             object? fridge = Safe(() => (object?)location.fridge?.Value);
             if (fridge is not null)
-                Add((IEnumerable)((dynamic)fridge).Items, name);
+                Add((IEnumerable)((dynamic)fridge).Items, name, "fridge");
+        }
+        object? shared = Safe(() => (object?)((dynamic)player.team).globalInventories);
+        if (shared is IEnumerable inventories)
+        {
+            foreach (object pair in inventories)
+                Add(Safe(() => (IEnumerable?)((dynamic)pair).Value), "Junimo", "junimo");
         }
         return items;
     }

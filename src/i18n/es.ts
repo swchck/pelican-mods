@@ -164,6 +164,8 @@ export default {
   },
   chestsTab: {
     search: "Buscar un objeto…",
+    live: "En directo desde el juego: los cofres tal como están ahora.",
+    junimo: "Cofres junimo",
     asOfSave: "Según la última partida guardada: el juego anota los cofres cuando te vas a dormir.",
     nothing: "No se encontró nada.",
     more: "y {n} más: afina la búsqueda",

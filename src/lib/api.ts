@@ -836,7 +836,11 @@ export interface StoredItem {
   display: string;
   stack: number;
   quality: number;
-  place: { location: string; kind: "chest" | "fridge" | "grabber" | "inventory"; tile: [number, number] | null };
+  place: {
+    location: string;
+    kind: "chest" | "fridge" | "grabber" | "junimo" | "inventory";
+    tile: [number, number] | null;
+  };
   /** The location as the game names it. */
   locationName: string | null;
 }

@@ -165,6 +165,8 @@ export default {
   },
   chestsTab: {
     search: "Gegenstand suchen…",
+    live: "Live aus dem Spiel: die Truhen, wie sie gerade sind.",
+    junimo: "Junimo-Truhen",
     asOfSave: "Stand des letzten Speicherns: Das Spiel schreibt Truhen auf, wenn du schlafen gehst.",
     nothing: "Nichts gefunden.",
     more: "und {n} weitere – grenze die Suche ein",

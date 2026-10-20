@@ -165,6 +165,8 @@ export default {
   },
   chestsTab: {
     search: "Tárgy keresése…",
+    live: "Élőben a játékból: a ládák a mostani állapotukban.",
+    junimo: "Junimóládák",
     asOfSave: "Az utolsó mentés szerint: a játék lefekvéskor jegyzi fel a ládák tartalmát.",
     nothing: "Nincs találat.",
     more: "és még {n} – szűkítsd a keresést",

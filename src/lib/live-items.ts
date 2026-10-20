@@ -28,5 +28,5 @@ export function useLiveItems() {
     }
     return map;
   });
-  return { live: computed(() => items.value !== null), byId };
+  return { live: computed(() => items.value !== null), byId, items };
 }

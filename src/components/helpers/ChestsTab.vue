@@ -1,33 +1,61 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { BackpackIcon, BoxIcon, RefrigeratorIcon, SearchIcon, TractorIcon } from "@lucide/vue";
+import { BackpackIcon, BoxIcon, RefrigeratorIcon, SearchIcon, SparklesIcon, TractorIcon } from "@lucide/vue";
 import { saves, type StoredItem } from "@/lib/api";
 import { useFarmDate } from "@/lib/farm-date";
+import { useLiveItems } from "@/lib/live-items";
 
 const { t, te, n } = useI18n();
 const date = useFarmDate();
-const items = ref<StoredItem[] | null>(null);
+const saved = ref<StoredItem[] | null>(null);
 const query = ref("");
+const { live, items: liveItems } = useLiveItems();
 
 watch(
   () => date.value?.saveId,
   async (id) => {
-    items.value = id ? await saves.items(id).catch(() => null) : null;
+    saved.value = id ? await saves.items(id).catch(() => null) : null;
   },
   { immediate: true },
+);
+
+// the running game knows what's in the chests right now; the save only as of last night
+const items = computed<StoredItem[] | null>(() =>
+  live.value && liveItems.value
+    ? liveItems.value.map((i) => ({
+        id: i.id,
+        name: i.name,
+        display: i.name,
+        stack: i.stack,
+        quality: i.quality,
+        place: {
+          location: i.where,
+          kind: i.kind ?? (i.where === "inventory" ? "inventory" : "chest"),
+          tile: i.tile ? [i.tile.x, i.tile.y] : null,
+        },
+        locationName: i.where,
+      }))
+    : saved.value,
 );
 
 // the game names most places itself; the farm and the player's own rooms it doesn't
 function placeName(i: StoredItem): string {
   if (i.place.kind === "inventory") return t("calendar.inventory");
+  if (i.place.kind === "junimo") return t("chestsTab.junimo");
   const loc = i.place.location;
   if (i.locationName) return i.locationName;
   for (const key of [`chestsTab.places.${loc}`, `fishPlaces.${loc}`]) if (te(key)) return t(key);
   return loc.replace(/^Custom_/, "").replace(/([a-z])([A-Z])/g, "$1 $2");
 }
 
-const icons = { chest: BoxIcon, fridge: RefrigeratorIcon, grabber: TractorIcon, inventory: BackpackIcon };
+const icons = {
+  chest: BoxIcon,
+  fridge: RefrigeratorIcon,
+  grabber: TractorIcon,
+  inventory: BackpackIcon,
+  junimo: SparklesIcon,
+};
 
 const groups = computed(() => {
   const q = query.value.trim().toLowerCase();
@@ -78,7 +106,9 @@ const SHOWN = 60;
             class="w-full min-w-0 bg-transparent text-sm outline-none"
           />
         </label>
-        <span class="text-muted-foreground text-xs font-semibold">{{ t("chestsTab.asOfSave") }}</span>
+        <span class="text-muted-foreground text-xs font-semibold">{{
+          live ? t("chestsTab.live") : t("chestsTab.asOfSave")
+        }}</span>
       </div>
       <p v-if="items && !groups.length" class="text-muted-foreground text-sm font-semibold">
         {{ t("chestsTab.nothing") }}

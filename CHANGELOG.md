@@ -10,6 +10,10 @@
 
 - What the game keeps hidden until it happens — night events, geode and mystery box contents, the traveling cart's stock — now waits for a "Spoilers and predictions" setting, off by default. Luck and tomorrow's weather, which the TV tells anyway, stay.
 
+### Helpers
+
+- The Chests tab reads the running game live, and from saves it now finds Junimo chests and gives auto-grabbers their tile.
+
 ## 0.4.1 — 2026-10-20
 
 ### Helpers

@@ -28,7 +28,8 @@ pub struct Place {
     /// The location's internal name ("Farm", "FarmHouse", "Custom_X"), or the building's
     /// interior name; "inventory" for what the player carries.
     pub location: String,
-    /// "chest", "fridge", "grabber" (an auto-grabber's hopper) or "inventory".
+    /// "chest", "fridge", "grabber" (an auto-grabber's hopper), "junimo" (the chests
+    /// that share one inventory everywhere) or "inventory".
     pub kind: &'static str,
     /// The container's tile, when it stands somewhere.
     pub tile: Option<(i32, i32)>,
@@ -39,6 +40,7 @@ struct Container {
     depth: usize,
     kind: &'static str,
     tile: (Option<i32>, Option<i32>),
+    key_tile: Option<(i32, i32)>,
     frame: Option<usize>,
 }
 
@@ -80,6 +82,8 @@ pub fn read(reader: impl BufRead) -> AppResult<Vec<StoredItem>> {
     let mut item: Option<ItemDraft> = None;
     // items waiting for their location's name, by frame depth
     let mut pending: Vec<(usize, StoredItem)> = Vec::new();
+    // the tile of the object dictionary entry being read: <item><key><Vector2><X/><Y/>…
+    let mut key_tile: (Option<i32>, Option<i32>) = (None, None);
     let mut out = Vec::new();
 
     loop {
@@ -105,13 +109,16 @@ pub fn read(reader: impl BufRead) -> AppResult<Vec<StoredItem>> {
                             _ => "chest",
                         },
                         tile: (None, None),
+                        key_tile: key_tile.0.zip(key_tile.1),
                         frame: frames.last().map(|f| f.depth),
                     });
                 }
-                let in_items = parent == Some("items")
-                    && item.is_none()
-                    && (containers.last().is_some_and(|c| depth == c.depth + 2)
-                        || path.len() == 3 && path[1] == "player");
+                let shared = path.iter().any(|p| p == "globalInventories");
+                let in_items = item.is_none()
+                    && ((parent == Some("items")
+                        && (containers.last().is_some_and(|c| depth == c.depth + 2)
+                            || path.len() == 3 && path[1] == "player"))
+                        || (shared && parent == Some("ArrayOfItem")));
                 if in_items && name == "Item" {
                     item = Some(ItemDraft {
                         depth,
@@ -149,6 +156,13 @@ pub fn read(reader: impl BufRead) -> AppResult<Vec<StoredItem>> {
                         }
                     }
                 }
+                if depth >= 3 && path[depth - 2] == "Vector2" && path[depth - 3] == "key" {
+                    match field {
+                        "X" => key_tile.0 = t.parse().ok(),
+                        "Y" => key_tile.1 = t.parse().ok(),
+                        _ => {}
+                    }
+                }
                 if let Some(f) = frames.last_mut().filter(|f| depth == f.depth + 1)
                     && field == "name"
                 {
@@ -157,11 +171,19 @@ pub fn read(reader: impl BufRead) -> AppResult<Vec<StoredItem>> {
 
                 if item.as_ref().is_some_and(|d| d.depth == depth) {
                     let d = item.take().unwrap();
+                    let shared = path.iter().any(|p| p == "globalInventories");
                     let place = match containers.last() {
+                        _ if shared => Place {
+                            location: "Junimo".to_owned(),
+                            kind: "junimo",
+                            tile: None,
+                        },
+                        // an auto-grabber's hopper has no tile of its own; its machine's
+                        // dictionary key has it
                         Some(c) if path.len() > c.depth => Place {
                             location: String::new(),
                             kind: c.kind,
-                            tile: c.tile.0.zip(c.tile.1),
+                            tile: c.tile.0.zip(c.tile.1).or(c.key_tile),
                         },
                         _ => Place {
                             location: "inventory".to_owned(),
@@ -177,7 +199,7 @@ pub fn read(reader: impl BufRead) -> AppResult<Vec<StoredItem>> {
                         place,
                     };
                     match containers.last().and_then(|c| c.frame) {
-                        Some(frame) if stored.place.kind != "inventory" => {
+                        Some(frame) if !matches!(stored.place.kind, "inventory" | "junimo") => {
                             pending.push((frame, stored))
                         }
                         _ => out.push(stored),
@@ -272,13 +294,19 @@ mod tests {
       <name>Farm</name>
     </GameLocation>
   </locations>
+  <globalInventories>
+    <item><key><string>JunimoChests</string></key>
+      <value><ArrayOfItem><Item xsi:type="Object"><name>Ruby</name><itemId>64</itemId><stack>6</stack></Item></ArrayOfItem></value></item>
+  </globalInventories>
 </SaveGame>"#;
 
     #[test]
     fn finds_every_stack_and_its_place() {
         let items = read(SAVE.as_bytes()).unwrap();
         let find = |id: &str| items.iter().find(|i| i.id == id).unwrap();
-        assert_eq!(items.len(), 5, "{items:#?}");
+        assert_eq!(items.len(), 6, "{items:#?}");
+        let ruby = find("(O)64");
+        assert_eq!((ruby.place.kind, ruby.stack), ("junimo", 6));
         assert_eq!(find("(O)337").place.kind, "inventory");
         assert_eq!(find("(O)337").stack, 5);
         let egg = find("(O)442");
@@ -290,7 +318,10 @@ mod tests {
         assert_eq!(egg.place.tile, Some((21, 8)));
         assert_eq!(find("(BC)12").place.kind, "chest");
         let milk = find("(O)184");
-        assert_eq!((milk.place.kind, milk.place.tile), ("grabber", None));
+        assert_eq!(
+            (milk.place.kind, milk.place.tile),
+            ("grabber", Some((3, 4)))
+        );
         let salad = find("(O)196");
         assert_eq!(
             (salad.place.kind, salad.place.location.as_str()),

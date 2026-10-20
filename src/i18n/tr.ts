@@ -165,6 +165,8 @@ export default {
   },
   chestsTab: {
     search: "Eşya bul…",
+    live: "Doğrudan oyundan: sandıklar şu anki halleriyle.",
+    junimo: "Junimo sandıkları",
     asOfSave: "Son kayda göre: oyun sandıkları siz uyurken kaydeder.",
     nothing: "Hiçbir şey bulunamadı.",
     more: "ve {n} tane daha — aramayı daraltın",

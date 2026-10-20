@@ -163,6 +163,8 @@ export default {
   },
   chestsTab: {
     search: "아이템 찾기…",
+    live: "게임에서 바로: 지금 상자 그대로입니다.",
+    junimo: "주니모 상자",
     asOfSave: "마지막 저장 기준입니다. 상자 내용은 잠자리에 들 때 기록됩니다.",
     nothing: "찾지 못했습니다.",
     more: "외 {n}개 — 검색어를 좁혀 보세요",

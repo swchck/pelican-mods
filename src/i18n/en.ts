@@ -164,6 +164,8 @@ export default {
   },
   chestsTab: {
     search: "Find an item…",
+    live: "Live from the game: chests as they are right now.",
+    junimo: "Junimo chests",
     asOfSave: "As of the last save: the game writes chests down when you go to sleep.",
     nothing: "Nothing found.",
     more: "and {n} more — narrow the search",

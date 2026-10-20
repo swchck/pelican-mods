@@ -165,6 +165,8 @@ export default {
   },
   chestsTab: {
     search: "Cerca un oggetto…",
+    live: "In diretta dal gioco: i bauli come sono adesso.",
+    junimo: "Bauli junimo",
     asOfSave: "All'ultimo salvataggio: il gioco registra i bauli quando vai a dormire.",
     nothing: "Nessun risultato.",
     more: "e altri {n}: restringi la ricerca",

@@ -15,6 +15,9 @@ export interface GrangeItem {
   stack: number;
   /** "inventory" or the location of the chest it sits in. */
   where: string;
+  /** What holds it; older companions leave it out. */
+  kind?: "chest" | "fridge" | "grabber" | "junimo" | "inventory";
+  tile?: { x: number; y: number } | null;
 }
 
 export const SLOTS = 9;
