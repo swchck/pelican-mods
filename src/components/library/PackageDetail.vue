@@ -188,7 +188,13 @@ async function remove() {
     :aria-label="packageTitle(pkg)"
     class="wood-panel flex w-[clamp(260px,32%,330px)] shrink-0 flex-col gap-3 overflow-auto p-[18px]"
   >
-    <div class="flex h-24 shrink-0 items-end overflow-hidden rounded-md border-2 border-[#a0703f] bg-[#cfe6f5]">
+    <img
+      v-if="lib.pictureOf(pkg)"
+      :src="lib.pictureOf(pkg)!"
+      alt=""
+      class="h-32 w-full shrink-0 rounded-md border-2 border-[#a0703f] object-cover"
+    />
+    <div v-else class="flex h-24 shrink-0 items-end overflow-hidden rounded-md border-2 border-[#a0703f] bg-[#cfe6f5]">
       <div class="grass-strip h-9 w-full border-t-4 border-[#3f7f2a]" />
     </div>
 

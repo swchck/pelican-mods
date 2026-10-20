@@ -144,6 +144,7 @@ pub fn run() {
             commands::nexus::nexus_download,
             commands::nexus::nexus_file_page,
             commands::nexus::nexus_collection,
+            commands::nexus::nexus_thumbnails,
             commands::nexus::nxm_open,
             commands::nexus::nxm_take_pending,
             commands::nexus::downloads_list,

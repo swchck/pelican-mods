@@ -61,6 +61,13 @@ test("library filters by status and tag", async ({ page }) => {
   await expect(rows).toHaveCount(4);
 });
 
+test("library shows Nexus pictures", async ({ page }) => {
+  await open(page, "/", "ru");
+  const row = page.getByRole("option").filter({ hasText: "Lookup Anything" });
+  await expect(row.locator("img")).toHaveAttribute("src", /^data:image/);
+  await expect(page.getByRole("option").filter({ hasText: "Console Commands" }).locator("img")).toHaveCount(0);
+});
+
 test("browse reads a Nexus collection", async ({ page }) => {
   await open(page, "/browse", "ru");
   await page.getByRole("button", { name: "Коллекция" }).click();

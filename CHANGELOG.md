@@ -1,5 +1,11 @@
 # What's new
 
+## 0.4.2
+
+### Library and saves
+
+- The library shows each Nexus mod's picture: a thumbnail in its row and a larger one atop its details, fetched in one batch and cached for a week.
+
 ## 0.4.1 — 2026-10-20
 
 ### Helpers

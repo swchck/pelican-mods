@@ -331,6 +331,47 @@ pub async fn collection(client: &reqwest::Client, slug: &str) -> AppResult<Colle
     })
 }
 
+/// Thumbnail URLs of Nexus mods `ids`, by id; mods without a picture are left out.
+pub async fn thumbnails(
+    client: &reqwest::Client,
+    ids: &[u64],
+) -> AppResult<std::collections::HashMap<u64, String>> {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Data {
+        legacy_mods_by_domain: Nodes,
+    }
+    #[derive(Deserialize)]
+    struct Nodes {
+        nodes: Vec<Node>,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Node {
+        #[serde(deserialize_with = "lenient_u64")]
+        mod_id: Option<u64>,
+        thumbnail_url: Option<String>,
+    }
+    const QUERY: &str = "query($ids: [CompositeDomainWithIdInput!]!) { \
+        legacyModsByDomain(ids: $ids) { nodes { modId thumbnailUrl } } }";
+    let mut out = std::collections::HashMap::new();
+    // the API pages at 100 a request
+    for chunk in ids.chunks(100) {
+        let ids: Vec<serde_json::Value> = chunk
+            .iter()
+            .map(|id| json!({ "gameDomain": "stardewvalley", "modId": id }))
+            .collect();
+        let data: Data = graphql(client, QUERY, json!({ "ids": ids })).await?;
+        out.extend(
+            data.legacy_mods_by_domain
+                .nodes
+                .into_iter()
+                .filter_map(|n| Some((n.mod_id?, n.thumbnail_url.filter(|u| !u.is_empty())?))),
+        );
+    }
+    Ok(out)
+}
+
 /// Searches Stardew Valley mods by name; an empty `query` lists the whole catalogue.
 pub async fn search(
     client: &reqwest::Client,

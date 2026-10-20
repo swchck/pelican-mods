@@ -84,6 +84,55 @@ pub async fn nexus_download(app: AppHandle, mod_id: u64, file_id: u64) -> AppRes
     Ok(())
 }
 
+/// Pictures of Nexus mods `ids`, from a week-old cache at most; ids already asked
+/// without a picture stay unanswered until the cache goes stale.
+#[tauri::command]
+pub async fn nexus_thumbnails(
+    app: AppHandle,
+    ids: Vec<u64>,
+) -> AppResult<std::collections::HashMap<u64, String>> {
+    use std::collections::HashMap;
+    #[derive(serde::Serialize, serde::Deserialize, Default)]
+    struct Cache {
+        at: u64,
+        urls: HashMap<u64, Option<String>>,
+    }
+    const MAX_AGE_MS: u64 = 7 * 24 * 60 * 60 * 1000;
+    let state = app.state::<AppState>();
+    let file = state.updates_file.with_file_name("thumbnails.json");
+    let now = crate::history::now_ms();
+    let mut cache: Cache = std::fs::read(&file)
+        .ok()
+        .and_then(|b| serde_json::from_slice(&b).ok())
+        .filter(|c: &Cache| now.saturating_sub(c.at) < MAX_AGE_MS)
+        .unwrap_or_default();
+    let unknown: Vec<u64> = ids
+        .iter()
+        .copied()
+        .filter(|id| !cache.urls.contains_key(id))
+        .collect();
+    if !unknown.is_empty() {
+        let found = nexus::thumbnails(&state.http, &unknown).await?;
+        if cache.urls.is_empty() {
+            cache.at = now;
+        }
+        for id in unknown {
+            cache.urls.insert(id, found.get(&id).cloned());
+        }
+        if let Some(dir) = file.parent() {
+            let _ = std::fs::create_dir_all(dir);
+        }
+        let _ = std::fs::write(
+            &file,
+            serde_json::to_vec(&cache).expect("thumbnails serialize"),
+        );
+    }
+    Ok(ids
+        .into_iter()
+        .filter_map(|id| Some((id, cache.urls.get(&id)?.clone()?)))
+        .collect())
+}
+
 /// A collection and the Nexus mods of it the library already has.
 #[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]

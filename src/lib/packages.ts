@@ -32,6 +32,17 @@ export function packageVersion(p: PackageView): string {
   return p.mods[0]?.manifest.version ?? "";
 }
 
+/** The Nexus mod a package comes from, by its first mod's update keys. */
+export function packageNexusId(p: PackageView): number | null {
+  for (const m of p.mods)
+    for (const k of m.manifest.updateKeys) {
+      const [site, rest] = k.split(":");
+      const id = Number(rest?.split("@")[0]);
+      if (site?.trim().toLowerCase() === "nexus" && Number.isInteger(id) && id > 0) return id;
+    }
+  return null;
+}
+
 export function packageSource(p: PackageView): string | null {
   return p.system ? "SMAPI" : (p.mods.find((m) => m.source)?.source ?? null);
 }

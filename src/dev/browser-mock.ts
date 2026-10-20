@@ -366,6 +366,16 @@ mockIPC(
       case "bisect_cancel":
         library.bisect = null;
         return structuredClone(library);
+      case "nexus_thumbnails": {
+        // drawn, not fetched: the screen tests run offline
+        const colors = ["#7fb069", "#e6aa68", "#ca3c25", "#5a8dee"];
+        return Object.fromEntries(
+          (a as { ids: number[] }).ids.map((id, i) => [
+            id,
+            `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="${colors[i % colors.length]}"/></svg>`)}`,
+          ]),
+        );
+      }
       case "nexus_collection":
         return {
           collection: {

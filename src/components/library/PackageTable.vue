@@ -85,14 +85,23 @@ function select(p: PackageView) {
           :label="r.title"
           @toggle="lib.toggle(r.pkg.id, !r.pkg.enabled)"
         />
-        <div class="flex min-w-0 flex-col">
-          <span class="truncate text-[15px] font-extrabold">
-            {{ r.title }}
-            <span v-if="r.parts > 1" class="text-muted-foreground text-xs font-bold">
-              · {{ t("library.mods", r.parts) }}
+        <div class="flex min-w-0 items-center gap-2.5">
+          <img
+            v-if="lib.pictureOf(r.pkg)"
+            :src="lib.pictureOf(r.pkg)!"
+            alt=""
+            loading="lazy"
+            class="size-9 shrink-0 rounded border border-[#cdba98] object-cover"
+          />
+          <div class="flex min-w-0 flex-col">
+            <span class="truncate text-[15px] font-extrabold">
+              {{ r.title }}
+              <span v-if="r.parts > 1" class="text-muted-foreground text-xs font-bold">
+                · {{ t("library.mods", r.parts) }}
+              </span>
             </span>
-          </span>
-          <span class="text-muted-foreground truncate text-xs">{{ r.author }}</span>
+            <span class="text-muted-foreground truncate text-xs">{{ r.author }}</span>
+          </div>
         </div>
         <span class="min-w-0 truncate font-mono text-[13px] font-bold" :title="r.version">{{ r.version }}</span>
         <span class="justify-self-start rounded border-2 px-2 py-0.5 text-xs font-extrabold" :class="pill[r.status]">

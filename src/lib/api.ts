@@ -326,6 +326,7 @@ export const nexus = {
   download: (modId: number, fileId: number) => invoke<void>("nexus_download", { modId, fileId }),
   filePage: (modId: number, fileId: number) => invoke<string>("nexus_file_page", { modId, fileId }),
   collection: (input: string) => invoke<CollectionView>("nexus_collection", { input }),
+  thumbnails: (ids: number[]) => invoke<Record<number, string>>("nexus_thumbnails", { ids }),
   openNxm: (url: string) => invoke<void>("nxm_open", { url }),
   takePendingNxm: () => invoke<NxmLink[]>("nxm_take_pending"),
   downloads: () => invoke<Download[]>("downloads_list"),

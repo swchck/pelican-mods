@@ -14,12 +14,13 @@ import {
 import {
   matchesFilter,
   matchesStatus,
+  packageNexusId,
   packageStatus,
   packageTitle,
   packageUpdate,
   type StatusFilter,
 } from "@/lib/packages";
-import { translations as translationsApi } from "@/lib/api";
+import { nexus as nexusApi, translations as translationsApi } from "@/lib/api";
 import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
 import { errorText, i18n } from "@/i18n";
 import { useNexus } from "./nexus";
@@ -78,6 +79,8 @@ export const useLibrary = defineStore("library", () => {
         view.value = next;
       }
       if (selectedId.value && !packages.value.some((p) => p.id === selectedId.value)) selectedId.value = null;
+      // a fresh install may bring a Nexus mod the pictures don't cover yet
+      void loadPictures();
       return true;
     } catch (e) {
       toast.error(errorText(e), { duration: 10000 });
@@ -109,9 +112,25 @@ export const useLibrary = defineStore("library", () => {
     }
   }
 
+  /** Nexus thumbnails by mod id, for packages that come from Nexus. */
+  const pictures = ref<Record<number, string>>({});
+  async function loadPictures() {
+    const ids = [...new Set(packages.value.map(packageNexusId).filter((id): id is number => id !== null))];
+    const missing = ids.filter((id) => !(id in pictures.value));
+    if (!missing.length) return;
+    // offline, or Nexus is down: the library just goes without pictures
+    const found = await nexusApi.thumbnails(missing).catch(() => ({}));
+    pictures.value = { ...pictures.value, ...found };
+  }
+  const pictureOf = (p: PackageView) => {
+    const id = packageNexusId(p);
+    return id === null ? null : (pictures.value[id] ?? null);
+  };
+
   async function load() {
     const ok = await run(api.get, true);
     if (ok) {
+      void loadPictures();
       void checkUpdates(false);
       backgroundChecks();
     }
@@ -257,6 +276,7 @@ export const useLibrary = defineStore("library", () => {
       if (await run(() => api.setGithub(uniqueId, repo))) await checkUpdates(true);
     },
     selectedId,
+    pictureOf,
     filter,
     statusFilter,
     tagFilter,
