@@ -70,6 +70,20 @@ test("predictions wait for the spoilers setting", async ({ page }) => {
   await expect(page.getByText(/Предсказания скрыты/)).toHaveCount(0);
 });
 
+test("walnut tracker shows only with spoilers on", async ({ page }) => {
+  await open(page, "/helpers", "ru");
+  await expect(page.getByRole("tab", { name: "Орехи" })).toHaveCount(0);
+  await page.goto("/#/settings");
+  await page.getByRole("switch", { name: "Спойлеры и предсказания" }).click();
+  await page.goto("/#/helpers");
+  await page.getByRole("tab", { name: "Орехи" }).click();
+  await expect(page.getByText("Золотых орехов найдено: 93 из 130")).toBeVisible();
+  await expect(page.getByText("Полевой офис: летучая мышь")).toBeVisible();
+  await expect(page.getByText("Песня русалки на флейтовых блоках")).toHaveCount(0);
+  await page.getByLabel("Только ненайденные").uncheck();
+  await expect(page.getByText("Песня русалки на флейтовых блоках")).toBeVisible();
+});
+
 test("library shows Nexus pictures", async ({ page }) => {
   await open(page, "/", "ru");
   const row = page.getByRole("option").filter({ hasText: "Lookup Anything" });

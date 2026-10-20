@@ -716,6 +716,21 @@ mockIPC(
             { key: "(O)404", name: "Шампиньон", from: 70, to: 53 },
           ],
         };
+      case "saves_walnuts":
+        return {
+          found: 93,
+          total: 130,
+          sources: [
+            { key: "Bush_IslandNorth_13_33", kind: "bush", area: "IslandNorth", tile: [13, 33], have: 1, max: 1 },
+            { key: "Buried_IslandWest_21_81", kind: "buried", area: "IslandWest", tile: [21, 81], have: 1, max: 1 },
+            { key: "Bush_IslandWest_15_3", kind: "bush", area: "IslandWest", tile: [15, 3], have: 0, max: 1 },
+            { key: "IslandBatRestored", kind: "flag", area: "IslandFieldOffice", tile: null, have: 0, max: 1 },
+            { key: "IslandShrinePuzzle", kind: "flag", area: "IslandShrine", tile: null, have: 0, max: 1 },
+            { key: "Mermaid", kind: "flag", area: "IslandSouthEast", tile: null, have: 1, max: 1 },
+            { key: "VolcanoMining", kind: "limited", area: "Volcano", tile: null, have: 2, max: 5 },
+            { key: "IslandFishing", kind: "limited", area: "Island", tile: null, have: 5, max: 5 },
+          ],
+        };
       case "saves_items":
         return [
           {

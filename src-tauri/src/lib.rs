@@ -35,6 +35,7 @@ mod storage;
 mod translations;
 mod updates;
 mod version;
+mod walnuts;
 
 use tauri::Manager;
 use tauri_plugin_deep_link::DeepLinkExt;
@@ -158,6 +159,7 @@ pub fn run() {
             commands::saves::saves_perfection,
             commands::saves::saves_checkup,
             commands::saves::saves_items,
+            commands::saves::saves_walnuts,
             commands::saves::saves_compare,
             commands::saves::saves_snapshots,
             commands::saves::saves_backup,

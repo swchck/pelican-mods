@@ -17,6 +17,7 @@
 ### Helpers
 
 - The Chests tab reads the running game live, and from saves it now finds Junimo chests and gives auto-grabbers their tile.
+- With spoilers on, a Walnuts tab lists every golden walnut source on Ginger Island by area — each bush and buried spot with its tile, puzzles, Field Office donations and the capped drops with how many are left — and marks what the save has already found.
 
 ### Console
 

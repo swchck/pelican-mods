@@ -497,6 +497,7 @@ export const saves = {
   list: () => invoke<SaveSummary[]>("saves_list"),
   checkup: (id: string) => invoke<Checkup>("saves_checkup", { id }),
   items: (id: string) => invoke<StoredItem[]>("saves_items", { id }),
+  walnuts: (id: string) => invoke<Walnuts>("saves_walnuts", { id }),
   /** Each side is "current", "previous" or a snapshot's file. */
   compare: (id: string, from: string, to: string) => invoke<SaveDiff>("saves_compare", { id, from, to }),
   perfection: (id: string) => invoke<Perfection>("saves_perfection", { id }),
@@ -855,6 +856,25 @@ export interface StoredItem {
   };
   /** The location as the game names it. */
   locationName: string | null;
+}
+
+/** One place on Ginger Island that golden walnuts come from. */
+export interface WalnutSource {
+  /** The game's key, such as "Bush_IslandNorth_13_33" or "Darts". */
+  key: string;
+  kind: "bush" | "buried" | "flag" | "limited";
+  /** Internal location name; "Island" for the whole island. */
+  area: string;
+  tile: [number, number] | null;
+  have: number;
+  /** Walnuts it gives at most; a flag counts as 1 even where the game gives a few. */
+  max: number;
+}
+
+export interface Walnuts {
+  found: number;
+  total: number;
+  sources: WalnutSource[];
 }
 
 /** One state of a save in a comparison. */

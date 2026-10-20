@@ -135,6 +135,13 @@ pub async fn saves_items(app: AppHandle, id: String) -> AppResult<Vec<NamedItem>
     .await
 }
 
+/// Which of Ginger Island's golden walnut sources save `id` has found, as of its last save.
+#[tauri::command]
+pub async fn saves_walnuts(app: AppHandle, id: String) -> AppResult<crate::walnuts::Walnuts> {
+    let path = save_path(&app, &id)?;
+    blocking(app, move |_| crate::walnuts::in_save(&path)).await
+}
+
 /// Compares two states of save `id`: each side is "current", "previous" (the day before
 /// the last save, which the game keeps as `_old` files) or the path of one of its snapshots.
 #[tauri::command]

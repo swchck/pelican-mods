@@ -7,6 +7,7 @@ import {
   CloudSunIcon,
   FishIcon,
   GemIcon,
+  NutIcon,
   BoxIcon,
   LandmarkIcon,
   Loader2Icon,
@@ -20,6 +21,7 @@ import CalendarTab from "@/components/helpers/CalendarTab.vue";
 import FishTab from "@/components/helpers/FishTab.vue";
 import ChestsTab from "@/components/helpers/ChestsTab.vue";
 import MuseumTab from "@/components/helpers/MuseumTab.vue";
+import WalnutsTab from "@/components/helpers/WalnutsTab.vue";
 import WikiName from "@/components/WikiName.vue";
 import { api as appApi, companion as api, isAppError, type Forecast } from "@/lib/api";
 import { bestGrange, grangeScore, itemPoints, place, SLOTS, type GrangeItem } from "@/lib/grange";
@@ -33,7 +35,7 @@ const companion = useCompanion();
 const settings = useSettings();
 void settings.load();
 
-const tab = ref<"forecast" | "fair" | "calendar" | "fish" | "museum" | "chests">("forecast");
+const tab = ref<"forecast" | "fair" | "calendar" | "fish" | "museum" | "chests" | "walnuts">("forecast");
 /** Forecast and fair come from the running game; calendar and fish work from the lists. */
 const needsGame = computed(() => tab.value === "forecast" || tab.value === "fair");
 const forecast = ref<Forecast | null>(null);
@@ -117,6 +119,13 @@ function remove(slot: number) {
 const where = (w: string) => (w === "inventory" ? t("helpers.fair.inventory") : w);
 const quality = ["", "silver", "gold", "", "iridium"];
 
+watch(
+  () => settings.spoilers,
+  (on) => {
+    if (!on && tab.value === "walnuts") tab.value = "forecast";
+  },
+);
+
 useShortcut("page.refresh", () => void load());
 watch([tab, ready], load, { immediate: true });
 </script>
@@ -138,6 +147,7 @@ watch([tab, ready], load, { immediate: true });
         <TabsTrigger value="fish"><FishIcon />{{ t("helpers.tabs.fish") }}</TabsTrigger>
         <TabsTrigger value="museum"><LandmarkIcon />{{ t("helpers.tabs.museum") }}</TabsTrigger>
         <TabsTrigger value="chests"><BoxIcon />{{ t("helpers.tabs.chests") }}</TabsTrigger>
+        <TabsTrigger v-if="settings.spoilers" value="walnuts"><NutIcon />{{ t("helpers.tabs.walnuts") }}</TabsTrigger>
       </TabsList>
 
       <div
@@ -303,6 +313,9 @@ watch([tab, ready], load, { immediate: true });
       <TabsContent value="fish" class="min-h-0 flex-1 overflow-auto"><FishTab /></TabsContent>
       <TabsContent value="museum" class="min-h-0 flex-1 overflow-auto"><MuseumTab /></TabsContent>
       <TabsContent value="chests" class="min-h-0 flex-1 overflow-auto"><ChestsTab /></TabsContent>
+      <TabsContent v-if="settings.spoilers" value="walnuts" class="min-h-0 flex-1 overflow-auto"
+        ><WalnutsTab
+      /></TabsContent>
     </Tabs>
   </div>
 </template>
