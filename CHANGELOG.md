@@ -1,6 +1,6 @@
 # What's new
 
-## 0.4.2
+## 0.4.2 — 2026-10-21
 
 ### Library and saves
 
