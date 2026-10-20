@@ -108,6 +108,20 @@ test("co-op finds a host on the network and compares lists", async ({ page }) =>
   await expect(page.getByRole("dialog").getByText("Automate")).toBeVisible();
 });
 
+test("library builds a texture pack from pictures", async ({ page }) => {
+  await open(page, "/", "ru");
+  await page.getByRole("button", { name: "Пак из картинок" }).click();
+  const dialog = page.getByRole("dialog");
+  const create = dialog.getByRole("button", { name: "Создать и установить" });
+  await dialog.getByLabel("Название пака").fill("Моя Абигейл");
+  await expect(create).toBeDisabled();
+  await dialog.getByRole("button", { name: "Добавить картинки" }).click();
+  // the file's name matches a villager, so the portrait is the first guess
+  await expect(dialog.getByLabel("Что заменяет Abigail.png")).toHaveValue("Portraits/Abigail");
+  await create.click();
+  await expect(page.getByText("Пак «Моя Абигейл» установлен")).toBeVisible();
+});
+
 test("walnut tracker shows only with spoilers on", async ({ page }) => {
   await open(page, "/helpers", "ru");
   await expect(page.getByRole("tab", { name: "Орехи" })).toHaveCount(0);

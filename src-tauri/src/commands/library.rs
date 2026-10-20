@@ -261,6 +261,28 @@ pub async fn library_install(app: AppHandle, paths: Vec<PathBuf>) -> AppResult<L
     .await
 }
 
+/// Builds a Content Patcher pack named `name` from the player's pictures and installs it
+/// into the active profile.
+#[tauri::command]
+pub async fn library_make_pack(
+    app: AppHandle,
+    name: String,
+    author: String,
+    items: Vec<crate::cp_pack::Replacement>,
+) -> AppResult<LibraryView> {
+    blocking(app, move |s| {
+        let tmp = s
+            .work_dir
+            .with_file_name(format!("pack-{}", crate::history::now_ms()));
+        let result = crate::cp_pack::build(&tmp, &name, &author, &items)
+            .and_then(|dir| install_paths(s, &[dir]));
+        let _ = std::fs::remove_dir_all(&tmp);
+        result?;
+        Ok(build_view(s))
+    })
+    .await
+}
+
 /// Installs archives or mod folders into the store and enables new packages in the
 /// active profile. Blocking; call from a blocking thread.
 pub fn install_paths(s: &AppState, paths: &[PathBuf]) -> AppResult<()> {

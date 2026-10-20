@@ -7,6 +7,7 @@ mod commands;
 mod companion;
 mod compat;
 mod conflicts;
+mod cp_pack;
 mod deps;
 mod downloads;
 mod error;
@@ -114,6 +115,7 @@ pub fn run() {
             commands::app::app_changelog,
             commands::library::library_get,
             commands::library::library_install,
+            commands::library::library_make_pack,
             commands::library::library_import,
             commands::library::library_remove,
             commands::library::library_toggle,

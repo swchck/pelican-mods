@@ -349,6 +349,10 @@ mockIPC(
         return { version: "4.5.2", url: "", size: 0, notesUrl: "https://github.com/Pathoschild/SMAPI/releases" };
       case "library_get":
         return library;
+      case "plugin:dialog|open":
+        return ["/mock/Pictures/Abigail.png"];
+      case "library_make_pack":
+        return structuredClone(library);
       case "profile_set_own_configs":
         library.profiles.profiles[0].ownConfigs = (a as { on: boolean }).on;
         return structuredClone(library);

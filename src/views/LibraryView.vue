@@ -5,7 +5,15 @@ import { toast } from "vue-sonner";
 import { open } from "@tauri-apps/plugin-dialog";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import type { UnlistenFn } from "@tauri-apps/api/event";
-import { ArrowUpCircleIcon, DownloadIcon, HistoryIcon, PackageOpenIcon, RefreshCwIcon, SearchIcon } from "@lucide/vue";
+import {
+  ArrowUpCircleIcon,
+  DownloadIcon,
+  HistoryIcon,
+  ImagesIcon,
+  PackageOpenIcon,
+  RefreshCwIcon,
+  SearchIcon,
+} from "@lucide/vue";
 import { useIntervalFn, useNow } from "@vueuse/core";
 import { relativeTime } from "@/lib/time";
 import { computed } from "vue";
@@ -17,12 +25,14 @@ import ConflictBanner from "@/components/library/ConflictBanner.vue";
 import LibraryFilters from "@/components/library/LibraryFilters.vue";
 import BisectBanner from "@/components/library/BisectBanner.vue";
 import HistoryDialog from "@/components/library/HistoryDialog.vue";
+import PackDialog from "@/components/library/PackDialog.vue";
 import { useLibrary } from "@/stores/library";
 import { hint, useShortcut } from "@/stores/shortcuts";
 
 const { t, locale } = useI18n();
 const lib = useLibrary();
 const historyOpen = ref(false);
+const packOpen = ref(false);
 const dragging = ref(false);
 const filterInput = ref<HTMLInputElement>();
 
@@ -144,6 +154,16 @@ onUnmounted(() => {
         variant="ghost"
         size="icon"
         class="shrink-0"
+        :title="t('pack.open')"
+        :aria-label="t('pack.open')"
+        @click="packOpen = true"
+      >
+        <ImagesIcon />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        class="shrink-0"
         :title="t('history.title')"
         :aria-label="t('history.title')"
         @click="historyOpen = true"
@@ -189,5 +209,6 @@ onUnmounted(() => {
       <span class="font-pixel text-wood-dark text-3xl font-bold">{{ t("library.dropHint") }}</span>
     </div>
     <HistoryDialog v-model:open="historyOpen" />
+    <PackDialog v-model:open="packOpen" />
   </div>
 </template>

@@ -237,6 +237,9 @@ export const lan = {
 export const library = {
   get: () => invoke<LibraryView>("library_get"),
   install: (paths: string[]) => invoke<LibraryView>("library_install", { paths }),
+  /** Builds a Content Patcher pack from pictures, each replacing one asset, and installs it. */
+  makePack: (name: string, author: string, items: { file: string; target: string }[]) =>
+    invoke<LibraryView>("library_make_pack", { name, author, items }),
   import: (names: string[]) => invoke<LibraryView>("library_import", { names }),
   remove: (id: string) => invoke<LibraryView>("library_remove", { id }),
   toggle: (id: string, enabled: boolean) => invoke<LibraryView>("library_toggle", { id, enabled }),

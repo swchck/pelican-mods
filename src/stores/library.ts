@@ -297,6 +297,8 @@ export const useLibrary = defineStore("library", () => {
     activeProfile,
     load,
     install: (paths: string[]) => run(() => api.install(paths)),
+    makePack: (name: string, author: string, items: { file: string; target: string }[]) =>
+      run(() => api.makePack(name, author, items)),
     importGameMods: (names: string[]) => run(() => api.import(names)),
     remove: (id: string) => run(() => api.remove(id)),
     toggle,

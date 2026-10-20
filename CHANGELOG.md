@@ -4,6 +4,7 @@
 
 ### Library and saves
 
+- "Pack from pictures" turns your own PNGs into a Content Patcher mod: pick the pictures, say what each replaces (a villager's portrait or sprite is guessed from the file name), and it installs into the active profile.
 - "Co-op on the network" in the profile menu shares your mod list with friends on the same network and finds theirs, opening the usual comparison to install what's missing. Only names and versions go out, and only while the window is open.
 - Saves have a History chart: total earned, money, perfection and skills by in-game day, noted on every look at a save and filled in from its snapshots.
 - After each session a notice offers what changed on the farm since the game started, compared against the copy taken before launch.
