@@ -1003,6 +1003,7 @@ export default {
     },
   },
   profiles: {
+    ownConfigs: "프로필 전용 모드 설정",
     label: "프로필",
     default: "기본",
     create: "새 프로필…",

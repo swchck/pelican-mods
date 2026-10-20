@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuCheckboxItem,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -125,6 +126,12 @@ async function submit() {
       <DropdownMenuContent align="start">
         <DropdownMenuItem @select="open('create')"><PlusIcon />{{ t("profiles.create") }}</DropdownMenuItem>
         <DropdownMenuItem @select="open('rename')"><PencilIcon />{{ t("profiles.rename") }}</DropdownMenuItem>
+        <DropdownMenuCheckboxItem
+          :model-value="lib.activeProfile?.ownConfigs ?? false"
+          :disabled="game.running || lib.working"
+          @update:model-value="(on: boolean) => lib.activeProfile && lib.setOwnConfigs(lib.activeProfile.id, on)"
+          >{{ t("profiles.ownConfigs") }}</DropdownMenuCheckboxItem
+        >
         <DropdownMenuSeparator />
         <DropdownMenuItem @select="exportList"><FileUpIcon />{{ t("modList.export") }}</DropdownMenuItem>
         <DropdownMenuItem @select="importList()"><FileDownIcon />{{ t("modList.import") }}</DropdownMenuItem>

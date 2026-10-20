@@ -24,6 +24,9 @@ pub struct Profile {
     pub name: Option<String>,
     /// Package ids, in the order they were enabled.
     pub enabled: Vec<String>,
+    /// Keeps its own copy of every mod's settings instead of sharing them.
+    #[serde(default)]
+    pub own_configs: bool,
 }
 
 /// All profiles and which one is active.
@@ -51,6 +54,7 @@ impl Default for Profiles {
                 id: DEFAULT_ID.into(),
                 name: None,
                 enabled: Vec::new(),
+                own_configs: false,
             }],
             save_profiles: BTreeMap::new(),
             tags: BTreeMap::new(),
@@ -126,6 +130,7 @@ impl Profiles {
             id: id.clone(),
             name: Some(name),
             enabled,
+            own_configs: false,
         });
         Ok(id)
     }
@@ -152,6 +157,12 @@ impl Profiles {
     pub fn activate(&mut self, id: &str) -> AppResult<()> {
         self.get_mut(id)?;
         self.active = id.to_owned();
+        Ok(())
+    }
+
+    /// Gives profile `id` mod settings of its own, or makes it share them again.
+    pub fn set_own_configs(&mut self, id: &str, on: bool) -> AppResult<()> {
+        self.get_mut(id)?.own_configs = on;
         Ok(())
     }
 
@@ -349,6 +360,7 @@ mod tests {
             id: "p1".into(),
             name: None,
             enabled: vec!["Lookup".into(), "Gone".into()],
+            own_configs: false,
         };
         let bundled = [("ConsoleCommands".to_owned(), game_mods.clone())];
         let out = deploy(&profile, &store, &bundled, &deploy_root).unwrap();

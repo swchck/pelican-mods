@@ -179,6 +179,8 @@ export interface Profile {
   id: string;
   name: string | null;
   enabled: string[];
+  /** Keeps its own copy of every mod's settings. */
+  ownConfigs: boolean;
 }
 
 export interface Profiles {
@@ -226,6 +228,7 @@ export const library = {
   renameProfile: (id: string, name: string) => invoke<LibraryView>("profile_rename", { id, name }),
   deleteProfile: (id: string) => invoke<LibraryView>("profile_delete", { id }),
   activateProfile: (id: string) => invoke<LibraryView>("profile_activate", { id }),
+  setOwnConfigs: (id: string, on: boolean) => invoke<LibraryView>("profile_set_own_configs", { id, on }),
   checkUpdates: (force: boolean) => invoke<UpdateReport>("updates_check", { force }),
   update: (id: string) => invoke<UpdateOutcome>("mod_update", { id }),
   rollback: (uniqueId: string) => invoke<LibraryView>("mod_rollback", { uniqueId }),
@@ -627,12 +630,12 @@ export const companion = {
   forecast: () => invoke<Forecast>("companion_forecast"),
   items: () => invoke<import("./grange").GrangeItem[]>("companion_items"),
   profileStart: () => invoke<number>("companion_profile_start"),
-  profileStop: () => invoke<Profile>("companion_profile_stop"),
+  profileStop: () => invoke<HandlerTimes>("companion_profile_stop"),
   patches: () => invoke<PatchReport>("companion_patches"),
 };
 
 /** Mods' SMAPI event handler time over a measurement, slowest first; times in ms. */
-export interface Profile {
+export interface HandlerTimes {
   seconds: number;
   mods: {
     mod: string;

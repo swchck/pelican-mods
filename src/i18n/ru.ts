@@ -1019,6 +1019,7 @@ export default {
     },
   },
   profiles: {
+    ownConfigs: "Свои настройки модов",
     label: "Профиль",
     default: "Основной",
     create: "Новый профиль…",

@@ -983,6 +983,7 @@ export default {
     },
   },
   profiles: {
+    ownConfigs: "独立的模组设置",
     label: "配置",
     default: "主配置",
     create: "新建配置…",

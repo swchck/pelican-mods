@@ -1037,6 +1037,7 @@ export default {
     },
   },
   profiles: {
+    ownConfigs: "Ajustes de mods propios",
     label: "Perfil",
     default: "Principal",
     create: "Nuevo perfil…",

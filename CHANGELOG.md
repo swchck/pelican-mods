@@ -4,6 +4,7 @@
 
 ### Library and saves
 
+- A profile can keep mod settings of its own: switching away saves every mod's config.json for it, and coming back puts them back, so "SVE hard" and "SVE cozy" can set the same mods differently.
 - When a search ends on a mod, "Check what it breaks with" runs it alone, then halves the mods the search cleared with it kept on, so a problem that needs two mods names both.
 - Undoing an install is itself a removal in the history, so it can be taken back too, and removing a mod sets it aside before its copy in the game's Mods folder goes to the Trash.
 - The library shows each Nexus mod's picture: a thumbnail in its row and a larger one atop its details, fetched in one batch and cached for a week.

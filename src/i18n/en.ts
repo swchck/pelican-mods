@@ -1017,6 +1017,7 @@ export default {
     },
   },
   profiles: {
+    ownConfigs: "Own mod settings",
     label: "Profile",
     default: "Main",
     create: "New profile…",

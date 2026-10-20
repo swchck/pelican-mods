@@ -1026,6 +1026,7 @@ export default {
     },
   },
   profiles: {
+    ownConfigs: "Kendi mod ayarları",
     label: "Profil",
     default: "Ana",
     create: "Yeni profil…",

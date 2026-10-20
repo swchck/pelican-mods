@@ -102,6 +102,19 @@ test("library translates a mod without the language", async ({ page }) => {
   await expect(page.getByText(/Перевод сохранён/)).toBeVisible();
 });
 
+test("profiles can keep mod settings of their own", async ({ page }) => {
+  await open(page, "/", "ru");
+  await page.getByRole("button", { name: "Профиль" }).last().click();
+  const item = page.getByRole("menuitemcheckbox", { name: "Свои настройки модов" });
+  await expect(item).toHaveAttribute("aria-checked", "false");
+  await item.click();
+  await page.getByRole("button", { name: "Профиль" }).last().click();
+  await expect(page.getByRole("menuitemcheckbox", { name: "Свои настройки модов" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+});
+
 test("library halves its way to a problem's mod", async ({ page }) => {
   await open(page, "/", "ru");
   await page.getByRole("button", { name: "Профиль" }).last().click();

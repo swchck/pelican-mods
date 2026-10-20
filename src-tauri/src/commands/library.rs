@@ -422,6 +422,7 @@ pub async fn profile_delete(app: AppHandle, id: String) -> AppResult<LibraryView
         ensure_stopped(s)?;
         s.profiles.update(|p| p.delete(&id))?;
         let _ = std::fs::remove_dir_all(s.deploy_root.join(&id));
+        let _ = std::fs::remove_dir_all(s.profile_configs_root.join(&id));
         Ok(build_view(s))
     })
     .await
@@ -580,7 +581,49 @@ pub async fn profile_activate(app: AppHandle, id: String) -> AppResult<LibraryVi
         if s.bisect.get().is_some() {
             return Err(AppError::Bisecting);
         }
+        let _guard = lock_library(s);
+        let before = s.profiles.get();
+        let packages = library::scan(&s.store_root);
+        // the profile left keeps the settings it was played with
+        if before.active().own_configs {
+            crate::profile_configs::snapshot(
+                &packages,
+                &s.profile_configs_root.join(&before.active),
+            )?;
+        }
         s.profiles.update(|p| p.activate(&id))?;
+        let after = s.profiles.get();
+        if after.active().own_configs {
+            crate::profile_configs::restore(
+                &s.store_root,
+                &s.profile_configs_root.join(&after.active),
+            )?;
+        }
+        drop(_guard);
+        Ok(build_view(s))
+    })
+    .await
+}
+
+/// Gives profile `id` mod settings of its own (starting from the current ones), or makes
+/// it share them with the other profiles again.
+#[tauri::command]
+pub async fn profile_set_own_configs(
+    app: AppHandle,
+    id: String,
+    on: bool,
+) -> AppResult<LibraryView> {
+    blocking(app, move |s| {
+        ensure_stopped(s)?;
+        let _guard = lock_library(s);
+        s.profiles.update(|p| p.set_own_configs(&id, on))?;
+        let dir = s.profile_configs_root.join(&id);
+        if on {
+            crate::profile_configs::snapshot(&library::scan(&s.store_root), &dir)?;
+        } else {
+            let _ = std::fs::remove_dir_all(dir);
+        }
+        drop(_guard);
         Ok(build_view(s))
     })
     .await

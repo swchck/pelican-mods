@@ -306,5 +306,6 @@ export const useLibrary = defineStore("library", () => {
     renameProfile: (id: string, name: string) => run(() => api.renameProfile(id, name)),
     deleteProfile: (id: string) => run(() => api.deleteProfile(id)),
     activateProfile: (id: string) => run(() => api.activateProfile(id)),
+    setOwnConfigs: (id: string, on: boolean) => run(() => api.setOwnConfigs(id, on)),
   };
 });

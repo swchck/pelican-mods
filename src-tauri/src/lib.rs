@@ -21,6 +21,7 @@ mod moddrop;
 mod modlist;
 mod nexus;
 mod perfection;
+mod profile_configs;
 mod profiles;
 mod rosetta;
 mod save_backups;
@@ -122,6 +123,7 @@ pub fn run() {
             commands::library::profile_rename,
             commands::library::profile_delete,
             commands::library::profile_activate,
+            commands::library::profile_set_own_configs,
             commands::updates::updates_check,
             commands::updates::mod_update,
             commands::updates::mod_rollback,

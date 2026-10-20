@@ -70,7 +70,10 @@ const library = {
       enabled: false,
     }),
   ],
-  profiles: { active: "default", profiles: [{ id: "default", name: null, enabled: [] }] },
+  profiles: {
+    active: "default",
+    profiles: [{ id: "default", name: null, enabled: [] as string[], ownConfigs: false }],
+  },
   bisect: null as null | {
     original: string;
     profile: string;
@@ -346,6 +349,9 @@ mockIPC(
         return { version: "4.5.2", url: "", size: 0, notesUrl: "https://github.com/Pathoschild/SMAPI/releases" };
       case "library_get":
         return library;
+      case "profile_set_own_configs":
+        library.profiles.profiles[0].ownConfigs = (a as { on: boolean }).on;
+        return structuredClone(library);
       case "bisect_start": {
         const all = library.packages.filter((p) => !p.system && p.enabled).map((p) => p.id);
         library.bisect = {

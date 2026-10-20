@@ -1035,6 +1035,7 @@ export default {
     },
   },
   profiles: {
+    ownConfigs: "Saját modbeállítások",
     label: "Profil",
     default: "Fő",
     create: "Új profil…",

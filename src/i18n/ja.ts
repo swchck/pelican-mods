@@ -1023,6 +1023,7 @@ export default {
     },
   },
   profiles: {
+    ownConfigs: "専用の MOD 設定",
     label: "プロフィール",
     default: "メイン",
     create: "新しいプロフィール…",

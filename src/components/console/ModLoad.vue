@@ -4,7 +4,7 @@ import { useI18n } from "vue-i18n";
 import { toast } from "vue-sonner";
 import { GaugeIcon, Loader2Icon, SplitIcon } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
-import { companion as api, type PatchedMethod, type PatchReport, type Profile } from "@/lib/api";
+import { companion as api, type PatchedMethod, type PatchReport, type HandlerTimes } from "@/lib/api";
 import { errorText } from "@/i18n";
 import { useCompanion } from "@/stores/companion";
 import { useLibrary } from "@/stores/library";
@@ -16,7 +16,7 @@ const link = useCompanion();
 const lib = useLibrary();
 
 const left = ref(0);
-const profile = ref<Profile | null>(null);
+const profile = ref<HandlerTimes | null>(null);
 const patches = ref<PatchReport | null>(null);
 const loadingPatches = ref(false);
 let timer: ReturnType<typeof setInterval> | null = null;

@@ -679,6 +679,7 @@ mod tests {
             id: "test".into(),
             name: None,
             enabled: vec![installed[0].id.clone()],
+            own_configs: false,
         };
         let bundled = [(
             "ConsoleCommands".to_owned(),
