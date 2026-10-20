@@ -7,6 +7,7 @@ import {
   CloudSunIcon,
   FishIcon,
   GemIcon,
+  MapIcon,
   SproutIcon,
   NutIcon,
   BoxIcon,
@@ -24,6 +25,7 @@ import ChestsTab from "@/components/helpers/ChestsTab.vue";
 import MuseumTab from "@/components/helpers/MuseumTab.vue";
 import WalnutsTab from "@/components/helpers/WalnutsTab.vue";
 import CropsTab from "@/components/helpers/CropsTab.vue";
+import MapTab from "@/components/helpers/MapTab.vue";
 import WikiName from "@/components/WikiName.vue";
 import { api as appApi, companion as api, isAppError, type Forecast } from "@/lib/api";
 import { bestGrange, grangeScore, itemPoints, place, SLOTS, type GrangeItem } from "@/lib/grange";
@@ -37,7 +39,9 @@ const companion = useCompanion();
 const settings = useSettings();
 void settings.load();
 
-const tab = ref<"forecast" | "fair" | "calendar" | "fish" | "museum" | "chests" | "crops" | "walnuts">("forecast");
+const tab = ref<"forecast" | "fair" | "calendar" | "fish" | "museum" | "chests" | "crops" | "map" | "walnuts">(
+  "forecast",
+);
 /** Forecast and fair come from the running game; calendar and fish work from the lists. */
 const needsGame = computed(() => tab.value === "forecast" || tab.value === "fair");
 const forecast = ref<Forecast | null>(null);
@@ -150,6 +154,7 @@ watch([tab, ready], load, { immediate: true });
         <TabsTrigger value="fish"><FishIcon />{{ t("helpers.tabs.fish") }}</TabsTrigger>
         <TabsTrigger value="museum"><LandmarkIcon />{{ t("helpers.tabs.museum") }}</TabsTrigger>
         <TabsTrigger value="chests"><BoxIcon />{{ t("helpers.tabs.chests") }}</TabsTrigger>
+        <TabsTrigger value="map"><MapIcon />{{ t("helpers.tabs.map") }}</TabsTrigger>
         <TabsTrigger v-if="settings.spoilers" value="walnuts"><NutIcon />{{ t("helpers.tabs.walnuts") }}</TabsTrigger>
       </TabsList>
 
@@ -317,6 +322,7 @@ watch([tab, ready], load, { immediate: true });
       <TabsContent value="fish" class="min-h-0 flex-1 overflow-auto"><FishTab /></TabsContent>
       <TabsContent value="museum" class="min-h-0 flex-1 overflow-auto"><MuseumTab /></TabsContent>
       <TabsContent value="chests" class="min-h-0 flex-1 overflow-auto"><ChestsTab /></TabsContent>
+      <TabsContent value="map" class="min-h-0 flex-1 overflow-auto"><MapTab /></TabsContent>
       <TabsContent v-if="settings.spoilers" value="walnuts" class="min-h-0 flex-1 overflow-auto"
         ><WalnutsTab
       /></TabsContent>
