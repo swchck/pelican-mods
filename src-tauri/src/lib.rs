@@ -23,6 +23,7 @@ mod perfection;
 mod profiles;
 mod rosetta;
 mod save_backups;
+mod save_diff;
 mod save_usage;
 mod saves;
 mod settings;
@@ -145,6 +146,7 @@ pub fn run() {
             commands::saves::saves_perfection,
             commands::saves::saves_checkup,
             commands::saves::saves_items,
+            commands::saves::saves_compare,
             commands::saves::saves_snapshots,
             commands::saves::saves_backup,
             commands::saves::saves_restore,

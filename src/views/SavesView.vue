@@ -5,6 +5,7 @@ import { toast } from "vue-sonner";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import {
   ArchiveRestoreIcon,
+  GitCompareIcon,
   DownloadIcon,
   FolderOpenIcon,
   Loader2Icon,
@@ -29,6 +30,7 @@ import { errorText } from "@/i18n";
 import { useGame } from "@/stores/game";
 import { useLibrary } from "@/stores/library";
 import { useShortcut } from "@/stores/shortcuts";
+import SaveDiffDialog from "@/components/saves/SaveDiffDialog.vue";
 
 const { t, locale } = useI18n();
 const game = useGame();
@@ -42,6 +44,7 @@ const snapshots = ref<Snapshot[]>([]);
 const busy = ref(false);
 const restoreTarget = ref<Snapshot | null>(null);
 const deleteTarget = ref<SaveSummary | null>(null);
+const diffOpen = ref(false);
 
 const selected = computed(() => list.value.find((s) => s.id === selectedId.value) ?? null);
 const lib = useLibrary();
@@ -309,6 +312,9 @@ useShortcut("page.install", () => void importSave());
             <Button variant="outline" :disabled="busy" @click="exportSave"
               ><DownloadIcon />{{ t("saves.export") }}</Button
             >
+            <Button variant="outline" class="col-span-2" :disabled="!selected" @click="diffOpen = true"
+              ><GitCompareIcon />{{ t("saveDiff.open") }}</Button
+            >
             <Button
               variant="destructive"
               class="col-span-2"
@@ -353,4 +359,5 @@ useShortcut("page.install", () => void importSave());
       </DialogContent>
     </Dialog>
   </div>
+  <SaveDiffDialog v-if="selected" v-model:open="diffOpen" :save-id="selected.id" :snapshots="snapshots" />
 </template>

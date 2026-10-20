@@ -135,6 +135,63 @@ pub async fn saves_items(app: AppHandle, id: String) -> AppResult<Vec<NamedItem>
     .await
 }
 
+/// Compares two states of save `id`: each side is "current", "previous" (the day before
+/// the last save, which the game keeps as `_old` files) or the path of one of its snapshots.
+#[tauri::command]
+pub async fn saves_compare(
+    app: AppHandle,
+    id: String,
+    from: String,
+    to: String,
+) -> AppResult<crate::save_diff::SaveDiff> {
+    let path = save_path(&app, &id)?;
+    let language = game_language(&app);
+    blocking(app, move |s| {
+        // old states unpack into the cache, never next to the real save
+        let tmp = s
+            .work_dir
+            .with_file_name(format!("compare-{}", crate::history::now_ms()));
+        let result = compare_sides(s, &tmp, &path, &id, &from, &to, &language);
+        let _ = std::fs::remove_dir_all(&tmp);
+        result
+    })
+    .await
+}
+
+fn compare_sides(
+    s: &AppState,
+    tmp: &std::path::Path,
+    path: &std::path::Path,
+    id: &str,
+    from: &str,
+    to: &str,
+    language: &str,
+) -> AppResult<crate::save_diff::SaveDiff> {
+    let side = |which: &str, slot: &str| -> AppResult<PathBuf> {
+        match which {
+            "current" => Ok(path.to_path_buf()),
+            "previous" => {
+                let dir = tmp.join(slot).join(id);
+                std::fs::create_dir_all(&dir)?;
+                std::fs::copy(path.join(format!("{id}_old")), dir.join(id))?;
+                std::fs::copy(path.join("SaveGameInfo_old"), dir.join(saves::INFO_FILE))?;
+                Ok(dir)
+            }
+            file => crate::save_backups::unpack(
+                &s.save_backup_root,
+                std::path::Path::new(file),
+                &tmp.join(slot),
+            ),
+        }
+    };
+    let (a, b) = (side(from, "from")?, side(to, "to")?);
+    let live = s.companion.catalog();
+    let catalog = live
+        .as_ref()
+        .unwrap_or(perfection::Catalog::builtin(language));
+    crate::save_diff::compare(&a, &b, catalog)
+}
+
 /// A stored stack with the names the UI shows.
 #[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]

@@ -568,6 +568,34 @@ mockIPC(
         return "ru";
       case "nxm_take_pending":
         return [];
+      case "saves_compare":
+        return {
+          from: {
+            year: 2,
+            season: 0,
+            day: 13,
+            money: 589232,
+            totalEarned: 2365488,
+            playTimeMs: 264071168,
+            perfection: 25.7,
+          },
+          to: {
+            year: 2,
+            season: 0,
+            day: 14,
+            money: 588232,
+            totalEarned: 2368488,
+            playTimeMs: 264733536,
+            perfection: 26.1,
+          },
+          skills: [{ key: "fishing", name: "Рыбная ловля", from: 6, to: 7 }],
+          friends: [{ key: "Abigail", name: "Абигейл", from: 4, to: 5 }],
+          firsts: [{ kind: "fish", names: ["Тунец"] }],
+          items: [
+            { key: "(O)344", name: "Джем", from: 1, to: 16 },
+            { key: "(O)404", name: "Шампиньон", from: 70, to: 53 },
+          ],
+        };
       case "saves_items":
         return [
           {

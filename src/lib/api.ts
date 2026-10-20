@@ -462,6 +462,8 @@ export const saves = {
   list: () => invoke<SaveSummary[]>("saves_list"),
   checkup: (id: string) => invoke<Checkup>("saves_checkup", { id }),
   items: (id: string) => invoke<StoredItem[]>("saves_items", { id }),
+  /** Each side is "current", "previous" or a snapshot's file. */
+  compare: (id: string, from: string, to: string) => invoke<SaveDiff>("saves_compare", { id, from, to }),
   perfection: (id: string) => invoke<Perfection>("saves_perfection", { id }),
   progress: (id: string) => invoke<SaveProgress>("saves_progress", { id }),
   snapshots: (id: string) => invoke<Snapshot[]>("saves_snapshots", { id }),
@@ -799,4 +801,34 @@ export interface StoredItem {
   place: { location: string; kind: "chest" | "fridge" | "grabber" | "inventory"; tile: [number, number] | null };
   /** The location as the game names it. */
   locationName: string | null;
+}
+
+/** One state of a save in a comparison. */
+export interface SaveSide {
+  year: number;
+  season: number;
+  day: number;
+  money: number;
+  totalEarned: number;
+  playTimeMs: number;
+  perfection: number | null;
+}
+
+export interface SaveChange {
+  key: string;
+  name: string;
+  from: number;
+  to: number;
+}
+
+/** What changed between two states of a save. */
+export interface SaveDiff {
+  from: SaveSide;
+  to: SaveSide;
+  skills: SaveChange[];
+  /** Whole hearts. */
+  friends: SaveChange[];
+  firsts: { kind: "shipped" | "fish" | "cooked" | "crafted" | "donated" | "achievement"; names: string[] }[];
+  /** Stored item totals, biggest change first. */
+  items: SaveChange[];
 }

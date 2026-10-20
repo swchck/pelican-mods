@@ -182,6 +182,20 @@ pub fn restore(root: &Path, saves_dir: &Path, file: &Path) -> AppResult<String> 
     import(root, saves_dir, file)
 }
 
+/// Unpacks snapshot `file`, which must sit under `root`, into `into` and returns the
+/// save folder inside, for reading an old state without touching the real save.
+pub fn unpack(root: &Path, file: &Path, into: &Path) -> AppResult<PathBuf> {
+    let inside = match (file.canonicalize(), root.canonicalize()) {
+        (Ok(f), Ok(r)) => f.starts_with(r),
+        _ => false,
+    };
+    if !inside {
+        return Err(AppError::NotFound(file.display().to_string()));
+    }
+    archive::extract(file, into)?;
+    find_save(into, 0).ok_or_else(|| AppError::BadSave("no save in the snapshot".into()))
+}
+
 /// Brings a save from a zip (exported here, or a plain zipped save folder) into
 /// `saves_dir`. A save with the same id is snapshotted, then replaced. Returns the id.
 pub fn import(root: &Path, saves_dir: &Path, file: &Path) -> AppResult<String> {

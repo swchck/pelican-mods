@@ -61,6 +61,15 @@ test("library filters by status and tag", async ({ page }) => {
   await expect(rows).toHaveCount(4);
 });
 
+test("saves compare two states of a farm", async ({ page }) => {
+  await open(page, "/saves", "ru");
+  await page.getByRole("button", { name: "Что изменилось" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByText("Рыбная ловля: 6 → 7")).toBeVisible();
+  await expect(dialog.getByText("Впервые поймано: 1")).toBeVisible();
+  await expect(dialog.getByText("+15")).toBeVisible();
+});
+
 test("helpers find items across chests", async ({ page }) => {
   await open(page, "/helpers", "ru");
   await page.getByRole("tab", { name: "Сундуки" }).click();

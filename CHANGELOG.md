@@ -12,6 +12,10 @@
 - A Load tab times every mod's SMAPI event handlers for 30 seconds while you play, in the running game, and shows who costs how many milliseconds a second and their worst spikes. SMAPI 4 no longer has a performance monitor of its own.
 - The same tab lists game methods several mods patch with Harmony, the usual place C# mods break each other, with transpilers and prefixes that can cancel the original marked first.
 
+### Library and saves
+
+- "What changed" on the Saves screen compares two states of a farm, the day before, any copy or now: money, playtime and perfection, skill levels, hearts, firsts shipped, caught, cooked, crafted and donated, new achievements, and what came into or left the chests.
+
 ## 0.4.0 — 2026-10-20
 
 ### Progress
