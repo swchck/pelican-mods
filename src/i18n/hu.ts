@@ -196,7 +196,7 @@ export default {
     fertilizers: {
       none: "Trágya nélkül",
       speedGro: "Gyorsnövesztő",
-      deluxe: "Deluxe gyorsnövesztő",
+      deluxe: "Luxus gyorsnövesztő",
       hyper: "Hiper gyorsnövesztő",
     },
   },
@@ -226,7 +226,7 @@ export default {
       clump: "Tönk vagy szikla",
       debris: "Törmelék",
       chest: "Láda",
-      sprinkler: "Locsoló",
+      sprinkler: "Öntöző",
       scarecrow: "Madárijesztő",
       machine: "Gép",
       fence: "Kerítés",

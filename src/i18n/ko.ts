@@ -193,8 +193,8 @@ export default {
     fertilizers: {
       none: "비료 없음",
       speedGro: "성장 촉진제",
-      deluxe: "고급 성장 촉진제",
-      hyper: "초고속 성장 촉진제",
+      deluxe: "디럭스 성장 촉진제",
+      hyper: "하이퍼 성장 촉진제",
     },
   },
   mapTab: {
@@ -318,7 +318,7 @@ export default {
     sharing: "이 창이 열려 있는 동안 목록이 네트워크에 표시됩니다.",
     find: "호스트 찾기",
     search: "검색",
-    nobody: "이 네트워크에서 목록을 공유하는 사람이 없습니다. 친구에게 '내 목록 공유'를 켜 달라고 하세요.",
+    nobody: "이 네트워크에서 목록을 공유하는 사람이 없습니다. 친구에게 “내 목록 공유”를 켜 달라고 하세요.",
     compare: "비교",
   },
   pack: {
@@ -334,7 +334,7 @@ export default {
     needsCp: "Content Patcher가 필요합니다. 없으면 팩이 로드되지 않습니다.",
     add: "이미지 추가",
     create: "만들고 설치",
-    made: '팩 "{name}" 설치됨',
+    made: "팩 “{name}” 설치됨",
   },
   modList: {
     export: "모드 목록 내보내기…",
@@ -640,9 +640,9 @@ export default {
     cleared: " 무혐의: {n}개.",
     hint: "게임을 실행해 문제가 있는지 확인하고, 게임을 닫은 뒤 답하세요. 답할 때마다 용의자가 절반으로 줄어듭니다. 내 프로필은 그대로입니다.",
     alone: "이번 라운드는 「{name}」만 켭니다. 혼자서도 문제가 생기는지 봅시다.",
-    pinned: "「{name}」은 계속 켜 둡니다.",
-    pair: "「{name}」은 「{with}」와 함께일 때만 문제가 생깁니다.",
-    partner: "함께 깨지는 모드 찾기",
+    pinned: "「{name}」은(는) 계속 켜 둡니다.",
+    pair: "「{name}」은(는) 「{with}」와(과) 함께일 때만 문제가 생깁니다.",
+    partner: "함께 문제가 생기는 모드 찾기",
     crashed: "이번 라운드에서 게임이 멈췄습니다. 문제가 있는 것 같습니다.",
     problem: "문제 있음",
     fine: "문제 없음",

@@ -200,9 +200,9 @@ export default {
     trellis: "treillis",
     fertilizers: {
       none: "Sans engrais",
-      speedGro: "Accélérateur",
-      deluxe: "Accélérateur de luxe",
-      hyper: "Hyper accélérateur",
+      speedGro: "Engrais de croissance rapide",
+      deluxe: "Engrais de croissance rapide II",
+      hyper: "Vitesse grand V",
     },
   },
   mapTab: {
@@ -280,7 +280,7 @@ export default {
       IslandCenterSkeletonRestored: "Bureau de terrain : squelette",
       IslandSnakeRestored: "Bureau de terrain : serpent",
       TigerSlimeNut: "Slimes tigrés",
-      MusselStone: "Pierres à moules",
+      MusselStone: "Pierres à moule",
       IslandFarming: "Récoltes sur l'île",
       IslandFishing: "Pêche sur l'île",
       VolcanoNormalChest: "Coffre commun du volcan",
@@ -416,7 +416,7 @@ export default {
     companion: "Lien avec le jeu",
     spoilers: "Spoilers et prédictions",
     spoilersHint:
-      "Montrer ce que le jeu cache jusqu'au moment venu : événements nocturnes, contenu des géodes et boîtes mystères, stock de la charrette, emplacement des noix dorées manquantes.",
+      "Montrer ce que le jeu cache jusqu'au moment venu : événements nocturnes, contenu des géodes et boîtes mystère, stock de la charrette, emplacement des noix dorées manquantes.",
     briefing: "Bilan du matin dans le jeu",
     briefingHint:
       "En début de journée : qui fête son anniversaire et quels cadeaux préférés vous avez déjà, festival, charrette ambulante, libraire et chance. Au prochain lancement.",
@@ -897,7 +897,7 @@ export default {
     },
     nights: "Événements nocturnes",
     spoilersHidden:
-      "Les prédictions sont masquées. Activez « Spoilers et prédictions » dans les réglages pour voir les événements nocturnes, les géodes, les boîtes mystères et le stock de la charrette.",
+      "Les prédictions sont masquées. Activez « Spoilers et prédictions » dans les réglages pour voir les événements nocturnes, les géodes, les boîtes mystère et le stock de la charrette.",
     nightsHint:
       "Événements aléatoires à la ferme dans les quatre prochaines semaines. Les mariages et les salles du Centre communautaire terminées cette nuit-là passent en premier et ne sont pas comptés.",
     quietNights: "Quatre semaines de nuits tranquilles",
@@ -1212,7 +1212,7 @@ export default {
     },
   },
   profiles: {
-    ownConfigs: "Réglages de mods propres",
+    ownConfigs: "Réglages de mods dédiés",
     label: "Profil",
     default: "Principal",
     create: "Nouveau profil…",

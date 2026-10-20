@@ -200,9 +200,9 @@ export default {
     trellis: "graticcio",
     fertilizers: {
       none: "Senza fertilizzante",
-      speedGro: "Crescita rapida",
-      deluxe: "Crescita rapida deluxe",
-      hyper: "Crescita iper-rapida",
+      speedGro: "Crescipresto",
+      deluxe: "Crescipresto deluxe",
+      hyper: "Iper-Crescipresto",
     },
   },
   mapTab: {
@@ -279,7 +279,7 @@ export default {
       IslandFrogRestored: "Ufficio sul campo: rana",
       IslandCenterSkeletonRestored: "Ufficio sul campo: scheletro",
       IslandSnakeRestored: "Ufficio sul campo: serpente",
-      TigerSlimeNut: "Slime tigre",
+      TigerSlimeNut: "Melme tigre",
       MusselStone: "Pietre con cozze",
       IslandFarming: "Raccolti sull'isola",
       IslandFishing: "Pesca sull'isola",
@@ -416,7 +416,7 @@ export default {
     companion: "Collegamento al gioco",
     spoilers: "Spoiler e previsioni",
     spoilersHint:
-      "Mostra ciò che il gioco nasconde finché non accade: eventi notturni, contenuto di geodi e scatole misteriose, merce del carretto, dove sono le noci d'oro mancanti.",
+      "Mostra ciò che il gioco nasconde finché non accade: eventi notturni, contenuto di geodi e scatole misteriose, merce del carretto, dove sono le noci dorate mancanti.",
     briefing: "Riepilogo del mattino nel gioco",
     briefingHint:
       "A inizio giornata: chi compie gli anni e quali regali preferiti hai già, feste, carretto ambulante, libraio e fortuna. Dal prossimo avvio.",
@@ -1209,7 +1209,7 @@ export default {
     },
   },
   profiles: {
-    ownConfigs: "Impostazioni delle mod proprie",
+    ownConfigs: "Impostazioni mod dedicate",
     label: "Profilo",
     default: "Principale",
     create: "Nuovo profilo…",

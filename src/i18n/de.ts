@@ -195,9 +195,9 @@ export default {
     trellis: "Rankgitter",
     fertilizers: {
       none: "Ohne Dünger",
-      speedGro: "Wachstumsbeschleuniger",
-      deluxe: "Deluxe-Wachstumsbeschleuniger",
-      hyper: "Hyper-Wachstumsbeschleuniger",
+      speedGro: "Geschwind-Wachs",
+      deluxe: "Luxus-Geschwind-Wachs",
+      hyper: "Hyper Speed-Zücht",
     },
   },
   mapTab: {
@@ -411,7 +411,7 @@ export default {
     companion: "Spielverbindung",
     spoilers: "Spoiler und Vorhersagen",
     spoilersHint:
-      "Zeigen, was das Spiel bis zum Eintreten verbirgt: nächtliche Ereignisse, Inhalt von Geoden und Mysterienkisten, das Angebot des Reisewagens, wo die fehlenden goldenen Walnüsse liegen.",
+      "Zeigen, was das Spiel bis zum Eintreten verbirgt: nächtliche Ereignisse, Inhalt von Geoden und mysteriösen Kisten, das Angebot des Reisewagens, wo die fehlenden goldenen Walnüsse liegen.",
     briefing: "Morgenbericht im Spiel",
     briefingHint:
       "Zu Tagesbeginn: wer Geburtstag hat und welche Lieblingsgeschenke du schon hast, Feste, Reisewagen, Buchhändler und Glück. Ab dem nächsten Start.",
@@ -659,7 +659,7 @@ export default {
     dismiss: "Schließen",
   },
   session: {
-    ready: "Die Sitzung auf dem Hof „{farm}“ ist vorbei.",
+    ready: "Die Sitzung auf der Farm „{farm}“ ist vorbei.",
     show: "Was sich geändert hat",
   },
   farmHistory: {
@@ -885,7 +885,7 @@ export default {
     },
     nights: "Nächtliche Ereignisse",
     spoilersHidden:
-      "Vorhersagen sind ausgeblendet. Schalte „Spoiler und Vorhersagen“ in den Einstellungen ein, um nächtliche Ereignisse, Geoden, Mysterienkisten und den Reisewagen zu sehen.",
+      "Vorhersagen sind ausgeblendet. Schalte „Spoiler und Vorhersagen“ in den Einstellungen ein, um nächtliche Ereignisse, Geoden, mysteriöse Kisten und den Reisewagen zu sehen.",
     nightsHint:
       "Zufällige Farm-Ereignisse in den nächsten vier Wochen. Hochzeiten und in dieser Nacht fertiggestellte Räume im Gemeinschaftszentrum haben Vorrang und werden nicht mitgezählt.",
     quietNights: "Vier Wochen ruhige Nächte",

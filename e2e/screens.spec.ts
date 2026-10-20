@@ -86,7 +86,7 @@ test("map shows the farm and what's ready", async ({ page }) => {
   await open(page, "/helpers", "ru");
   await page.getByRole("tab", { name: "Карта" }).click();
   await expect(page.getByRole("img", { name: "Ферма" })).toBeVisible();
-  await expect(page.getByText("Готово: 5 · Не полито: 6 · Машин с готовым: 1")).toBeVisible();
+  await expect(page.getByText("Готово: 5 · Не полито: 6 · Машины готовы: 1")).toBeVisible();
   const map = page.getByRole("img", { name: "Ферма" });
   const box = (await map.boundingBox())!;
   // the mock's pumpkin patch starts at tile (20, 20) of a 40-tile-wide farm

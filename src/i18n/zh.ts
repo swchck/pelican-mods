@@ -193,7 +193,7 @@ export default {
       none: "不施肥",
       speedGro: "生长激素",
       deluxe: "高级生长激素",
-      hyper: "超级生长激素",
+      hyper: "顶级生长激素",
     },
   },
   mapTab: {

@@ -199,9 +199,9 @@ export default {
     trellis: "treliça",
     fertilizers: {
       none: "Sem fertilizante",
-      speedGro: "Acelerador de crescimento",
-      deluxe: "Acelerador de crescimento deluxe",
-      hyper: "Hiperacelerador de crescimento",
+      speedGro: "Solo Foliar",
+      deluxe: "Solo Foliar Premium",
+      hyper: "Hiper Solo Foliar",
     },
   },
   mapTab: {
@@ -230,7 +230,7 @@ export default {
       clump: "Toco ou pedregulho",
       debris: "Detritos",
       chest: "Baú",
-      sprinkler: "Irrigador",
+      sprinkler: "Aspersor",
       scarecrow: "Espantalho",
       machine: "Máquina",
       fence: "Cerca",
@@ -279,7 +279,7 @@ export default {
       IslandCenterSkeletonRestored: "Escritório de campo: esqueleto",
       IslandSnakeRestored: "Escritório de campo: cobra",
       TigerSlimeNut: "Gosmas-tigre",
-      MusselStone: "Pedras com mexilhões",
+      MusselStone: "Pedras de mexilhão",
       IslandFarming: "Colheitas na ilha",
       IslandFishing: "Pesca na ilha",
       VolcanoNormalChest: "Baú comum do vulcão",
@@ -291,7 +291,7 @@ export default {
       Island_W_BuriedTreasureNut: "Tesouro do diário, oeste",
       Island_W_BuriedTreasureNut2: "Segundo tesouro do diário, oeste",
       Darts: "Dardos piratas",
-      Birdie: "Missão do Birdie",
+      Birdie: "Missão da Birdie",
     },
   },
   museumTab: {
@@ -1200,7 +1200,7 @@ export default {
     },
   },
   profiles: {
-    ownConfigs: "Configurações de mods próprias",
+    ownConfigs: "Configurações próprias de mods",
     label: "Perfil",
     default: "Principal",
     create: "Novo perfil…",

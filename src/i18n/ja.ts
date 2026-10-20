@@ -225,7 +225,7 @@ export default {
       debris: "がれき",
       chest: "チェスト",
       sprinkler: "スプリンクラー",
-      scarecrow: "かかし",
+      scarecrow: "カカシ",
       machine: "機械",
       fence: "柵",
       object: "アイテム",
@@ -273,7 +273,7 @@ export default {
       IslandCenterSkeletonRestored: "フィールドオフィス：骨格",
       IslandSnakeRestored: "フィールドオフィス：ヘビ",
       TigerSlimeNut: "タイガースライム",
-      MusselStone: "ムール貝の石",
+      MusselStone: "ムールガイ鉱脈",
       IslandFarming: "島での収穫",
       IslandFishing: "島での釣り",
       VolcanoNormalChest: "火山の普通の宝箱",
@@ -415,7 +415,7 @@ export default {
     companion: "ゲーム連携",
     spoilers: "ネタバレと予測",
     spoilersHint:
-      "ゲームがその時まで隠しているものを表示します：夜のイベント、晶洞石やミステリーボックスの中身、行商人の品ぞろえ、未発見のゴールデンクルミの場所。",
+      "ゲームがその時まで隠しているものを表示します：夜のイベント、ジオードやミステリーボックスの中身、行商人の品ぞろえ、未発見の金のクルミの場所。",
     briefing: "ゲーム内の朝のお知らせ",
     briefingHint:
       "一日の始めに、誕生日の人と手持ちの好きな贈り物、お祭り、行商人、本屋、運勢を表示します。次の起動から有効です。",
@@ -878,7 +878,7 @@ export default {
     },
     nights: "夜のイベント",
     spoilersHidden:
-      "予測は非表示です。設定で「ネタバレと予測」をオンにすると、夜のイベント、晶洞石、ミステリーボックス、行商人の品ぞろえが見られます。",
+      "予測は非表示です。設定で「ネタバレと予測」をオンにすると、夜のイベント、ジオード、ミステリーボックス、行商人の品ぞろえが見られます。",
     nightsHint:
       "今後4週間に牧場で起きるランダムイベントです。結婚式やその夜に完成するコミュニティセンターの部屋が優先され、カウントされません。",
     quietNights: "4週間、静かな夜が続きます",

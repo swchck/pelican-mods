@@ -188,7 +188,7 @@ export default {
     anySeason: "Invernadero o isla",
     hint: "Beneficio por casilla hasta el fin de la estación si se planta este día, a precio base sin calidad; semillas a precio de tienda.",
     noData:
-      "El catálogo aún no tiene tiempos de crecimiento: inicia el juego desde el lanzador y el acompañante los enviará.",
+      "El catálogo aún no tiene tiempos de crecimiento: inicia el juego desde el lanzador y el compañero los enviará.",
     none: "Nada llegaría a crecer antes de que acabe la estación.",
     crop: "Cultivo",
     days: "Días",
@@ -200,9 +200,9 @@ export default {
     trellis: "enrejado",
     fertilizers: {
       none: "Sin fertilizante",
-      speedGro: "Crecimiento rápido",
-      deluxe: "Crecimiento rápido de lujo",
-      hyper: "Crecimiento hiperrápido",
+      speedGro: "Acelerador básico",
+      deluxe: "Acelerador deluxe",
+      hyper: "Fertilizante ultra-rápido",
     },
   },
   mapTab: {
@@ -279,7 +279,7 @@ export default {
       IslandFrogRestored: "Oficina de campo: rana",
       IslandCenterSkeletonRestored: "Oficina de campo: esqueleto",
       IslandSnakeRestored: "Oficina de campo: serpiente",
-      TigerSlimeNut: "Babosas tigre",
+      TigerSlimeNut: "Babas tigre",
       MusselStone: "Piedras con mejillones",
       IslandFarming: "Cosechas en la isla",
       IslandFishing: "Pesca en la isla",
@@ -1203,7 +1203,7 @@ export default {
     },
   },
   profiles: {
-    ownConfigs: "Ajustes de mods propios",
+    ownConfigs: "Ajustes propios de mods",
     label: "Perfil",
     default: "Principal",
     create: "Nuevo perfil…",

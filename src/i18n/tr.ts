@@ -200,9 +200,9 @@ export default {
     trellis: "çardak",
     fertilizers: {
       none: "Gübresiz",
-      speedGro: "Hızlı Büyütücü",
-      deluxe: "Lüks Hızlı Büyütücü",
-      hyper: "Süper Hızlı Büyütücü",
+      speedGro: "Hızlı-Ek",
+      deluxe: "Üstün Hızlı-Ek",
+      hyper: "Aşırı Hızlı-Ek",
     },
   },
   mapTab: {
@@ -279,8 +279,8 @@ export default {
       IslandFrogRestored: "Saha ofisi: kurbağa",
       IslandCenterSkeletonRestored: "Saha ofisi: iskelet",
       IslandSnakeRestored: "Saha ofisi: yılan",
-      TigerSlimeNut: "Kaplan balçıklar",
-      MusselStone: "Midyeli taşlar",
+      TigerSlimeNut: "Kaplan balçıkları",
+      MusselStone: "Midye taşları",
       IslandFarming: "Adada hasat",
       IslandFishing: "Adada balıkçılık",
       VolcanoNormalChest: "Volkanın sıradan sandığı",
@@ -330,7 +330,7 @@ export default {
   },
   pack: {
     open: "Resimlerden paket",
-    title: "Kendi doku paketin",
+    title: "Kendi doku paketiniz",
     hint: "PNG'leri seçin ve her birinin oyunda neyi değiştireceğini yazın, örneğin Portraits/Abigail. Bir Content Patcher modu oluşur; oyunun dosyalarına dokunulmaz.",
     name: "Paket adı",
     author: "Yapımcı",
