@@ -494,6 +494,10 @@ export default {
     turnOff: "关闭它",
     dismiss: "关闭",
   },
+  session: {
+    ready: "“{farm}”农场的这次游戏结束了。",
+    show: "有何变化",
+  },
   saveDiff: {
     open: "有何变化",
     title: "农场有何变化",

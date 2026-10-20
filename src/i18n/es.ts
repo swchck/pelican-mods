@@ -520,6 +520,10 @@ export default {
     turnOff: "Desactivarlo",
     dismiss: "Cerrar",
   },
+  session: {
+    ready: "La sesión en la granja «{farm}» ha terminado.",
+    show: "Qué cambió",
+  },
   saveDiff: {
     open: "Qué cambió",
     title: "Qué cambió en la granja",

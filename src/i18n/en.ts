@@ -509,6 +509,10 @@ export default {
     turnOff: "Turn it off",
     dismiss: "Dismiss",
   },
+  session: {
+    ready: "The session on {farm} farm is over.",
+    show: "What changed",
+  },
   saveDiff: {
     open: "What changed",
     title: "What changed on the farm",

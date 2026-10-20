@@ -9,11 +9,11 @@ import { saves, type SaveDiff, type SaveSide, type Snapshot } from "@/lib/api";
 import { errorText } from "@/i18n";
 import { relativeTime } from "@/lib/time";
 
-const props = defineProps<{ saveId: string; snapshots: Snapshot[] }>();
+const props = defineProps<{ saveId: string; snapshots: Snapshot[]; initialFrom?: string }>();
 const open = defineModel<boolean>("open", { required: true });
 const { t, n, locale } = useI18n();
 
-const from = ref("previous");
+const from = ref(props.initialFrom ?? "previous");
 const to = ref("current");
 const diff = ref<SaveDiff | null>(null);
 const busy = ref(false);
@@ -38,12 +38,17 @@ async function compare() {
   }
 }
 
-watch(open, (on) => {
-  if (on) {
-    diff.value = null;
-    void compare();
-  }
-});
+watch(
+  open,
+  (on) => {
+    if (on) {
+      diff.value = null;
+      if (props.initialFrom) from.value = props.initialFrom;
+      void compare();
+    }
+  },
+  { immediate: true },
+);
 
 const date = (s: SaveSide) => t("saves.date", { year: s.year, season: t(`saves.season.${s.season}`), day: s.day });
 const signed = (v: number) => (v > 0 ? "+" : v < 0 ? "−" : "±") + n(Math.abs(v));

@@ -507,6 +507,10 @@ export default {
     turnOff: "Выключить его",
     dismiss: "Закрыть",
   },
+  session: {
+    ready: "Сессия на ферме «{farm}» закончилась.",
+    show: "Что изменилось",
+  },
   saveDiff: {
     open: "Что изменилось",
     title: "Что изменилось на ферме",

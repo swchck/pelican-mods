@@ -12,6 +12,7 @@ import NxmConfirmDialog from "@/components/NxmConfirmDialog.vue";
 import AppUpdateDialogs from "@/components/AppUpdateDialogs.vue";
 import ShortcutsDialog from "@/components/ShortcutsDialog.vue";
 import DisableWarning from "@/components/library/DisableWarning.vue";
+import SaveDiffDialog from "@/components/saves/SaveDiffDialog.vue";
 import { useShortcut, useShortcuts } from "@/stores/shortcuts";
 import { useAppUpdate } from "@/stores/appUpdate";
 import { useCompanion } from "@/stores/companion";
@@ -67,5 +68,12 @@ onMounted(() => {
   <AppUpdateDialogs />
   <ShortcutsDialog />
   <DisableWarning />
+  <SaveDiffDialog
+    v-if="game.session"
+    v-model:open="game.sessionOpen"
+    :save-id="game.session.saveId"
+    :snapshots="game.session.snapshots"
+    :initial-from="game.session.from"
+  />
   <Toaster position="bottom-right" rich-colors />
 </template>

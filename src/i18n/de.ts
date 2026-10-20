@@ -514,6 +514,10 @@ export default {
     turnOff: "Deaktivieren",
     dismiss: "Schließen",
   },
+  session: {
+    ready: "Die Sitzung auf dem Hof „{farm}“ ist vorbei.",
+    show: "Was sich geändert hat",
+  },
   saveDiff: {
     open: "Was hat sich geändert",
     title: "Was sich auf dem Hof geändert hat",

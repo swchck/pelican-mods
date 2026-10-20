@@ -521,6 +521,10 @@ export default {
     turnOff: "Le désactiver",
     dismiss: "Fermer",
   },
+  session: {
+    ready: "La session à la ferme « {farm} » est terminée.",
+    show: "Ce qui a changé",
+  },
   saveDiff: {
     open: "Ce qui a changé",
     title: "Ce qui a changé à la ferme",

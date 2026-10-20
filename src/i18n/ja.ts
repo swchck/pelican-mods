@@ -517,6 +517,10 @@ export default {
     turnOff: "オフにする",
     dismiss: "閉じる",
   },
+  session: {
+    ready: "「{farm}」牧場でのプレイが終わりました。",
+    show: "変わったこと",
+  },
   saveDiff: {
     open: "変わったこと",
     title: "牧場で変わったこと",

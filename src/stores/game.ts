@@ -14,6 +14,7 @@ import {
   type RunState,
   type SmapiProgress,
   type SmapiRelease,
+  type Snapshot,
 } from "@/lib/api";
 import { compareVersions } from "@/lib/version";
 import { router } from "@/router";
@@ -63,6 +64,7 @@ export const useGame = defineStore("game", () => {
           // a stop from the app also ends with a non-zero code; only the game's own exit counts
           if (s.code !== 0 && !stopping) void explainCrash();
           if (launchedAt) void rememberProfile(launchedAt);
+          if (launchedAt) void summarize(launchedAt);
           launchedAt = 0;
           stopping = false;
           void warnFromLog();
@@ -96,6 +98,26 @@ export const useGame = defineStore("game", () => {
     const lib = useLibrary();
     lib.view = await library.rememberProfile(since).catch(() => lib.view);
   }
+
+  /** What the last session changed on its farm, until the player looks or dismisses it. */
+  const session = ref<{ saveId: string; snapshots: Snapshot[]; from: string } | null>(null);
+
+  // the snapshot taken before launch is the farm as the session found it
+  async function summarize(since: number) {
+    const list = await saves.list().catch(() => []);
+    const played = list.filter((s) => s.modified >= since).sort((a, b) => b.modified - a.modified)[0];
+    if (!played) return;
+    const snapshots = await saves.snapshots(played.id).catch(() => []);
+    const before = snapshots.filter((s) => s.created <= since * 1000 + 10_000).sort((a, b) => b.created - a.created)[0];
+    if (!before) return;
+    session.value = { saveId: played.id, snapshots, from: before.file };
+    const { t } = i18n.global;
+    toast.info(t("session.ready", { farm: played.farmName }), {
+      duration: 15_000,
+      action: { label: t("session.show"), onClick: () => (sessionOpen.value = true) },
+    });
+  }
+  const sessionOpen = ref(false);
 
   async function explainCrash() {
     const c = await api.crash().catch(() => null);
@@ -277,6 +299,8 @@ export const useGame = defineStore("game", () => {
     running,
     checking,
     check,
+    session,
+    sessionOpen,
     busy,
     smapiUpdate,
     smapiPrompt,

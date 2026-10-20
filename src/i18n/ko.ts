@@ -509,6 +509,10 @@ export default {
     turnOff: "끄기",
     dismiss: "닫기",
   },
+  session: {
+    ready: "「{farm}」 농장 플레이가 끝났습니다.",
+    show: "달라진 점",
+  },
   saveDiff: {
     open: "달라진 점",
     title: "농장에서 달라진 점",

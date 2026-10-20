@@ -516,6 +516,10 @@ export default {
     turnOff: "Kapat",
     dismiss: "Kapat",
   },
+  session: {
+    ready: "“{farm}” çiftliğindeki oturum bitti.",
+    show: "Ne değişti",
+  },
   saveDiff: {
     open: "Ne değişti",
     title: "Çiftlikte ne değişti",

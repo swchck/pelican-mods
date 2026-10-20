@@ -513,6 +513,10 @@ export default {
     turnOff: "Kikapcsolás",
     dismiss: "Bezárás",
   },
+  session: {
+    ready: "Véget ért a játék a(z) „{farm}” farmon.",
+    show: "Mi változott",
+  },
   saveDiff: {
     open: "Mi változott",
     title: "Mi változott a farmon",

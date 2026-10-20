@@ -519,6 +519,10 @@ export default {
     turnOff: "Disattivala",
     dismiss: "Chiudi",
   },
+  session: {
+    ready: "La sessione alla fattoria «{farm}» è finita.",
+    show: "Cosa è cambiato",
+  },
   saveDiff: {
     open: "Cosa è cambiato",
     title: "Cosa è cambiato alla fattoria",
