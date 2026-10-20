@@ -10,6 +10,7 @@ mod downloads;
 mod error;
 mod game;
 mod history;
+mod jsonc;
 mod launcher;
 mod library;
 mod manifest;

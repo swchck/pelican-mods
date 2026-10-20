@@ -79,10 +79,17 @@ fn collect(dir: &Path, file: &Path, depth: u32, out: &mut Vec<(String, bool)>) {
     if depth > MAX_INCLUDE_DEPTH {
         return;
     }
-    let Ok(text) = std::fs::read_to_string(dir.join(file)) else {
+    // FromFile is the pack's word; keep it inside the pack ("/dev/zero" would read forever)
+    let inside = file
+        .components()
+        .all(|c| matches!(c, std::path::Component::Normal(_)));
+    if !inside {
+        return;
+    }
+    let Ok(text) = crate::jsonc::read(&dir.join(file)) else {
         return;
     };
-    let Ok(json) = json5::from_str::<Value>(text.trim_start_matches('\u{feff}')) else {
+    let Ok(json) = crate::jsonc::parse::<Value>(&text) else {
         return;
     };
     let Some(changes) = json.get("Changes").and_then(Value::as_array) else {

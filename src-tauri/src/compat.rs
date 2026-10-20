@@ -47,8 +47,8 @@ struct Entry {
 
 /// Reads verdicts by Nexus id from the list's text.
 pub fn parse(text: &str) -> AppResult<HashMap<u64, Verdict>> {
-    let list: List = json5::from_str(text.trim_start_matches('\u{feff}'))
-        .map_err(|e| AppError::Io(std::io::Error::other(e)))?;
+    let list: List =
+        crate::jsonc::parse(text).map_err(|e| AppError::Io(std::io::Error::other(e)))?;
     Ok(list
         .mods
         .into_iter()

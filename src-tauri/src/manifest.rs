@@ -70,8 +70,7 @@ fn yes() -> bool {
 /// Parses manifest text the way SMAPI does.
 pub fn parse(text: &str) -> AppResult<Manifest> {
     let text = text.trim_start_matches('\u{feff}');
-    let value: serde_json::Value =
-        json5::from_str(text).map_err(|e| AppError::BadManifest(e.to_string()))?;
+    let value: serde_json::Value = crate::jsonc::parse(text).map_err(AppError::BadManifest)?;
     let m: Manifest = serde_json::from_value(lowercase_keys(value))
         .map_err(|e| AppError::BadManifest(e.to_string()))?;
     if m.unique_id.trim().is_empty() {
@@ -82,7 +81,7 @@ pub fn parse(text: &str) -> AppResult<Manifest> {
 
 /// Reads and parses `<dir>/manifest.json`.
 pub fn read(dir: &Path) -> AppResult<Manifest> {
-    let text = std::fs::read_to_string(dir.join(FILE_NAME))?;
+    let text = crate::jsonc::read(&dir.join(FILE_NAME))?;
     parse(&text)
 }
 

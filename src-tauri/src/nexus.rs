@@ -441,7 +441,9 @@ pub struct NxmLink {
 
 /// Parses an nxm link for Stardew Valley; links for other games are refused.
 pub fn parse_nxm(raw: &str) -> AppResult<NxmLink> {
-    let bad = || AppError::BadNxm(raw.to_owned());
+    // the query holds the one-time download key; errors reach the UI and its clipboard
+    let shown = raw.split_once('?').map_or(raw, |(link, _)| link);
+    let bad = || AppError::BadNxm(shown.to_owned());
     let url = url::Url::parse(raw).map_err(|_| bad())?;
     if url.scheme() != "nxm"
         || !url

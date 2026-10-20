@@ -197,6 +197,8 @@ export default {
     extra: "{n} in più qui",
     extraTitle: "Tu le hai, l'elenco no",
     profileMade: "Profilo “{name}” creato e attivato",
+    sourceHint:
+      "Le mod note a smapi.io si installano dalle fonti ufficiali; la fonte indicata nella lista vale solo per le altre, quindi installale solo da liste di cui ti fidi.",
   },
   logReport: {
     noLog: "Ancora nessun log di SMAPI: appare dopo il primo avvio del gioco con le mod.",

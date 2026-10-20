@@ -314,14 +314,27 @@ pub async fn mod_install_dependency(
         versions(&s)
     };
     let http = app.state::<AppState>().http.clone();
-    let found = updates::lookup(
-        &http,
-        &unique_id,
-        update_keys.unwrap_or_default(),
-        &smapi,
-        &game,
-    )
-    .await?;
+    // keys and repos may come from a mod list someone shared: where smapi.io knows the
+    // mod by its id alone, only its sources count, or a list could ship anyone's code
+    // under a trusted mod's id
+    let known = updates::lookup(&http, &unique_id, Vec::new(), &smapi, &game).await?;
+    let (found, github) = match known {
+        Some(f) => {
+            let repo = f.github.clone();
+            (Some(f), repo)
+        }
+        None => {
+            let keys = update_keys.unwrap_or_default();
+            let f = if keys.is_empty() {
+                None
+            } else {
+                updates::lookup(&http, &unique_id, keys, &smapi, &game).await?
+            };
+            let repo = github.as_deref().and_then(updates::parse_repo);
+            let repo = repo.or_else(|| f.as_ref().and_then(|f| f.github.clone()));
+            (f, repo)
+        }
+    };
     let Some(f) = found else {
         return Ok(UpdateOutcome::OpenPage {
             url: "https://smapi.io/mods".to_owned(),
@@ -334,7 +347,7 @@ pub async fn mod_install_dependency(
             version: f.version,
             url: f.url,
             nexus_id: f.nexus_id,
-            github: github.or(f.github),
+            github,
             subkey: None,
         },
     )

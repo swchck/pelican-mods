@@ -276,17 +276,14 @@ pub async fn download_github(
         .await?;
     let asset = pick_asset(&releases, mod_name, version)
         .ok_or_else(|| AppError::NoDownload(format!("{repo} {version}")))?;
-    let bytes = client
-        .get(&asset.browser_download_url)
-        .send()
-        .await?
-        .error_for_status()?
-        .bytes()
-        .await?;
-    tokio::fs::create_dir_all(dir).await?;
-    let file = dir.join(crate::downloads::safe_file_name(&asset.name));
-    tokio::fs::write(&file, bytes).await?;
-    Ok(file)
+    crate::downloads::fetch_as(
+        client,
+        &asset.browser_download_url,
+        dir,
+        Some(&asset.name),
+        |_, _| {},
+    )
+    .await
 }
 
 // monorepos tag releases per mod ("GenericModConfigMenu/1.16.0") and attach one zip each,

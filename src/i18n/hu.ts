@@ -197,6 +197,8 @@ export default {
     extra: "{n} fölösleges itt",
     extraTitle: "Neked megvan, a listában nincs",
     profileMade: "A(z) „{name}” profil létrehozva és kiválasztva",
+    sourceHint:
+      "Az smapi.io által ismert modok a hivatalos forrásukból települnek; a listában megadott forrást csak a többihez használjuk, ezért azokat csak megbízható listából telepítsd.",
   },
   logReport: {
     noLog: "Még nincs SMAPI-napló: akkor jelenik meg, amikor a játék először fut modokkal.",

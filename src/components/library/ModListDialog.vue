@@ -87,11 +87,18 @@ async function makeProfile() {
             }"
           />
           <span class="min-w-0 flex-1 truncate font-semibold">{{ m.name }}</span>
+          <span
+            v-if="m.github && state(m) !== 'ok'"
+            class="text-muted-foreground max-w-40 shrink truncate text-xs"
+            :title="t('modList.sourceHint')"
+            >github.com/{{ m.github }}</span
+          >
           <span class="text-muted-foreground shrink-0 font-mono text-xs">
             {{ m.installed && state(m) !== "ok" ? `${m.installed} / ` : "" }}{{ m.version }}
           </span>
         </li>
       </ul>
+      <p v-if="missing.length" class="text-muted-foreground text-xs font-semibold">{{ t("modList.sourceHint") }}</p>
       <template v-if="list.extra.length">
         <h3 class="text-sm font-extrabold">{{ t("modList.extraTitle") }}</h3>
         <ul class="flex flex-col gap-1 text-sm">

@@ -12,7 +12,7 @@ use futures_util::StreamExt;
 use serde::Serialize;
 use tokio::io::AsyncWriteExt;
 
-use crate::error::AppResult;
+use crate::error::{AppError, AppResult};
 
 /// Progress events are throttled to this interval per download.
 const REPORT_EVERY: Duration = Duration::from_millis(150);
@@ -101,11 +101,25 @@ pub async fn fetch(
     client: &reqwest::Client,
     url: &str,
     dir: &Path,
+    progress: impl FnMut(u64, u64),
+) -> AppResult<PathBuf> {
+    fetch_as(client, url, dir, None, progress).await
+}
+
+/// Like [`fetch`], saving under `name` when given instead of the URL's last segment.
+pub async fn fetch_as(
+    client: &reqwest::Client,
+    url: &str,
+    dir: &Path,
+    name: Option<&str>,
     mut progress: impl FnMut(u64, u64),
 ) -> AppResult<PathBuf> {
     let resp = client.get(url).send().await?.error_for_status()?;
     let total = resp.content_length().unwrap_or(0);
-    let name = file_name(resp.url());
+    if total > MAX_DOWNLOAD {
+        return Err(too_big());
+    }
+    let name = name.map_or_else(|| file_name(resp.url()), safe_file_name);
     tokio::fs::create_dir_all(dir).await?;
     let (path, mut file) = create_unique(dir, &name).await?;
     let written: AppResult<u64> = async {
@@ -116,6 +130,10 @@ pub async fn fetch(
             let chunk = chunk?;
             file.write_all(&chunk).await?;
             received += chunk.len() as u64;
+            // Content-Length is the server's word; the stream is what actually arrives
+            if received > MAX_DOWNLOAD {
+                return Err(too_big());
+            }
             if last.elapsed() >= REPORT_EVERY {
                 last = Instant::now();
                 progress(received, total);
@@ -137,6 +155,13 @@ pub async fn fetch(
             Err(e)
         }
     }
+}
+
+/// No Stardew mod comes close; the biggest texture packs are a few hundred megabytes.
+const MAX_DOWNLOAD: u64 = 4 << 30;
+
+fn too_big() -> AppError {
+    AppError::Network(format!("the file is over {} GB", MAX_DOWNLOAD >> 30))
 }
 
 fn file_name(url: &reqwest::Url) -> String {

@@ -26,6 +26,12 @@
 
 - The app speaks every language the game ships: German, Spanish, French, Portuguese, Italian, Japanese, Korean, Chinese, Turkish and Hungarian join Russian and English, and it follows the game's language out of the box. The new translations haven't been reviewed by native speakers yet.
 
+### Security
+
+- Installing missing mods from a shared mod list takes them from the sources smapi.io knows; a list's own repo or update keys are used only for mods smapi.io doesn't know, and the list shows them.
+- A mod file nested thousands of levels deep, a content pack including a file outside itself, or a download over 4 GB no longer crash or exhaust the app.
+- The Nexus key never follows a redirect off the Nexus API, and an nxm link's one-time key stays out of error messages.
+
 ## 0.3.0 — 2026-10-20
 
 ### Progress

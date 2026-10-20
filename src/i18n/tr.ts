@@ -197,6 +197,8 @@ export default {
     extra: "Burada {n} fazla",
     extraTitle: "Bunlar sende var, listede yok",
     profileMade: "“{name}” profili oluşturuldu ve geçildi",
+    sourceHint:
+      "smapi.io'nun bildiği modlar resmî kaynaklarından kurulur; listedeki kaynak yalnızca geri kalanlar için kullanılır, bu yüzden onları yalnızca güvendiğiniz listelerden kurun.",
   },
   logReport: {
     noLog: "Henüz SMAPI günlüğü yok: oyun modlarla ilk kez çalıştığında oluşur.",

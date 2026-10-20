@@ -71,6 +71,21 @@ impl AppState {
             .user_agent(concat!("PelicanMods/", env!("CARGO_PKG_VERSION")))
             .connect_timeout(std::time::Duration::from_secs(20))
             .read_timeout(std::time::Duration::from_secs(60))
+            .redirect(reqwest::redirect::Policy::custom(|attempt| {
+                // the Nexus key travels in an "apikey" header, which reqwest only strips
+                // for its standard credential headers when a redirect changes host
+                let from_api = attempt
+                    .previous()
+                    .last()
+                    .is_some_and(|u| u.host_str() == Some("api.nexusmods.com"));
+                if from_api && attempt.url().host_str() != Some("api.nexusmods.com") {
+                    attempt.stop()
+                } else if attempt.previous().len() >= 10 {
+                    attempt.error("too many redirects")
+                } else {
+                    attempt.follow()
+                }
+            }))
             .build()
             .expect("http client");
         Self {

@@ -75,12 +75,12 @@ pub fn label_key(name: &str) -> String {
 /// `content.json`.
 pub fn load(mod_dir: &Path, locale: &str) -> AppResult<ModConfig> {
     let path = mod_dir.join(CONFIG);
-    let values = match std::fs::read_to_string(&path) {
+    let values = match crate::jsonc::read(&path) {
         Ok(text) => Some(parse_lax(&text)?),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
         Err(e) => return Err(e.into()),
     };
-    let schema = match std::fs::read_to_string(mod_dir.join(CONTENT)) {
+    let schema = match crate::jsonc::read(&mod_dir.join(CONTENT)) {
         Ok(text) => cp_schema(&parse_lax(&text)?),
         Err(_) => None,
     };
@@ -97,7 +97,7 @@ pub fn load(mod_dir: &Path, locale: &str) -> AppResult<ModConfig> {
 /// Reports whether the content pack in `mod_dir` declares a `ConfigSchema`, without
 /// parsing the whole `content.json`, which can run to megabytes.
 pub fn declares_schema(mod_dir: &Path) -> bool {
-    std::fs::read_to_string(mod_dir.join(CONTENT))
+    crate::jsonc::read(&mod_dir.join(CONTENT))
         .map(|t| t.to_ascii_lowercase().contains("\"configschema\""))
         .unwrap_or(false)
 }
@@ -138,7 +138,7 @@ pub fn defaults(schema: &[SchemaField]) -> Value {
 // to default.json, as SMAPI does.
 fn labels(mod_dir: &Path, locale: &str) -> HashMap<String, Label> {
     let read = |name: &str| -> Map<String, Value> {
-        std::fs::read_to_string(mod_dir.join("i18n").join(name))
+        crate::jsonc::read(&mod_dir.join("i18n").join(name))
             .ok()
             .and_then(|t| parse_lax(&t).ok())
             .and_then(|v| v.as_object().cloned())
@@ -199,8 +199,7 @@ fn labels(mod_dir: &Path, locale: &str) -> HashMap<String, Label> {
 
 // mods ship config and content files with comments and trailing commas, as SMAPI allows
 fn parse_lax(text: &str) -> AppResult<Value> {
-    json5::from_str(text.trim_start_matches('\u{feff}'))
-        .map_err(|e| AppError::BadConfig(e.to_string()))
+    crate::jsonc::parse(text).map_err(AppError::BadConfig)
 }
 
 fn get_ci<'a>(obj: &'a Map<String, Value>, key: &str) -> Option<&'a Value> {

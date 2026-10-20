@@ -195,6 +195,7 @@ export default {
     extra: "这里多出 {n} 个",
     extraTitle: "你有，但列表里没有",
     profileMade: "已创建并切换到配置“{name}”",
+    sourceHint: "smapi.io 认识的模组会从官方来源安装；列表中写的来源只用于其余模组，因此请只从你信任的列表安装它们。",
   },
   logReport: {
     noLog: "还没有 SMAPI 日志：游戏首次带模组运行后才会生成。",

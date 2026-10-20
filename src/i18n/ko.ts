@@ -196,6 +196,8 @@ export default {
     extra: "여기에만 있음: {n}",
     extraTitle: "나에게는 있지만 목록에는 없는 것",
     profileMade: "“{name}” 프로필을 만들고 전환했어요",
+    sourceHint:
+      "smapi.io가 아는 모드는 공식 출처에서 설치됩니다. 목록에 적힌 출처는 나머지 모드에만 쓰이니, 믿을 수 있는 목록에서만 설치하세요.",
   },
   logReport: {
     noLog: "아직 SMAPI 로그가 없어요. 모드와 함께 게임을 처음 실행하면 생겨요.",

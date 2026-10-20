@@ -197,6 +197,8 @@ export default {
     extra: "{n} a mais aqui",
     extraTitle: "Você tem estes, a lista não",
     profileMade: "Perfil “{name}” criado e ativado",
+    sourceHint:
+      "Mods que o smapi.io conhece são instalados das fontes oficiais; a fonte da lista só é usada para os demais, então instale-os apenas de listas em que você confia.",
   },
   logReport: {
     noLog: "Ainda não há log do SMAPI: ele aparece depois que o jogo roda com mods pela primeira vez.",
