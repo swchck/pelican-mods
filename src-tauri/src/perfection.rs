@@ -196,6 +196,38 @@ pub struct CatalogCrop {
     /// "spring", "summer", "fall", "winter".
     #[serde(default)]
     pub seasons: Vec<String>,
+    // added with the crop calculator; empty phases mean a catalog from before it
+    /// Days in each growth phase; together the days until the first harvest.
+    #[serde(default)]
+    pub phases: Vec<u32>,
+    /// Days between harvests after the first; -1 for a crop harvested once.
+    #[serde(default = "no_regrow")]
+    pub regrow: i32,
+    #[serde(default = "one")]
+    pub min_stack: u32,
+    #[serde(default = "one")]
+    pub max_stack: u32,
+    /// Chance of each extra item on top of the stack, repeated while it hits.
+    #[serde(default)]
+    pub extra_chance: f64,
+    #[serde(default)]
+    pub paddy: bool,
+    #[serde(default)]
+    pub trellis: bool,
+    /// Sell price of the harvest at base quality, in gold.
+    #[serde(default)]
+    pub price: u32,
+    /// What a shop asks for one seed, in gold; 0 where the data has no price.
+    #[serde(default)]
+    pub seed_price: u32,
+}
+
+fn no_regrow() -> i32 {
+    -1
+}
+
+fn one() -> u32 {
+    1
 }
 
 /// A festival, or a passive one like the Night Market, over `day..=end_day`.

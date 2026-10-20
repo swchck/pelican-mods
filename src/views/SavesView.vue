@@ -5,6 +5,7 @@ import { toast } from "vue-sonner";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import {
   ArchiveRestoreIcon,
+  ChartLineIcon,
   GitCompareIcon,
   DownloadIcon,
   FolderOpenIcon,
@@ -31,6 +32,7 @@ import { useGame } from "@/stores/game";
 import { useLibrary } from "@/stores/library";
 import { useShortcut } from "@/stores/shortcuts";
 import SaveDiffDialog from "@/components/saves/SaveDiffDialog.vue";
+import FarmHistoryDialog from "@/components/saves/FarmHistoryDialog.vue";
 
 const { t, locale } = useI18n();
 const game = useGame();
@@ -45,6 +47,7 @@ const busy = ref(false);
 const restoreTarget = ref<Snapshot | null>(null);
 const deleteTarget = ref<SaveSummary | null>(null);
 const diffOpen = ref(false);
+const historyOpen = ref(false);
 
 const selected = computed(() => list.value.find((s) => s.id === selectedId.value) ?? null);
 const lib = useLibrary();
@@ -312,8 +315,11 @@ useShortcut("page.install", () => void importSave());
             <Button variant="outline" :disabled="busy" @click="exportSave"
               ><DownloadIcon />{{ t("saves.export") }}</Button
             >
-            <Button variant="outline" class="col-span-2" :disabled="!selected" @click="diffOpen = true"
+            <Button variant="outline" :disabled="!selected" @click="diffOpen = true"
               ><GitCompareIcon />{{ t("saveDiff.open") }}</Button
+            >
+            <Button variant="outline" :disabled="!selected" @click="historyOpen = true"
+              ><ChartLineIcon />{{ t("farmHistory.open") }}</Button
             >
             <Button
               variant="destructive"
@@ -359,5 +365,6 @@ useShortcut("page.install", () => void importSave());
       </DialogContent>
     </Dialog>
   </div>
+  <FarmHistoryDialog v-if="selected" v-model:open="historyOpen" :save-id="selected.id" />
   <SaveDiffDialog v-if="selected" v-model:open="diffOpen" :save-id="selected.id" :snapshots="snapshots" />
 </template>

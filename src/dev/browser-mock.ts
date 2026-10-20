@@ -716,6 +716,17 @@ mockIPC(
             { key: "(O)404", name: "Шампиньон", from: 70, to: 53 },
           ],
         };
+      case "saves_history":
+        return Array.from({ length: 12 }, (_, i) => ({
+          year: 2,
+          season: Math.floor(i / 4),
+          day: 1 + (i % 4) * 7,
+          money: 200_000 + i * 90_000 - (i % 3) * 40_000,
+          totalEarned: 1_500_000 + i * 120_000,
+          playTimeMs: 200_000_000 + i * 5_000_000,
+          skills: 30 + i,
+          perfection: i % 2 ? null : 20 + i,
+        }));
       case "saves_walnuts":
         return {
           found: 93,

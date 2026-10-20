@@ -1,3 +1,4 @@
+import type { Crop } from "@/lib/crops";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
@@ -498,6 +499,8 @@ export const saves = {
   checkup: (id: string) => invoke<Checkup>("saves_checkup", { id }),
   items: (id: string) => invoke<StoredItem[]>("saves_items", { id }),
   walnuts: (id: string) => invoke<Walnuts>("saves_walnuts", { id }),
+  /** Money and progress by in-game day, oldest first. */
+  history: (id: string) => invoke<FarmPoint[]>("saves_history", { id }),
   /** Each side is "current", "previous" or a snapshot's file. */
   compare: (id: string, from: string, to: string) => invoke<SaveDiff>("saves_compare", { id, from, to }),
   perfection: (id: string) => invoke<Perfection>("saves_perfection", { id }),
@@ -761,6 +764,7 @@ export interface GameCatalog {
     loves: string[];
   }[];
   festivals: { season: string; day: number; endDay: number; name: string }[];
+  crops: Crop[];
   fishInfo: {
     id: string;
     name: string;
@@ -875,6 +879,20 @@ export interface Walnuts {
   found: number;
   total: number;
   sources: WalnutSource[];
+}
+
+/** A farm on one in-game day. */
+export interface FarmPoint {
+  year: number;
+  season: number;
+  day: number;
+  money: number;
+  totalEarned: number;
+  playTimeMs: number;
+  /** The five skill levels summed. */
+  skills: number;
+  /** Known for days a perfection check ran on. */
+  perfection: number | null;
 }
 
 /** One state of a save in a comparison. */

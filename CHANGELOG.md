@@ -4,6 +4,7 @@
 
 ### Library and saves
 
+- Saves have a History chart: total earned, money, perfection and skills by in-game day, noted on every look at a save and filled in from its snapshots.
 - After each session a notice offers what changed on the farm since the game started, compared against the copy taken before launch.
 - A profile can keep mod settings of its own: switching away saves every mod's config.json for it, and coming back puts them back, so "SVE hard" and "SVE cozy" can set the same mods differently.
 - When a search ends on a mod, "Check what it breaks with" runs it alone, then halves the mods the search cleared with it kept on, so a problem that needs two mods names both.
@@ -17,6 +18,7 @@
 ### Helpers
 
 - The Chests tab reads the running game live, and from saves it now finds Junimo chests and gives auto-grabbers their tile.
+- A Crops tab ranks what to plant today by profit per tile until the season ends, with growth times and prices from the game, Speed-Gro, Agriculturist, Tiller and a greenhouse switch.
 - With spoilers on, a Walnuts tab lists every golden walnut source on Ginger Island by area — each bush and buried spot with its tile, puzzles, Field Office donations and the capped drops with how many are left — and marks what the save has already found.
 
 ### Console

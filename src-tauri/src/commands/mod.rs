@@ -62,6 +62,8 @@ pub struct AppState {
     pub(crate) translations_root: PathBuf,
     /// Mod settings of profiles that keep their own, a folder per profile.
     pub(crate) profile_configs_root: PathBuf,
+    /// Each save's money and progress by in-game day.
+    pub(crate) farm_history_root: PathBuf,
     /// Unconfirmed nxm links the UI hasn't collected yet.
     pub(crate) nxm_pending: Mutex<Vec<serde_json::Value>>,
     /// The built companion mod, linked into every profile; `None` when this build lacks it.
@@ -120,6 +122,7 @@ impl AppState {
             removed_root: data_dir.join("removed"),
             translations_root: data_dir.join("translations"),
             profile_configs_root: data_dir.join("profile-configs"),
+            farm_history_root: data_dir.join("farm-history"),
             nxm_pending: Mutex::new(Vec::new()),
         }
     }

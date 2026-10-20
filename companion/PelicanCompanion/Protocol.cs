@@ -110,7 +110,26 @@ internal record CatalogAchievement(int Id, string Name, string Description);
 internal record CatalogOrder(string Key, string Name, string Requester, bool Qi);
 
 /// <summary>A crop the Polyculture or Monoculture achievements count, by harvest id.</summary>
-internal record CatalogCrop(string Id, bool Polyculture, bool Monoculture, string Seed, List<string> Seasons);
+/// <summary>
+/// A crop by its harvest item. <c>Phases</c> are days per growth phase, <c>Regrow</c> is -1
+/// for a crop harvested once, prices are in gold at base quality.
+/// </summary>
+internal record CatalogCrop(
+    string Id,
+    bool Polyculture,
+    bool Monoculture,
+    string Seed,
+    List<string> Seasons,
+    List<int> Phases,
+    int Regrow,
+    int MinStack,
+    int MaxStack,
+    double ExtraChance,
+    bool Paddy,
+    bool Trellis,
+    int Price,
+    int SeedPrice
+);
 
 /// <summary>A festival or a passive one (Night Market) over <c>Day</c>..<c>EndDay</c>.</summary>
 internal record CatalogFestival(string Season, int Day, int EndDay, string Name);

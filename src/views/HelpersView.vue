@@ -7,6 +7,7 @@ import {
   CloudSunIcon,
   FishIcon,
   GemIcon,
+  SproutIcon,
   NutIcon,
   BoxIcon,
   LandmarkIcon,
@@ -22,6 +23,7 @@ import FishTab from "@/components/helpers/FishTab.vue";
 import ChestsTab from "@/components/helpers/ChestsTab.vue";
 import MuseumTab from "@/components/helpers/MuseumTab.vue";
 import WalnutsTab from "@/components/helpers/WalnutsTab.vue";
+import CropsTab from "@/components/helpers/CropsTab.vue";
 import WikiName from "@/components/WikiName.vue";
 import { api as appApi, companion as api, isAppError, type Forecast } from "@/lib/api";
 import { bestGrange, grangeScore, itemPoints, place, SLOTS, type GrangeItem } from "@/lib/grange";
@@ -35,7 +37,7 @@ const companion = useCompanion();
 const settings = useSettings();
 void settings.load();
 
-const tab = ref<"forecast" | "fair" | "calendar" | "fish" | "museum" | "chests" | "walnuts">("forecast");
+const tab = ref<"forecast" | "fair" | "calendar" | "fish" | "museum" | "chests" | "crops" | "walnuts">("forecast");
 /** Forecast and fair come from the running game; calendar and fish work from the lists. */
 const needsGame = computed(() => tab.value === "forecast" || tab.value === "fair");
 const forecast = ref<Forecast | null>(null);
@@ -144,6 +146,7 @@ watch([tab, ready], load, { immediate: true });
         <TabsTrigger value="forecast"><CloudSunIcon />{{ t("helpers.tabs.forecast") }}</TabsTrigger>
         <TabsTrigger value="fair"><StoreIcon />{{ t("helpers.tabs.fair") }}</TabsTrigger>
         <TabsTrigger value="calendar"><CalendarDaysIcon />{{ t("helpers.tabs.calendar") }}</TabsTrigger>
+        <TabsTrigger value="crops"><SproutIcon />{{ t("helpers.tabs.crops") }}</TabsTrigger>
         <TabsTrigger value="fish"><FishIcon />{{ t("helpers.tabs.fish") }}</TabsTrigger>
         <TabsTrigger value="museum"><LandmarkIcon />{{ t("helpers.tabs.museum") }}</TabsTrigger>
         <TabsTrigger value="chests"><BoxIcon />{{ t("helpers.tabs.chests") }}</TabsTrigger>
@@ -310,6 +313,7 @@ watch([tab, ready], load, { immediate: true });
         </div>
       </TabsContent>
       <TabsContent value="calendar" class="min-h-0 flex-1 overflow-auto"><CalendarTab /></TabsContent>
+      <TabsContent value="crops" class="min-h-0 flex-1 overflow-auto"><CropsTab /></TabsContent>
       <TabsContent value="fish" class="min-h-0 flex-1 overflow-auto"><FishTab /></TabsContent>
       <TabsContent value="museum" class="min-h-0 flex-1 overflow-auto"><MuseumTab /></TabsContent>
       <TabsContent value="chests" class="min-h-0 flex-1 overflow-auto"><ChestsTab /></TabsContent>

@@ -9,6 +9,7 @@ use tauri::AppHandle;
 use crate::commands::blocking;
 use crate::commands::{AppState, game_data_dir};
 use crate::error::{AppError, AppResult};
+use crate::farm_history::Point;
 use crate::launcher::RunState;
 use crate::perfection::{self, Perfection};
 use crate::save_backups::{self, Reason, Snapshot};
@@ -47,7 +48,15 @@ fn ensure_stopped(state: &AppState) -> AppResult<()> {
 #[tauri::command]
 pub async fn saves_list(app: AppHandle) -> AppResult<Vec<SaveSummary>> {
     let dir = saves_dir(&app)?;
-    blocking(app, move |_| Ok(saves::list(&dir))).await
+    blocking(app, move |s| {
+        let list = saves::list(&dir);
+        for save in &list {
+            // the chart is a nicety; a failed note mustn't hide the saves
+            let _ = crate::farm_history::record(&s.farm_history_root, &save.id, Point::of(save));
+        }
+        Ok(list)
+    })
+    .await
 }
 
 /// Scores save `id` for perfection, against the catalog the companion last sent
@@ -59,14 +68,22 @@ pub async fn saves_perfection(app: AppHandle, id: String) -> AppResult<Perfectio
     blocking(app, move |s| {
         let facts = cached_facts(s, &id, &path)?;
         let catalog = s.companion.catalog();
-        Ok(perfection::evaluate(
+        let result = perfection::evaluate(
             &facts,
             Some(
                 catalog
                     .as_ref()
                     .unwrap_or(perfection::Catalog::builtin(&language)),
             ),
-        ))
+        );
+        if let Ok(summary) = saves::summary(&path) {
+            let point = Point {
+                perfection: result.percent,
+                ..Point::of(&summary)
+            };
+            let _ = crate::farm_history::record(&s.farm_history_root, &id, point);
+        }
+        Ok(result)
     })
     .await
 }
@@ -140,6 +157,29 @@ pub async fn saves_items(app: AppHandle, id: String) -> AppResult<Vec<NamedItem>
 pub async fn saves_walnuts(app: AppHandle, id: String) -> AppResult<crate::walnuts::Walnuts> {
     let path = save_path(&app, &id)?;
     blocking(app, move |_| crate::walnuts::in_save(&path)).await
+}
+
+/// Save `id`'s money and progress by in-game day, oldest first, read from what the
+/// launcher noted and from the save's snapshots.
+#[tauri::command]
+pub async fn saves_history(app: AppHandle, id: String) -> AppResult<Vec<Point>> {
+    let path = save_path(&app, &id)?;
+    blocking(app, move |s| {
+        let _ = crate::farm_history::record(
+            &s.farm_history_root,
+            &id,
+            Point::of(&saves::summary(&path)?),
+        );
+        let snapshots: Vec<PathBuf> = save_backups::list(&s.save_backup_root, &id)
+            .into_iter()
+            .map(|snap| snap.file)
+            .collect();
+        let scratch = s
+            .work_dir
+            .with_file_name(format!("history-{}", crate::history::now_ms()));
+        crate::farm_history::history(&s.farm_history_root, &id, &snapshots, &scratch)
+    })
+    .await
 }
 
 /// Compares two states of save `id`: each side is "current", "previous" (the day before

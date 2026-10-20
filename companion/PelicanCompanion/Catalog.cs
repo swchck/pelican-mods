@@ -218,21 +218,36 @@ internal static class Catalog
     private static List<CatalogCrop> Crops(Type game1)
     {
         var crops = (IEnumerable)(game1.GetField("cropData", Static)!.GetValue(null)!);
+        var objects = (IDictionary)game1.GetField("objectData", Static)!.GetValue(null)!;
+        int PriceOf(string id) => objects.Contains(id) ? (int)((dynamic)objects[id]!).Price : 0;
         var list = new List<CatalogCrop>();
         foreach (object raw in crops)
         {
             dynamic c = ((dynamic)raw).Value;
-            if (!(bool)c.CountForPolyculture && !(bool)c.CountForMonoculture)
-                continue;
+            string seed = (string)((dynamic)raw).Key;
+            string harvest = (string)c.HarvestItemId;
             var seasons = new List<string>();
             foreach (object season in (IEnumerable)c.Seasons)
                 seasons.Add(season.ToString()!.ToLowerInvariant());
+            var phases = new List<int>();
+            foreach (int days in (IEnumerable)c.DaysInPhase)
+                phases.Add(days);
             list.Add(new CatalogCrop(
-                (string)c.HarvestItemId,
+                harvest,
                 (bool)c.CountForPolyculture,
                 (bool)c.CountForMonoculture,
-                (string)((dynamic)raw).Key,
-                seasons
+                seed,
+                seasons,
+                phases,
+                (int)c.RegrowDays,
+                (int)c.HarvestMinStack,
+                (int)c.HarvestMaxStack,
+                (double)c.ExtraHarvestChance,
+                (bool)c.IsPaddyCrop,
+                (bool)c.IsRaised,
+                PriceOf(harvest),
+                // shops sell at twice the data price unless their own entry says otherwise
+                PriceOf(seed) * 2
             ));
         }
         return list;

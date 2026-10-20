@@ -70,6 +70,18 @@ test("predictions wait for the spoilers setting", async ({ page }) => {
   await expect(page.getByText(/Предсказания скрыты/)).toHaveCount(0);
 });
 
+test("crop calculator ranks this season's crops", async ({ page }) => {
+  await open(page, "/helpers", "ru");
+  await page.getByRole("tab", { name: "Урожай" }).click();
+  const rows = page.locator("tbody tr");
+  await expect(rows.first()).toBeVisible();
+  // the mock's game is on fall 12: pumpkins still make it, parsnips wait for spring
+  await expect(rows.filter({ hasText: "Тыква" })).toHaveCount(1);
+  await expect(rows.filter({ hasText: "Пастернак" })).toHaveCount(0);
+  await page.getByRole("switch", { name: "Теплица или остров" }).click();
+  await expect(rows.filter({ hasText: "Пастернак" })).toHaveCount(1);
+});
+
 test("walnut tracker shows only with spoilers on", async ({ page }) => {
   await open(page, "/helpers", "ru");
   await expect(page.getByRole("tab", { name: "Орехи" })).toHaveCount(0);
@@ -80,7 +92,7 @@ test("walnut tracker shows only with spoilers on", async ({ page }) => {
   await expect(page.getByText("Золотых орехов найдено: 93 из 130")).toBeVisible();
   await expect(page.getByText("Полевой офис: летучая мышь")).toBeVisible();
   await expect(page.getByText("Песня русалки на флейтовых блоках")).toHaveCount(0);
-  await page.getByLabel("Только ненайденные").uncheck();
+  await page.getByRole("switch", { name: "Только ненайденные" }).click();
   await expect(page.getByText("Песня русалки на флейтовых блоках")).toBeVisible();
 });
 
@@ -150,6 +162,17 @@ test("saves compare two states of a farm", async ({ page }) => {
   await expect(dialog.getByText("Рыбная ловля: 6 → 7")).toBeVisible();
   await expect(dialog.getByText("Впервые поймано: 1")).toBeVisible();
   await expect(dialog.getByText("+15")).toBeVisible();
+});
+
+test("saves chart a farm's history", async ({ page }) => {
+  await open(page, "/saves", "ru");
+  await page.getByRole("button", { name: "История" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.locator("circle")).toHaveCount(12);
+  await expect(dialog.locator("figcaption").getByText("Весна, 1-й день, год 2")).toBeVisible();
+  // perfection is known for every other day only
+  await dialog.getByRole("button", { name: "Совершенство" }).click();
+  await expect(dialog.locator("circle")).toHaveCount(6);
 });
 
 test("helpers find items across chests", async ({ page }) => {

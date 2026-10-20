@@ -2,6 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { CircleCheckIcon, CircleIcon } from "@lucide/vue";
+import PixelToggle from "@/components/PixelToggle.vue";
 import { saves, type WalnutSource, type Walnuts } from "@/lib/api";
 import { useFarmDate } from "@/lib/farm-date";
 
@@ -51,8 +52,13 @@ const areas = computed(() => {
         <div class="bg-muted h-2.5 w-48 overflow-hidden rounded-full border border-[#a0703f]">
           <div class="h-full bg-[#d9a520]" :style="{ width: `${(100 * walnuts.found) / walnuts.total}%` }" />
         </div>
-        <label class="flex items-center gap-2 text-xs font-semibold">
-          <input v-model="onlyMissing" type="checkbox" />{{ t("walnutsTab.onlyMissing") }}
+        <label class="flex items-center gap-2 text-sm font-bold">
+          <PixelToggle
+            :checked="onlyMissing"
+            :label="t('walnutsTab.onlyMissing')"
+            @toggle="onlyMissing = !onlyMissing"
+          />
+          {{ t("walnutsTab.onlyMissing") }}
         </label>
       </div>
       <p class="text-muted-foreground text-xs font-semibold">{{ t("walnutsTab.note") }}</p>
