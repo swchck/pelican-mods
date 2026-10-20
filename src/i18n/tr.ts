@@ -280,6 +280,11 @@ export default {
     later: "Sonra",
   },
   library: {
+    filters: "Kütüphane filtreleri",
+    show: { all: "Tümü", problems: "Sorunlar", updates: "Güncellemeler", off: "Kapalı" },
+    tags: "Etiketler",
+    tagAdd: "+ etiket",
+    tagRemove: "“{tag}” etiketini kaldır",
     title: "Kitaplık",
     filter: "Kurulu modlarda ara",
     installZip: ".zip kur",

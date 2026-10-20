@@ -14,10 +14,10 @@ import PackageTable from "@/components/library/PackageTable.vue";
 import PackageDetail from "@/components/library/PackageDetail.vue";
 import ProfileSwitcher from "@/components/library/ProfileSwitcher.vue";
 import ConflictBanner from "@/components/library/ConflictBanner.vue";
+import LibraryFilters from "@/components/library/LibraryFilters.vue";
 import HistoryDialog from "@/components/library/HistoryDialog.vue";
 import { useLibrary } from "@/stores/library";
 import { hint, useShortcut } from "@/stores/shortcuts";
-import { matchesFilter } from "@/lib/packages";
 
 const { t, locale } = useI18n();
 const lib = useLibrary();
@@ -26,7 +26,7 @@ const dragging = ref(false);
 const filterInput = ref<HTMLInputElement>();
 
 function move(delta: number) {
-  const rows = lib.packages.filter((p) => matchesFilter(p, lib.filter));
+  const rows = lib.visible;
   if (!rows.length) return;
   const i = rows.findIndex((p) => p.id === lib.selectedId);
   const next = i === -1 ? (delta > 0 ? 0 : rows.length - 1) : Math.min(rows.length - 1, Math.max(0, i + delta));
@@ -150,6 +150,8 @@ onUnmounted(() => {
         <HistoryIcon />
       </Button>
     </header>
+
+    <LibraryFilters v-if="lib.packages.length" />
 
     <ConflictBanner />
 

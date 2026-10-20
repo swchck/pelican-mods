@@ -282,6 +282,11 @@ export default {
     later: "Más tarde",
   },
   library: {
+    filters: "Filtros de la biblioteca",
+    show: { all: "Todos", problems: "Problemas", updates: "Actualizaciones", off: "Desactivados" },
+    tags: "Etiquetas",
+    tagAdd: "+ etiqueta",
+    tagRemove: "Quitar la etiqueta «{tag}»",
     title: "Biblioteca",
     filter: "Filtrar instalados",
     installZip: "Instalar .zip",

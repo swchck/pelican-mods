@@ -42,6 +42,25 @@ test("helpers tabs switch without the game", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Абигейл" })).toBeVisible();
 });
 
+test("library filters by status and tag", async ({ page }) => {
+  await open(page, "/", "ru");
+  const rows = page.getByRole("option");
+  await expect(rows).toHaveCount(4);
+  await page.getByRole("button", { name: /^Выключены/ }).click();
+  await expect(rows).toHaveCount(1);
+  await page.getByRole("button", { name: /^Все/ }).click();
+  await page.getByRole("button", { name: /^UI/ }).click();
+  await expect(rows).toHaveCount(1);
+  await rows.first().click();
+  const add = page.getByLabel("+ тег");
+  await add.fill("Удобство");
+  await add.press("Enter");
+  await expect(page.getByRole("button", { name: /^Удобство/ })).toBeVisible();
+  await page.getByRole("button", { name: "Убрать тег «UI»" }).click();
+  // the tag filter goes with its last tag, so every mod is back
+  await expect(rows).toHaveCount(4);
+});
+
 for (const locale of ["de", "es", "fr", "pt", "it", "ja", "ko", "zh", "tr", "hu"]) {
   test(`library and progress render in ${locale}`, async ({ page }) => {
     const errors = await open(page, "/", locale);

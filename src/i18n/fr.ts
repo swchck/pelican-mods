@@ -283,6 +283,11 @@ export default {
     later: "Plus tard",
   },
   library: {
+    filters: "Filtres de la bibliothèque",
+    show: { all: "Tous", problems: "Problèmes", updates: "Mises à jour", off: "Désactivés" },
+    tags: "Étiquettes",
+    tagAdd: "+ étiquette",
+    tagRemove: "Retirer l'étiquette « {tag} »",
     title: "Bibliothèque",
     filter: "Filtrer les mods installés",
     installZip: "Installer un .zip",

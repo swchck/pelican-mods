@@ -280,6 +280,11 @@ export default {
     later: "나중에",
   },
   library: {
+    filters: "라이브러리 필터",
+    show: { all: "전체", problems: "문제", updates: "업데이트", off: "꺼짐" },
+    tags: "태그",
+    tagAdd: "+ 태그",
+    tagRemove: "‘{tag}’ 태그 제거",
     title: "라이브러리",
     filter: "설치된 모드 필터",
     installZip: ".zip 설치",

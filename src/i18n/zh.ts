@@ -273,6 +273,11 @@ export default {
     later: "稍后",
   },
   library: {
+    filters: "模组库筛选",
+    show: { all: "全部", problems: "有问题", updates: "有更新", off: "已关闭" },
+    tags: "标签",
+    tagAdd: "+ 标签",
+    tagRemove: "移除标签“{tag}”",
     title: "模组库",
     filter: "筛选已安装",
     installZip: "安装 .zip",

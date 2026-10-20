@@ -283,6 +283,11 @@ export default {
     later: "Più tardi",
   },
   library: {
+    filters: "Filtri della libreria",
+    show: { all: "Tutte", problems: "Problemi", updates: "Aggiornamenti", off: "Disattivate" },
+    tags: "Etichette",
+    tagAdd: "+ etichetta",
+    tagRemove: "Rimuovi l'etichetta «{tag}»",
     title: "Libreria",
     filter: "Filtra installate",
     installZip: "Installa .zip",

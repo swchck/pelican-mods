@@ -276,6 +276,11 @@ export default {
     later: "Позже",
   },
   library: {
+    filters: "Фильтры библиотеки",
+    show: { all: "Все", problems: "Проблемы", updates: "Обновления", off: "Выключены" },
+    tags: "Теги",
+    tagAdd: "+ тег",
+    tagRemove: "Убрать тег «{tag}»",
     title: "Библиотека",
     filter: "Фильтр установленных",
     installZip: "Установить .zip",

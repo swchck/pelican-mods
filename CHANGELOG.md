@@ -18,6 +18,7 @@
 
 ### Library and saves
 
+- The library filters by state (problems, updates, turned off) and by your own tags: label packages in their details, then click a tag to see just those. The text filter matches tags too.
 - Each save remembers the profile it was played with; when the last played save's profile isn't the active one, launching offers to switch to it first. The Saves screen shows each save's profile.
 - The library keeps a history of installs, updates and removals, and any of them can be undone: a removed mod is set aside instead of deleted and comes back as it was, an update rolls back to its backup.
 - A disk space card shows what the app keeps (earlier mod versions, removed mods, save copies, downloads) and cleans each up: the latest mod version and five automatic copies per save stay, and copies made by hand or before a restore are left alone.

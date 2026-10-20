@@ -10,6 +10,7 @@ function pkg(id: string, uniqueId: string, name: string, version: string, enable
     enabled,
     broken: [],
     backupVersion: null,
+    tags: [],
     mods: [
       {
         relPath: "",

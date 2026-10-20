@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { library, saves, type Changelog, type Issue, type PackageView, type SaveUsage } from "@/lib/api";
 import DependencyList from "@/components/library/DependencyList.vue";
+import PackageTags from "@/components/library/PackageTags.vue";
 import { splitLinks, type Segment } from "@/lib/md-links";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useNexus } from "@/stores/nexus";
@@ -210,6 +211,8 @@ async function remove() {
         {{ tag.text }}
       </span>
     </div>
+
+    <PackageTags v-if="!pkg.system" :pkg="pkg" />
 
     <div
       v-if="missingLanguage"

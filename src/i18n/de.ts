@@ -283,6 +283,11 @@ export default {
     later: "Später",
   },
   library: {
+    filters: "Bibliotheksfilter",
+    show: { all: "Alle", problems: "Probleme", updates: "Updates", off: "Aus" },
+    tags: "Tags",
+    tagAdd: "+ Tag",
+    tagRemove: "Tag „{tag}“ entfernen",
     title: "Bibliothek",
     filter: "Installierte filtern",
     installZip: ".zip installieren",

@@ -103,6 +103,7 @@ pub fn run() {
             commands::library::library_remove,
             commands::library::library_toggle,
             commands::library::library_open,
+            commands::library::library_set_tags,
             commands::library::profile_create,
             commands::library::profile_rename,
             commands::library::profile_delete,

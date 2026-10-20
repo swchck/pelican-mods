@@ -282,6 +282,11 @@ export default {
     later: "Később",
   },
   library: {
+    filters: "Könyvtárszűrők",
+    show: { all: "Mind", problems: "Hibák", updates: "Frissítések", off: "Kikapcsolva" },
+    tags: "Címkék",
+    tagAdd: "+ címke",
+    tagRemove: "„{tag}” címke eltávolítása",
     title: "Könyvtár",
     filter: "Telepítettek szűrése",
     installZip: ".zip telepítése",

@@ -42,6 +42,8 @@ pub struct PackageView {
     pub broken: Vec<BrokenMod>,
     /// Version of the newest backup, when the package can be rolled back.
     pub backup_version: Option<String>,
+    /// The player's labels for it.
+    pub tags: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -122,6 +124,7 @@ pub(crate) fn build_view(state: &AppState) -> LibraryView {
     };
     let view = |p: Package, system: bool| PackageView {
         backup_version: if system { None } else { backup_of(&p) },
+        tags: profiles.tags.get(&p.id).cloned().unwrap_or_default(),
         enabled: system || enabled.contains(&p.id),
         mods: p
             .mods
@@ -408,6 +411,23 @@ pub async fn profile_delete(app: AppHandle, id: String) -> AppResult<LibraryView
         ensure_stopped(s)?;
         s.profiles.update(|p| p.delete(&id))?;
         let _ = std::fs::remove_dir_all(s.deploy_root.join(&id));
+        Ok(build_view(s))
+    })
+    .await
+}
+
+/// Labels package `id` with `tags`, replacing its old ones.
+#[tauri::command]
+pub async fn library_set_tags(
+    app: AppHandle,
+    id: String,
+    tags: Vec<String>,
+) -> AppResult<LibraryView> {
+    blocking(app, move |s| {
+        s.profiles.update(|p| {
+            p.set_tags(&id, &tags);
+            Ok(())
+        })?;
         Ok(build_view(s))
     })
     .await

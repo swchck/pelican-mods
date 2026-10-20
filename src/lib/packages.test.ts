@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ModView, PackageView } from "./api";
 import {
+  matchesStatus,
   matchesFilter,
   packageAuthor,
   packageCompat,
@@ -47,6 +48,7 @@ function pkg(extra: Partial<PackageView>): PackageView {
     mods: [],
     broken: [],
     backupVersion: null,
+    tags: [],
     ...extra,
   };
 }
@@ -73,6 +75,16 @@ describe("packages", () => {
     expect(matchesFilter(p, "lookup")).toBe(true);
     expect(matchesFilter(p, "pathoschild.look")).toBe(true);
     expect(matchesFilter(p, "fishing")).toBe(false);
+    expect(matchesFilter({ ...p, tags: ["Visual"] }, "visu")).toBe(true);
+  });
+
+  it("filters by status", () => {
+    expect(matchesStatus("broken", "problems")).toBe(true);
+    expect(matchesStatus("issue", "problems")).toBe(true);
+    expect(matchesStatus("update", "problems")).toBe(false);
+    expect(matchesStatus("update", "updates")).toBe(true);
+    expect(matchesStatus("off", "off")).toBe(true);
+    expect(matchesStatus("ok", "all")).toBe(true);
   });
 
   it("merges update reports", () => {

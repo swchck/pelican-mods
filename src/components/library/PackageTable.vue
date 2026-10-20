@@ -4,7 +4,6 @@ import { useI18n } from "vue-i18n";
 import PixelToggle from "@/components/PixelToggle.vue";
 import type { PackageView } from "@/lib/api";
 import {
-  matchesFilter,
   packageAuthor,
   packageSource,
   packageStatus,
@@ -18,18 +17,16 @@ const { t } = useI18n();
 const lib = useLibrary();
 
 const rows = computed(() =>
-  lib.packages
-    .filter((p) => matchesFilter(p, lib.filter))
-    .map((p) => ({
-      pkg: p,
-      title: packageTitle(p),
-      author: packageAuthor(p),
-      version: packageVersion(p),
-      status: packageStatus(p, lib.report),
-      update: packageUpdate(p, lib.report),
-      source: packageSource(p),
-      parts: p.mods.length,
-    })),
+  lib.visible.map((p) => ({
+    pkg: p,
+    title: packageTitle(p),
+    author: packageAuthor(p),
+    version: packageVersion(p),
+    status: packageStatus(p, lib.report),
+    update: packageUpdate(p, lib.report),
+    source: packageSource(p),
+    parts: p.mods.length,
+  })),
 );
 
 const pill: Record<string, string> = {

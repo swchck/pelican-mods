@@ -81,9 +81,19 @@ export function packageStatus(p: PackageView, report: UpdateReport | null = null
 }
 
 /** Case-insensitive match on names, authors, folder name and UniqueIDs. */
+/** Which packages the library shows by state: problems are broken mods or unmet needs. */
+export type StatusFilter = "all" | "problems" | "updates" | "off";
+
+export function matchesStatus(status: PackageStatus, filter: StatusFilter): boolean {
+  if (filter === "problems") return status === "broken" || status === "issue";
+  if (filter === "updates") return status === "update";
+  if (filter === "off") return status === "off";
+  return true;
+}
+
 export function matchesFilter(p: PackageView, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
-  const hay = [p.id, ...p.mods.flatMap((m) => [m.manifest.name, m.manifest.author, m.manifest.uniqueId])];
+  const hay = [p.id, ...p.tags, ...p.mods.flatMap((m) => [m.manifest.name, m.manifest.author, m.manifest.uniqueId])];
   return hay.some((s) => s.toLowerCase().includes(q));
 }

@@ -35,7 +35,13 @@ pub struct Profiles {
     /// The profile each save was last played with, by save id.
     #[serde(default)]
     pub save_profiles: BTreeMap<String, String>,
+    /// The player's own labels for packages, by package id, shared by every profile.
+    #[serde(default)]
+    pub tags: BTreeMap<String, Vec<String>>,
 }
+
+/// Tags are chips in a filter row; longer ones are notes, not labels.
+const MAX_TAG_CHARS: usize = 32;
 
 impl Default for Profiles {
     fn default() -> Self {
@@ -47,11 +53,28 @@ impl Default for Profiles {
                 enabled: Vec::new(),
             }],
             save_profiles: BTreeMap::new(),
+            tags: BTreeMap::new(),
         }
     }
 }
 
 impl Profiles {
+    /// Labels package `id` with `tags`, trimmed, without repeats in any letter case;
+    /// none at all forgets the package.
+    pub fn set_tags(&mut self, id: &str, tags: &[String]) {
+        let mut kept: Vec<String> = Vec::new();
+        for t in tags.iter().map(|t| t.trim()).filter(|t| !t.is_empty()) {
+            if !kept.iter().any(|k| k.to_lowercase() == t.to_lowercase()) {
+                kept.push(t.chars().take(MAX_TAG_CHARS).collect());
+            }
+        }
+        if kept.is_empty() {
+            self.tags.remove(id);
+        } else {
+            self.tags.insert(id.to_owned(), kept);
+        }
+    }
+
     /// Records the active profile as the one `saves` were played with.
     pub fn remember_saves(&mut self, saves: &[String]) {
         for s in saves {
@@ -240,6 +263,19 @@ pub fn deploy(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tags_packages() {
+        let mut p = Profiles::default();
+        let tags = ["  SVE ", "sve", "", &"x".repeat(40), "Visual"].map(String::from);
+        p.set_tags("Stardew Valley Expanded", &tags);
+        assert_eq!(
+            p.tags["Stardew Valley Expanded"],
+            ["SVE".to_owned(), "x".repeat(32), "Visual".to_owned()]
+        );
+        p.set_tags("Stardew Valley Expanded", &[]);
+        assert!(p.tags.is_empty());
+    }
 
     #[test]
     fn remembers_which_profile_played_a_save() {

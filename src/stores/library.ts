@@ -10,7 +10,14 @@ import {
   type UpdateOutcome,
   type UpdateReport,
 } from "@/lib/api";
-import { packageTitle, packageUpdate } from "@/lib/packages";
+import {
+  matchesFilter,
+  matchesStatus,
+  packageStatus,
+  packageTitle,
+  packageUpdate,
+  type StatusFilter,
+} from "@/lib/packages";
 import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
 import { errorText, i18n } from "@/i18n";
 import { useNexus } from "./nexus";
@@ -25,6 +32,24 @@ export const useLibrary = defineStore("library", () => {
   const updating = ref(new Set<string>());
 
   const packages = computed(() => view.value?.packages ?? []);
+  const statusFilter = ref<StatusFilter>("all");
+  /** Shows only packages with this tag; null shows every one. */
+  const tagFilter = ref<string | null>(null);
+  /** The packages the table lists, after the text, status and tag filters. */
+  const visible = computed(() =>
+    packages.value.filter(
+      (p) =>
+        matchesFilter(p, filter.value) &&
+        matchesStatus(packageStatus(p, report.value), statusFilter.value) &&
+        (tagFilter.value === null || p.tags.includes(tagFilter.value)),
+    ),
+  );
+  /** Every tag in use, with how many packages carry it, by name. */
+  const tags = computed(() => {
+    const counts = new Map<string, number>();
+    for (const p of packages.value) for (const t of p.tags) counts.set(t, (counts.get(t) ?? 0) + 1);
+    return [...counts].sort(([a], [b]) => a.localeCompare(b));
+  });
   const selected = computed(() => packages.value.find((p) => p.id === selectedId.value) ?? null);
   const profiles = computed(() => view.value?.profiles ?? null);
   const activeProfile = computed(() => profiles.value?.profiles.find((p) => p.id === profiles.value?.active) ?? null);
@@ -214,6 +239,15 @@ export const useLibrary = defineStore("library", () => {
     },
     selectedId,
     filter,
+    statusFilter,
+    tagFilter,
+    visible,
+    tags,
+    async setTags(id: string, next: string[]) {
+      await run(() => api.setTags(id, next));
+      // a tag nobody carries any more can't keep filtering the table down to nothing
+      if (tagFilter.value !== null && !tags.value.some(([t]) => t === tagFilter.value)) tagFilter.value = null;
+    },
     working,
     packages,
     selected,

@@ -147,6 +147,8 @@ export interface PackageView {
   mods: ModView[];
   broken: { relPath: string; error: string }[];
   backupVersion: string | null;
+  /** The player's labels for the package. */
+  tags: string[];
 }
 
 export interface UpdateInfo {
@@ -205,6 +207,7 @@ export const library = {
   rememberProfile: (since: number) => invoke<LibraryView>("saves_remember_profile", { since }),
   history: () => invoke<HistoryEntry[]>("history_list"),
   undo: (at: number) => invoke<LibraryView>("history_undo", { at }),
+  setTags: (id: string, tags: string[]) => invoke<LibraryView>("library_set_tags", { id, tags }),
   installDependency: (uniqueId: string, updateKeys?: string[], github?: string | null) =>
     invoke<UpdateOutcome>("mod_install_dependency", { uniqueId, updateKeys, github }),
   exportList: (dest: string) => invoke<void>("modlist_export", { dest }),

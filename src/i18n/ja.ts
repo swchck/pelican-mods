@@ -281,6 +281,11 @@ export default {
     later: "あとで",
   },
   library: {
+    filters: "ライブラリのフィルター",
+    show: { all: "すべて", problems: "問題あり", updates: "更新あり", off: "オフ" },
+    tags: "タグ",
+    tagAdd: "+ タグ",
+    tagRemove: "タグ「{tag}」を外す",
     title: "ライブラリ",
     filter: "インストール済みを絞り込む",
     installZip: ".zipをインストール",

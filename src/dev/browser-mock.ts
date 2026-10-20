@@ -40,6 +40,7 @@ const pkg = (id: string, m: ReturnType<typeof manifest>, extra: Record<string, u
   ],
   broken: [],
   backupVersion: null,
+  tags: [] as string[],
   ...extra,
 });
 
@@ -61,7 +62,7 @@ const library = {
           { uniqueId: "Bouhm.NPCMapLocations", minimumVersion: null, isRequired: false },
         ],
       }),
-      { backupVersion: "1.48.0" },
+      { backupVersion: "1.48.0", tags: ["UI"] },
     ),
     pkg("CJBCheatsMenu", manifest("CJB Cheats Menu", "CJBok.CheatsMenu", "1.38.0", { updateKeys: ["Nexus:4"] }), {
       enabled: false,
@@ -273,6 +274,13 @@ mockIPC(
         return { version: "4.5.2", url: "", size: 0, notesUrl: "https://github.com/Pathoschild/SMAPI/releases" };
       case "library_get":
         return library;
+      case "library_set_tags": {
+        const { id, tags } = a as { id: string; tags: string[] };
+        const p = library.packages.find((x) => x.id === id);
+        if (p) p.tags = tags;
+        // a fresh object, as from the backend: the store's view must see it change
+        return structuredClone(library);
+      }
       case "updates_check":
         return {
           checkedAt: Math.floor(Date.now() / 1000) - 600,
