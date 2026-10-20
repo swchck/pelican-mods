@@ -68,6 +68,7 @@ export default {
     clear: "지우기",
     tabLog: "로그",
     tabReport: "보고서",
+    tabLoad: "부하",
   },
   storage: {
     title: "디스크 공간",
@@ -199,6 +200,24 @@ export default {
     profileMade: "“{name}” 프로필을 만들고 전환했어요",
     sourceHint:
       "smapi.io가 아는 모드는 공식 출처에서 설치됩니다. 목록에 적힌 출처는 나머지 모드에만 쓰이니, 믿을 수 있는 목록에서만 설치하세요.",
+  },
+  modLoad: {
+    needsGame: "컴패니언과 함께 게임을 실행하세요. 측정과 패치 확인은 게임 안에서 이뤄집니다.",
+    title: "모드가 쓰는 시간",
+    measure: "{n}초 측정",
+    measuring: "측정 중… {n}초",
+    hint: "측정하는 동안 컴패니언이 모드마다 이벤트 핸들러 시간을 잽니다. 걷기, 메뉴 열기, 잠자기 등 평소처럼 플레이하세요. 빨간색 모드는 프레임의 상당 부분을 잡아먹습니다.",
+    nothing: "측정 동안 핸들러에서 시간을 쓴 모드가 없습니다.",
+    perSecond: "초당 {ms}ms",
+    spike: "최대 {ms}ms",
+    eventMs: "{event} {ms} ms",
+    patchesTitle: "여러 모드가 패치하는 게임 메서드",
+    findPatches: "겹침 찾기",
+    patchesHint:
+      "C# 모드끼리 가장 자주 부딪히는 곳입니다. 트랜스파일러와 원본을 취소할 수 있는 프리픽스(⤼)가 가장 위험하니, 문제가 생기면 여기부터 보세요.",
+    patchesFound: "Harmony가 패치한 게임 메서드는 {patched}개이고, 그중 {shared}개는 여러 모드가 패치합니다.",
+    canSkip: "이 프리픽스는 원래 메서드와 뒤따르는 패치를 취소할 수 있습니다",
+    kind: { prefix: "프리픽스", postfix: "포스트픽스", transpiler: "트랜스파일러", finalizer: "파이널라이저" },
   },
   logReport: {
     noLog: "아직 SMAPI 로그가 없어요. 모드와 함께 게임을 처음 실행하면 생겨요.",

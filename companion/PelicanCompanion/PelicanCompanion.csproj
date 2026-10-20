@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Builds against StardewModdingAPI.dll and SMAPI's Newtonsoft only, never the game's own
+    Builds against StardewModdingAPI.dll and SMAPI's Newtonsoft and Harmony only, never the game's own
     assemblies: CI has no game install, so game state is read through reflection.
     SmapiDir is the game folder locally, or an unpacked SMAPI release in CI.
   -->
@@ -22,6 +22,7 @@
     <Reference Include="StardewModdingAPI" HintPath="$(SmapiDir)/StardewModdingAPI.dll" Private="false" />
     <Reference Include="SMAPI.Toolkit.CoreInterfaces" HintPath="$(SmapiDir)/smapi-internal/SMAPI.Toolkit.CoreInterfaces.dll" Private="false" />
     <Reference Include="Newtonsoft.Json" HintPath="$(SmapiDir)/smapi-internal/Newtonsoft.Json.dll" Private="false" />
+    <Reference Include="0Harmony" HintPath="$(SmapiDir)/smapi-internal/0Harmony.dll" Private="false" />
   </ItemGroup>
 
   <ItemGroup>

@@ -68,6 +68,7 @@ export default {
     clear: "Törlés",
     tabLog: "Napló",
     tabReport: "Jelentés",
+    tabLoad: "Terhelés",
   },
   storage: {
     title: "Tárhely",
@@ -201,6 +202,24 @@ export default {
     profileMade: "A(z) „{name}” profil létrehozva és kiválasztva",
     sourceHint:
       "Az smapi.io által ismert modok a hivatalos forrásukból települnek; a listában megadott forrást csak a többihez használjuk, ezért azokat csak megbízható listából telepítsd.",
+  },
+  modLoad: {
+    needsGame: "Indítsd a játékot a kísérővel: a mérés és a foltok vizsgálata a játékban fut.",
+    title: "Mennyi időt visznek el a modok",
+    measure: "Mérés {n} mp-ig",
+    measuring: "Mérés… {n} mp",
+    hint: "Mérés közben a kísérő minden mod eseménykezelőjét méri; játssz úgy, mint mindig: sétálj, nyiss menüket, aludj. A pirossal jelölt modok a képkockák érezhető részét elviszik.",
+    nothing: "A mérés alatt egy mod sem töltött időt a kezelőiben.",
+    perSecond: "{ms} ms másodpercenként",
+    spike: "csúcs {ms} ms",
+    eventMs: "{event} {ms} ms",
+    patchesTitle: "Játékmetódusok, amelyeket több mod foltoz",
+    findPatches: "Átfedések keresése",
+    patchesHint:
+      "A C#-modok leggyakrabban itt zavarják egymást. A legkockázatosabbak a transpilerek és az eredetit kihagyni képes prefixek (⤼): ha valami elromlott, velük kezdd.",
+    patchesFound: "A Harmony {patched} játékmetódust foltoz; ezek közül {shared} metódust több mod is.",
+    canSkip: "Ez a prefix kihagyhatja az eredeti metódust és az utána jövő foltokat",
+    kind: { prefix: "prefix", postfix: "postfix", transpiler: "transpiler", finalizer: "finalizer" },
   },
   logReport: {
     noLog: "Még nincs SMAPI-napló: akkor jelenik meg, amikor a játék először fut modokkal.",

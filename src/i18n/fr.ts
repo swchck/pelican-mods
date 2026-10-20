@@ -68,6 +68,7 @@ export default {
     clear: "Effacer",
     tabLog: "Journal",
     tabReport: "Rapport",
+    tabLoad: "Charge",
   },
   storage: {
     title: "Espace disque",
@@ -200,6 +201,24 @@ export default {
     profileMade: "Profil « {name} » créé et activé",
     sourceHint:
       "Les mods connus de smapi.io s'installent depuis leurs sources officielles ; la source indiquée par la liste ne sert que pour les autres, n'installez donc ceux-là qu'à partir de listes de confiance.",
+  },
+  modLoad: {
+    needsGame: "Lancez le jeu avec le compagnon : la mesure et la vérification des patchs se font dans le jeu.",
+    title: "Le temps que prennent les mods",
+    measure: "Mesurer {n} s",
+    measuring: "Mesure… {n} s",
+    hint: "Pendant la mesure, le compagnon chronomètre chaque gestionnaire d'événements des mods ; jouez normalement : marchez, ouvrez des menus, allez dormir. En rouge, les mods qui mangent une part sensible des images.",
+    nothing: "Aucun mod n'a passé de temps dans ses gestionnaires pendant la mesure.",
+    perSecond: "{ms} ms par seconde",
+    spike: "pic {ms} ms",
+    eventMs: "{event} {ms} ms",
+    patchesTitle: "Méthodes du jeu que plusieurs mods patchent",
+    findPatches: "Trouver les chevauchements",
+    patchesHint:
+      "C'est là que les mods C# se gênent le plus souvent. Les plus risqués sont les transpileurs et les préfixes capables d'annuler l'original (⤼) : si quelque chose a cassé, commencez par eux.",
+    patchesFound: "Harmony patche {patched} méthodes du jeu ; plusieurs mods en patchent {shared}.",
+    canSkip: "Ce préfixe peut annuler la méthode d'origine et les patchs suivants",
+    kind: { prefix: "préfixe", postfix: "postfixe", transpiler: "transpileur", finalizer: "finaliseur" },
   },
   logReport: {
     noLog: "Pas encore de journal SMAPI : il apparaît après le premier lancement du jeu avec des mods.",

@@ -68,6 +68,7 @@ export default {
     clear: "Leeren",
     tabLog: "Log",
     tabReport: "Bericht",
+    tabLoad: "Last",
   },
   storage: {
     title: "Speicherplatz",
@@ -201,6 +202,24 @@ export default {
     profileMade: "Profil „{name}“ erstellt und aktiviert",
     sourceHint:
       "Mods, die smapi.io kennt, werden aus ihren offiziellen Quellen installiert; die Quelle aus der Liste gilt nur für die übrigen – installiere diese nur aus Listen, denen du vertraust.",
+  },
+  modLoad: {
+    needsGame: "Starte das Spiel mit dem Begleiter: Messung und Patch-Prüfung laufen im Spiel.",
+    title: "Wie viel Zeit Mods brauchen",
+    measure: "{n} s messen",
+    measuring: "Messung… {n} s",
+    hint: "Während der Messung stoppt der Begleiter jeden Event-Handler der Mods; spiel ganz normal – lauf herum, öffne Menüs, geh schlafen. Rote Mods fressen einen spürbaren Teil der Frames.",
+    nothing: "Während der Messung hat keine Mod Zeit in ihren Handlern verbracht.",
+    perSecond: "{ms} ms pro Sekunde",
+    spike: "Spitze {ms} ms",
+    eventMs: "{event} {ms} ms",
+    patchesTitle: "Spielmethoden, die mehrere Mods patchen",
+    findPatches: "Überschneidungen finden",
+    patchesHint:
+      "Hier kommen sich C#-Mods am häufigsten in die Quere. Am riskantesten sind Transpiler und Präfixe, die das Original abbrechen können (⤼): Wenn etwas kaputt ist, fang bei ihnen an.",
+    patchesFound: "Harmony patcht {patched} Spielmethoden; {shared} davon patchen mehrere Mods.",
+    canSkip: "Dieses Präfix kann die Originalmethode und die folgenden Patches abbrechen",
+    kind: { prefix: "Präfix", postfix: "Postfix", transpiler: "Transpiler", finalizer: "Finalizer" },
   },
   logReport: {
     noLog: "Noch kein SMAPI-Log: Es entsteht, sobald das Spiel zum ersten Mal mit Mods läuft.",

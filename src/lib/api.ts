@@ -590,7 +590,34 @@ export const companion = {
   onCatalog: (cb: () => void): Promise<UnlistenFn> => listen("companion:catalog", () => cb()),
   forecast: () => invoke<Forecast>("companion_forecast"),
   items: () => invoke<import("./grange").GrangeItem[]>("companion_items"),
+  profileStart: () => invoke<number>("companion_profile_start"),
+  profileStop: () => invoke<Profile>("companion_profile_stop"),
+  patches: () => invoke<PatchReport>("companion_patches"),
 };
+
+/** Mods' SMAPI event handler time over a measurement, slowest first; times in ms. */
+export interface Profile {
+  seconds: number;
+  mods: {
+    mod: string;
+    totalMs: number;
+    maxMs: number;
+    calls: number;
+    events: { event: string; totalMs: number; calls: number }[];
+  }[];
+}
+
+/** How many game methods carry Harmony patches, and those more than one mod patches. */
+export interface PatchReport {
+  patched: number;
+  shared: PatchedMethod[];
+}
+
+/** A game method more than one mod patches with Harmony; owners are usually UniqueIDs. */
+export interface PatchedMethod {
+  method: string;
+  patches: { owner: string; kind: "prefix" | "postfix" | "transpiler" | "finalizer"; canSkip: boolean }[];
+}
 
 export const modConfig = {
   get: (pkg: string, relPath: string, locale: string) =>

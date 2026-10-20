@@ -197,6 +197,41 @@ mockIPC(
         };
       case "companion_available":
         return true;
+      case "companion_profile_start":
+        return 42;
+      case "companion_profile_stop":
+        return {
+          seconds: 30,
+          mods: [
+            {
+              mod: "Automate",
+              totalMs: 830,
+              maxMs: 119,
+              calls: 1800,
+              events: [{ event: "UpdateTicked", totalMs: 800, calls: 1800 }],
+            },
+            {
+              mod: "Lookup Anything",
+              totalMs: 12,
+              maxMs: 0.8,
+              calls: 1800,
+              events: [{ event: "UpdateTicked", totalMs: 12, calls: 1800 }],
+            },
+          ],
+        };
+      case "companion_patches":
+        return {
+          patched: 741,
+          shared: [
+            {
+              method: "StardewValley.Menus.InventoryMenu.draw",
+              patches: [
+                { owner: "Pathoschild.LookupAnything", kind: "postfix", canSkip: false },
+                { owner: "spacechase0.SpaceCore", kind: "prefix", canSkip: true },
+              ],
+            },
+          ],
+        };
       case "companion_status":
         return {
           connected: true,

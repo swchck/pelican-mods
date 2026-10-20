@@ -68,6 +68,7 @@ export default {
     clear: "クリア",
     tabLog: "ログ",
     tabReport: "レポート",
+    tabLoad: "負荷",
   },
   storage: {
     title: "ディスク容量",
@@ -200,6 +201,30 @@ export default {
     profileMade: "プロフィール「{name}」を作成して切り替えました",
     sourceHint:
       "smapi.io が知っている MOD は公式の入手先からインストールされます。リストに書かれた入手先はそれ以外の MOD にだけ使われるので、信頼できるリストからのみインストールしてください。",
+  },
+  modLoad: {
+    needsGame: "コンパニオン付きでゲームを起動してください。計測とパッチの確認はゲーム内で行います。",
+    title: "MOD にかかる時間",
+    measure: "{n} 秒計測",
+    measuring: "計測中… {n} 秒",
+    hint: "計測中、コンパニオンは各 MOD のイベントハンドラーの時間を計ります。歩く、メニューを開く、寝るなど、いつも通り遊んでください。赤い MOD はフレームの目立つ割合を使っています。",
+    nothing: "計測中、ハンドラーで時間を使った MOD はありませんでした。",
+    perSecond: "1 秒あたり {ms} ms",
+    spike: "ピーク {ms} ms",
+    eventMs: "{event} {ms} ms",
+    patchesTitle: "複数の MOD がパッチを当てているゲームのメソッド",
+    findPatches: "重なりを探す",
+    patchesHint:
+      "C# MOD 同士が最もぶつかりやすいのがここです。特に危険なのはトランスパイラーと、元の処理を取り消せるプレフィックス（⤼）です。何か壊れたら、まずここを見てください。",
+    patchesFound:
+      "Harmony がパッチを当てたゲームのメソッドは {patched} 個、そのうち {shared} 個は複数の MOD が当てています。",
+    canSkip: "このプレフィックスは元のメソッドと後続のパッチを取り消せます",
+    kind: {
+      prefix: "プレフィックス",
+      postfix: "ポストフィックス",
+      transpiler: "トランスパイラー",
+      finalizer: "ファイナライザー",
+    },
   },
   logReport: {
     noLog: "SMAPIログはまだありません。MODを入れてゲームを初めて起動すると作成されます。",

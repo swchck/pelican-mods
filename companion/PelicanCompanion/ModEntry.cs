@@ -118,6 +118,16 @@ internal sealed class ModEntry : Mod
             case "items":
                 this.Answer(command.Id, Helpers.Items);
                 break;
+            // timing and patches don't need a farm: the title screen runs handlers too
+            case "profileStart":
+                this.Answer(command.Id, () => Profiler.Start(this.ModManifest.UniqueID), needsWorld: false);
+                break;
+            case "profileStop":
+                this.Answer(command.Id, Profiler.Stop, needsWorld: false);
+                break;
+            case "patches":
+                this.Answer(command.Id, Profiler.SharedPatches, needsWorld: false);
+                break;
             // tests only: opens an existing save for the forecast checks; nothing is written
             // unless a day ends, and the tests stop the game long before that
             case "testLoad" when TestMode && command.Text is not null && !Context.IsWorldReady:
@@ -139,9 +149,9 @@ internal sealed class ModEntry : Mod
         }
     }
 
-    private void Answer(long id, Func<object> build)
+    private void Answer(long id, Func<object> build, bool needsWorld = true)
     {
-        if (!Context.IsWorldReady && !TestMode)
+        if (needsWorld && !Context.IsWorldReady && !TestMode)
         {
             this.Bridge!.Send(new Reply(id, null, Error: "no_world"));
             return;

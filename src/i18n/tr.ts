@@ -68,6 +68,7 @@ export default {
     clear: "Temizle",
     tabLog: "Günlük",
     tabReport: "Rapor",
+    tabLoad: "Yük",
   },
   storage: {
     title: "Disk alanı",
@@ -200,6 +201,24 @@ export default {
     profileMade: "“{name}” profili oluşturuldu ve geçildi",
     sourceHint:
       "smapi.io'nun bildiği modlar resmî kaynaklarından kurulur; listedeki kaynak yalnızca geri kalanlar için kullanılır, bu yüzden onları yalnızca güvendiğiniz listelerden kurun.",
+  },
+  modLoad: {
+    needsGame: "Oyunu yardımcı modla başlatın: ölçüm ve yama denetimi oyunun içinde yapılır.",
+    title: "Modlar ne kadar zaman alıyor",
+    measure: "{n} sn ölç",
+    measuring: "Ölçülüyor… {n} sn",
+    hint: "Ölçüm sırasında yardımcı mod, her modun olay işleyicilerini zamanlar; her zamanki gibi oynayın: yürüyün, menüleri açın, uyuyun. Kırmızı modlar karelerin belirgin bir kısmını yiyor.",
+    nothing: "Ölçüm boyunca hiçbir mod işleyicilerinde zaman harcamadı.",
+    perSecond: "saniyede {ms} ms",
+    spike: "tepe {ms} ms",
+    eventMs: "{event} {ms} ms",
+    patchesTitle: "Birden çok modun yamaladığı oyun yöntemleri",
+    findPatches: "Çakışmaları bul",
+    patchesHint:
+      "C# modları en çok burada birbirine engel olur. En riskli olanlar transpiler'lar ve orijinali iptal edebilen önekler (⤼): bir şey bozulduysa onlardan başlayın.",
+    patchesFound: "Harmony {patched} oyun yöntemini yamalıyor; bunların {shared} tanesini birden çok mod yamalıyor.",
+    canSkip: "Bu önek orijinal yöntemi ve sonraki yamaları iptal edebilir",
+    kind: { prefix: "önek", postfix: "sonek", transpiler: "transpiler", finalizer: "sonlandırıcı" },
   },
   logReport: {
     noLog: "Henüz SMAPI günlüğü yok: oyun modlarla ilk kez çalıştığında oluşur.",

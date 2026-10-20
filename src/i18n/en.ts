@@ -68,6 +68,7 @@ export default {
     clear: "Clear",
     tabLog: "Log",
     tabReport: "Report",
+    tabLoad: "Load",
   },
   storage: {
     title: "Disk space",
@@ -200,6 +201,24 @@ export default {
     profileMade: "Profile “{name}” created and switched to",
     sourceHint:
       "Mods smapi.io knows install from their official sources; a list's own source is used only for the rest, so install those only from lists you trust.",
+  },
+  modLoad: {
+    needsGame: "Start the game with the companion: timing and patch checks run inside the game.",
+    title: "How much time mods take",
+    measure: "Measure for {n} s",
+    measuring: "Measuring… {n} s",
+    hint: "While measuring, the companion times every mod's event handlers; play as usual — walk, open menus, go to sleep. Mods in red eat a noticeable share of frames.",
+    nothing: "No mod spent time in its handlers during the measurement.",
+    perSecond: "{ms} ms per second",
+    spike: "peak {ms} ms",
+    eventMs: "{event} {ms} ms",
+    patchesTitle: "Game methods several mods patch",
+    findPatches: "Find overlaps",
+    patchesHint:
+      "This is where C# mods most often get in each other's way. Transpilers and prefixes that can cancel the original (⤼) are the riskiest: if something broke, start with them.",
+    patchesFound: "Harmony patches {patched} game methods; several mods patch {shared} of them.",
+    canSkip: "This prefix can cancel the original method and the patches after it",
+    kind: { prefix: "prefix", postfix: "postfix", transpiler: "transpiler", finalizer: "finalizer" },
   },
   logReport: {
     noLog: "No SMAPI log yet: it appears after the game first runs with mods.",

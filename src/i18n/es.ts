@@ -68,6 +68,7 @@ export default {
     clear: "Limpiar",
     tabLog: "Registro",
     tabReport: "Informe",
+    tabLoad: "Carga",
   },
   storage: {
     title: "Espacio en disco",
@@ -200,6 +201,24 @@ export default {
     profileMade: "Perfil «{name}» creado y activado",
     sourceHint:
       "Los mods que conoce smapi.io se instalan desde sus fuentes oficiales; la fuente de la lista solo se usa para el resto, así que instálalos solo de listas en las que confíes.",
+  },
+  modLoad: {
+    needsGame: "Inicia el juego con el compañero: la medición y la revisión de parches se hacen dentro del juego.",
+    title: "Cuánto tiempo consumen los mods",
+    measure: "Medir {n} s",
+    measuring: "Midiendo… {n} s",
+    hint: "Mientras mide, el compañero cronometra cada manejador de eventos de los mods; juega como siempre: camina, abre menús, ve a dormir. En rojo, los mods que se comen una parte notable de los fotogramas.",
+    nothing: "Durante la medición ningún mod gastó tiempo en sus manejadores.",
+    perSecond: "{ms} ms por segundo",
+    spike: "pico {ms} ms",
+    eventMs: "{event} {ms} ms",
+    patchesTitle: "Métodos del juego que parchean varios mods",
+    findPatches: "Buscar coincidencias",
+    patchesHint:
+      "Aquí es donde los mods de C# más chocan entre sí. Los más arriesgados son los transpiladores y los prefijos que pueden cancelar el original (⤼): si algo se rompió, empieza por ellos.",
+    patchesFound: "Harmony parchea {patched} métodos del juego; varios mods parchean {shared} de ellos.",
+    canSkip: "Este prefijo puede cancelar el método original y los parches siguientes",
+    kind: { prefix: "prefijo", postfix: "postfijo", transpiler: "transpilador", finalizer: "finalizador" },
   },
   logReport: {
     noLog: "Aún no hay registro de SMAPI: aparece la primera vez que el juego arranca con mods.",

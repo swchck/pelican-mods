@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ModLoad from "@/components/console/ModLoad.vue";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
@@ -21,7 +22,7 @@ const route = useRoute();
 const router = useRouter();
 
 const tab = computed({
-  get: () => (route.query.tab === "report" ? "report" : "log"),
+  get: () => (route.query.tab === "report" || route.query.tab === "load" ? route.query.tab : "log"),
   set: (v: string) => void router.replace({ query: { ...route.query, tab: v } }),
 });
 const report = ref<LogReport | null>(null);
@@ -95,6 +96,7 @@ async function send() {
               class="bg-destructive size-2 rounded-full"
             />
           </TabsTrigger>
+          <TabsTrigger value="load">{{ t("console.tabLoad") }}</TabsTrigger>
         </TabsList>
       </header>
 
@@ -140,6 +142,10 @@ async function send() {
 
       <TabsContent value="report" class="min-h-0 flex-1 overflow-auto">
         <LogReportView v-if="report" :report="report" :crash="game.crash" />
+      </TabsContent>
+
+      <TabsContent value="load" class="min-h-0 flex-1 overflow-auto">
+        <ModLoad />
       </TabsContent>
     </Tabs>
   </div>

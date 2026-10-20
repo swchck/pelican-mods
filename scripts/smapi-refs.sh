@@ -10,4 +10,5 @@ curl -fsSL "https://github.com/Pathoschild/SMAPI/releases/download/$version/SMAP
 unzip -q -j "$tmp/smapi.zip" "SMAPI $version installer/internal/macOS/install.dat" -d "$tmp"
 mkdir -p "$out"
 unzip -q -o "$tmp/install.dat" StardewModdingAPI.dll \
-  smapi-internal/Newtonsoft.Json.dll smapi-internal/SMAPI.Toolkit.CoreInterfaces.dll -d "$out"
+  smapi-internal/Newtonsoft.Json.dll smapi-internal/SMAPI.Toolkit.CoreInterfaces.dll \
+  smapi-internal/0Harmony.dll -d "$out"

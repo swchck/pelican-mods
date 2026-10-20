@@ -68,6 +68,7 @@ export default {
     clear: "Svuota",
     tabLog: "Log",
     tabReport: "Rapporto",
+    tabLoad: "Carico",
   },
   storage: {
     title: "Spazio su disco",
@@ -201,6 +202,24 @@ export default {
     profileMade: "Profilo “{name}” creato e attivato",
     sourceHint:
       "Le mod note a smapi.io si installano dalle fonti ufficiali; la fonte indicata nella lista vale solo per le altre, quindi installale solo da liste di cui ti fidi.",
+  },
+  modLoad: {
+    needsGame: "Avvia il gioco con il compagno: misurazione e controllo delle patch avvengono nel gioco.",
+    title: "Quanto tempo occupano le mod",
+    measure: "Misura per {n} s",
+    measuring: "Misurazione… {n} s",
+    hint: "Durante la misurazione il compagno cronometra ogni gestore di eventi delle mod; gioca come sempre: cammina, apri i menu, vai a dormire. In rosso le mod che consumano una parte sensibile dei fotogrammi.",
+    nothing: "Durante la misurazione nessuna mod ha speso tempo nei suoi gestori.",
+    perSecond: "{ms} ms al secondo",
+    spike: "picco {ms} ms",
+    eventMs: "{event} {ms} ms",
+    patchesTitle: "Metodi del gioco modificati da più mod",
+    findPatches: "Trova sovrapposizioni",
+    patchesHint:
+      "È qui che le mod C# si intralciano più spesso. I più rischiosi sono i transpiler e i prefissi che possono annullare l'originale (⤼): se qualcosa si è rotto, parti da loro.",
+    patchesFound: "Harmony modifica {patched} metodi del gioco; più mod ne modificano {shared}.",
+    canSkip: "Questo prefisso può annullare il metodo originale e le patch successive",
+    kind: { prefix: "prefisso", postfix: "postfisso", transpiler: "transpiler", finalizer: "finalizzatore" },
   },
   logReport: {
     noLog: "Ancora nessun log di SMAPI: appare dopo il primo avvio del gioco con le mod.",

@@ -61,6 +61,18 @@ test("library filters by status and tag", async ({ page }) => {
   await expect(rows).toHaveCount(4);
 });
 
+test("console measures mods and lists shared patches", async ({ page }) => {
+  await page.clock.install();
+  await open(page, "/console?tab=load", "ru");
+  await page.getByRole("button", { name: /Замерить/ }).click();
+  await page.clock.runFor(31_000);
+  await expect(page.getByText("Automate")).toBeVisible();
+  await page.getByRole("button", { name: "Найти пересечения" }).click();
+  await expect(page.getByText("StardewValley.Menus.InventoryMenu.draw")).toBeVisible();
+  // owners show as mod names from the library where it knows them
+  await expect(page.getByText("Lookup Anything · постфикс")).toBeVisible();
+});
+
 test("settings switch between game installs", async ({ page }) => {
   await open(page, "/settings", "ru");
   await expect(page.getByText("Используется")).toHaveCount(1);

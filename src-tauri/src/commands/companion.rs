@@ -89,6 +89,27 @@ pub async fn companion_items(app: AppHandle) -> AppResult<Value> {
     companion.query("items").await
 }
 
+/// Starts timing every mod's event handlers in the running game; returns how many.
+#[tauri::command]
+pub async fn companion_profile_start(app: AppHandle) -> AppResult<Value> {
+    let companion = app.state::<AppState>().companion.clone();
+    companion.query("profileStart").await
+}
+
+/// Stops the timing and returns each mod's handler time since the start, slowest first.
+#[tauri::command]
+pub async fn companion_profile_stop(app: AppHandle) -> AppResult<Value> {
+    let companion = app.state::<AppState>().companion.clone();
+    companion.query("profileStop").await
+}
+
+/// Game methods that more than one mod patches with Harmony.
+#[tauri::command]
+pub async fn companion_patches(app: AppHandle) -> AppResult<Value> {
+    let companion = app.state::<AppState>().companion.clone();
+    companion.query("patches").await
+}
+
 /// Loads `values` into mod `unique_id` in the running game and, when that worked,
 /// shows `notice` in the game's HUD.
 #[tauri::command]
