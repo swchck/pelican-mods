@@ -6,6 +6,10 @@
 
 - The library shows each Nexus mod's picture: a thumbnail in its row and a larger one atop its details, fetched in one batch and cached for a week.
 
+### Settings
+
+- What the game keeps hidden until it happens — night events, geode and mystery box contents, the traveling cart's stock — now waits for a "Spoilers and predictions" setting, off by default. Luck and tomorrow's weather, which the TV tells anyway, stay.
+
 ## 0.4.1 — 2026-10-20
 
 ### Helpers

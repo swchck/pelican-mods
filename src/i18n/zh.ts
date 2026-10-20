@@ -254,6 +254,8 @@ export default {
   },
   settings: {
     companion: "游戏连接",
+    spoilers: "剧透与预测",
+    spoilersHint: "显示游戏在发生前隐藏的内容：夜间事件、晶球和神秘盒里的东西、流动货车的货品、缺少的金色核桃在哪里。",
     briefing: "游戏内晨间简报",
     briefingHint: "每天开始时显示：谁过生日、你已有哪些他们最爱的礼物、节日、流动货车、书商和运势。下次启动起生效。",
     companionHint:
@@ -670,6 +672,7 @@ export default {
       Wedding: "婚礼",
     },
     nights: "夜间事件",
+    spoilersHidden: "预测已隐藏。在设置中打开“剧透与预测”即可查看夜间事件、晶球、神秘盒和流动货车的货品。",
     nightsHint: "未来四周农场上的随机事件。婚礼以及当晚完工的社区中心房间优先发生，不计算在内。",
     quietNights: "四周都是平静的夜晚",
     nightEvents: {

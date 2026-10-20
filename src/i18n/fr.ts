@@ -266,6 +266,9 @@ export default {
   },
   settings: {
     companion: "Lien avec le jeu",
+    spoilers: "Spoilers et prédictions",
+    spoilersHint:
+      "Montrer ce que le jeu cache jusqu'au moment venu : événements nocturnes, contenu des géodes et boîtes mystères, stock de la charrette, emplacement des noix dorées manquantes.",
     briefing: "Bilan du matin dans le jeu",
     briefingHint:
       "En début de journée : qui fête son anniversaire et quels cadeaux préférés vous avez déjà, festival, charrette ambulante, libraire et chance. Au prochain lancement.",
@@ -719,6 +722,8 @@ export default {
       Wedding: "Mariage",
     },
     nights: "Événements nocturnes",
+    spoilersHidden:
+      "Les prédictions sont masquées. Activez « Spoilers et prédictions » dans les réglages pour voir les événements nocturnes, les géodes, les boîtes mystères et le stock de la charrette.",
     nightsHint:
       "Événements aléatoires à la ferme dans les quatre prochaines semaines. Les mariages et les salles du Centre communautaire terminées cette nuit-là passent en premier et ne sont pas comptés.",
     quietNights: "Quatre semaines de nuits tranquilles",

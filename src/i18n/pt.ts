@@ -266,6 +266,9 @@ export default {
   },
   settings: {
     companion: "Conexão com o jogo",
+    spoilers: "Spoilers e previsões",
+    spoilersHint:
+      "Mostrar o que o jogo esconde até acontecer: eventos noturnos, o conteúdo de geodos e caixas misteriosas, o estoque da carroça e onde estão as nozes douradas que faltam.",
     briefing: "Resumo matinal no jogo",
     briefingHint:
       "No começo do dia: quem faz aniversário e quais presentes favoritos você já tem, festival, carroça viajante, livreiro e sorte. A partir do próximo início.",
@@ -710,6 +713,8 @@ export default {
       Wedding: "Casamento",
     },
     nights: "Eventos noturnos",
+    spoilersHidden:
+      "As previsões estão ocultas. Ative “Spoilers e previsões” nas configurações para ver eventos noturnos, geodos, caixas misteriosas e o estoque da carroça.",
     nightsHint:
       "Eventos aleatórios na fazenda nas próximas quatro semanas. Casamentos e salas do Centro Comunitário concluídas naquela noite vêm primeiro e não são contados.",
     quietNights: "Quatro semanas de noites tranquilas",

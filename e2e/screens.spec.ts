@@ -61,6 +61,15 @@ test("library filters by status and tag", async ({ page }) => {
   await expect(rows).toHaveCount(4);
 });
 
+test("predictions wait for the spoilers setting", async ({ page }) => {
+  await open(page, "/helpers", "ru");
+  await expect(page.getByText(/Предсказания скрыты/)).toBeVisible();
+  await page.goto("/#/settings");
+  await page.getByRole("switch", { name: "Спойлеры и предсказания" }).click();
+  await page.goto("/#/helpers");
+  await expect(page.getByText(/Предсказания скрыты/)).toHaveCount(0);
+});
+
 test("library shows Nexus pictures", async ({ page }) => {
   await open(page, "/", "ru");
   const row = page.getByRole("option").filter({ hasText: "Lookup Anything" });

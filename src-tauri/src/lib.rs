@@ -76,6 +76,7 @@ pub fn run() {
             commands::app::settings_set_locale,
             commands::app::game_language,
             commands::app::settings_set_wiki,
+            commands::app::settings_set_spoilers,
             commands::app::wiki_titles,
             commands::game::smapi_log_report,
             commands::game::game_catalog,

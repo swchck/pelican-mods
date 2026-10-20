@@ -266,6 +266,9 @@ export default {
   },
   settings: {
     companion: "Conexión con el juego",
+    spoilers: "Spoilers y predicciones",
+    spoilersHint:
+      "Mostrar lo que el juego oculta hasta que ocurre: sucesos nocturnos, el contenido de geodas y cajas misteriosas, la mercancía de la carreta y dónde están las nueces doradas que faltan.",
     briefing: "Resumen matutino en el juego",
     briefingHint:
       "Al empezar el día: quién cumple años y qué regalos favoritos ya tienes, festivales, la carreta ambulante, el librero y la suerte. Desde el próximo inicio.",
@@ -711,6 +714,8 @@ export default {
       Wedding: "Boda",
     },
     nights: "Sucesos nocturnos",
+    spoilersHidden:
+      "Las predicciones están ocultas. Activa «Spoilers y predicciones» en Ajustes para ver sucesos nocturnos, geodas, cajas misteriosas y la mercancía de la carreta.",
     nightsHint:
       "Sucesos aleatorios en la granja durante las próximas cuatro semanas. Las bodas y las salas del Centro comunitario que se completan esa noche tienen prioridad y no se cuentan.",
     quietNights: "Cuatro semanas de noches tranquilas",

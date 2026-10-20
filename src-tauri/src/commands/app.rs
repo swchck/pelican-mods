@@ -13,6 +13,12 @@ pub fn settings_get(state: State<AppState>) -> Settings {
     state.settings.get()
 }
 
+/// Turns the helpers that tell what the game hides (predictions, walnut spots) on or off.
+#[tauri::command]
+pub fn settings_set_spoilers(state: State<AppState>, enabled: bool) -> AppResult<Settings> {
+    state.settings.update(|s| s.spoilers = enabled)
+}
+
 /// Picks where item names link: "official", "fandom" or "off".
 #[tauri::command]
 pub fn settings_set_wiki(state: State<AppState>, wiki: String) -> AppResult<Settings> {

@@ -21,6 +21,10 @@ pub struct Settings {
     pub locale: Option<String>,
     /// Keeps the companion mod out of the game; it's on unless turned off.
     pub companion_disabled: bool,
+    /// Shows what the game keeps hidden until it happens: night events, geode and box
+    /// contents, the cart's stock, where the missing walnuts are. Off by default.
+    #[serde(default)]
+    pub spoilers: bool,
     /// Keeps the companion's start-of-day lines out of the game's HUD.
     #[serde(default)]
     pub briefing_disabled: bool,

@@ -24,11 +24,14 @@ import { errorText, setLocale } from "@/i18n";
 import { setWikiSource, wikiSource } from "@/lib/wiki";
 import StorageCard from "@/components/settings/StorageCard.vue";
 import { useGame } from "@/stores/game";
+import { useSettings } from "@/stores/settings";
 import GameInstalls from "@/components/settings/GameInstalls.vue";
 import { useCompanion } from "@/stores/companion";
 
 const { t } = useI18n();
 const game = useGame();
+const prefs = useSettings();
+void prefs.load();
 const locale = ref("system");
 const confirmUninstall = ref(false);
 const companion = useCompanion();
@@ -46,6 +49,14 @@ onMounted(async () => {
     toast.error(errorText(e));
   }
 });
+
+async function toggleSpoilers() {
+  try {
+    await prefs.setSpoilers(!prefs.spoilers);
+  } catch (e) {
+    toast.error(errorText(e));
+  }
+}
 
 async function toggleBriefing() {
   try {
@@ -140,6 +151,14 @@ async function uninstall() {
     </section>
 
     <NexusAccountCard />
+
+    <section class="wood-panel flex flex-col gap-2 p-5">
+      <div class="flex items-center gap-3">
+        <h2 class="font-pixel text-wood-dark flex-1 text-xl font-bold">{{ t("settings.spoilers") }}</h2>
+        <PixelToggle :checked="prefs.spoilers" :label="t('settings.spoilers')" @toggle="toggleSpoilers" />
+      </div>
+      <p class="text-muted-foreground text-sm leading-relaxed font-semibold">{{ t("settings.spoilersHint") }}</p>
+    </section>
 
     <section v-if="companion.available" class="wood-panel flex flex-col gap-2 p-5">
       <div class="flex items-center gap-3">

@@ -259,6 +259,9 @@ export default {
   },
   settings: {
     companion: "Game link",
+    spoilers: "Spoilers and predictions",
+    spoilersHint:
+      "Show what the game keeps hidden until it happens: night events, what geodes and mystery boxes hold, the cart's stock, where the missing golden walnuts are.",
     briefing: "Morning briefing in the game",
     briefingHint:
       "At the start of each day: whose birthday it is and which loved gifts you already have, a festival, the traveling cart, the bookseller and luck. From the next launch.",
@@ -693,6 +696,8 @@ export default {
       Wedding: "Wedding",
     },
     nights: "Night events",
+    spoilersHidden:
+      "Predictions are hidden. Turn on “Spoilers and predictions” in Settings to see night events, geodes, mystery boxes and the cart's stock.",
     nightsHint:
       "Random farm events in the next four weeks. Weddings and Community Center rooms finishing that night come first and aren't counted.",
     quietNights: "Four weeks of quiet nights",

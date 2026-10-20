@@ -265,6 +265,9 @@ export default {
   },
   settings: {
     companion: "Oyun bağlantısı",
+    spoilers: "Sürprizbozanlar ve tahminler",
+    spoilersHint:
+      "Oyunun zamanı gelene dek gizlediklerini göster: gece olayları, jeot ve gizemli kutu içerikleri, gezgin satıcının malları, eksik altın cevizlerin yeri.",
     briefing: "Oyunda sabah özeti",
     briefingHint:
       "Her günün başında: kimin doğum günü olduğu ve sevdiği hediyelerden hangilerinin sende olduğu, festival, gezgin satıcı, kitapçı ve şans. Bir sonraki açılıştan itibaren.",
@@ -703,6 +706,8 @@ export default {
       Wedding: "Düğün",
     },
     nights: "Gece olayları",
+    spoilersHidden:
+      "Tahminler gizli. Gece olaylarını, jeotları, gizemli kutuları ve gezgin satıcının mallarını görmek için ayarlardan “Sürprizbozanlar ve tahminler”i açın.",
     nightsHint:
       "Önümüzdeki dört haftada çiftlikteki rastgele olaylar. Düğünler ve o gece tamamlanan Topluluk Merkezi odaları önce gelir ve sayılmaz.",
     quietNights: "Dört hafta boyunca sakin geceler",

@@ -25,10 +25,13 @@ import { api as appApi, companion as api, isAppError, type Forecast } from "@/li
 import { bestGrange, grangeScore, itemPoints, place, SLOTS, type GrangeItem } from "@/lib/grange";
 import { errorText } from "@/i18n";
 import { useCompanion } from "@/stores/companion";
+import { useSettings } from "@/stores/settings";
 import { useShortcut } from "@/stores/shortcuts";
 
 const { t, n, te } = useI18n();
 const companion = useCompanion();
+const settings = useSettings();
+void settings.load();
 
 const tab = ref<"forecast" | "fair" | "calendar" | "fish" | "museum" | "chests">("forecast");
 /** Forecast and fair come from the running game; calendar and fish work from the lists. */
@@ -169,7 +172,7 @@ watch([tab, ready], load, { immediate: true });
             </section>
           </div>
           <div class="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
-            <section class="wood-panel flex flex-col gap-1.5 p-4">
+            <section v-if="settings.spoilers" class="wood-panel flex flex-col gap-1.5 p-4">
               <h2 class="font-pixel text-wood-dark text-xl font-bold">{{ t("helpers.nights") }}</h2>
               <p class="text-muted-foreground text-xs font-semibold">{{ t("helpers.nightsHint") }}</p>
               <ul v-if="forecast.nights.length" class="flex flex-col gap-1 text-sm">
@@ -190,7 +193,7 @@ watch([tab, ready], load, { immediate: true });
                 {{ forecast.bookseller.map((d) => t("helpers.dayOf", { day: d })).join(", ") }}
               </span>
             </section>
-            <section v-if="forecast.cart" class="wood-panel flex flex-col gap-1.5 p-4">
+            <section v-if="settings.spoilers && forecast.cart" class="wood-panel flex flex-col gap-1.5 p-4">
               <h2 class="font-pixel text-wood-dark text-xl font-bold">{{ t("helpers.cart") }}</h2>
               <ul class="flex flex-col gap-0.5 text-sm">
                 <li v-for="c in forecast.cart" :key="c.id" class="flex gap-2">
@@ -202,7 +205,14 @@ watch([tab, ready], load, { immediate: true });
               </ul>
             </section>
           </div>
+          <p
+            v-if="!settings.spoilers"
+            class="text-muted-foreground bg-parchment rounded-md border-2 border-dashed border-[#cdba98] p-3 text-sm font-semibold"
+          >
+            {{ t("helpers.spoilersHidden") }}
+          </p>
           <TreasureTable
+            v-if="settings.spoilers"
             :title="t('helpers.geodes')"
             :hint="t('helpers.geodesHint', { n: forecast.geodesCracked })"
             :opened="forecast.geodesCracked"
@@ -210,7 +220,7 @@ watch([tab, ready], load, { immediate: true });
             :titles="titles"
           />
           <TreasureTable
-            v-if="forecast.mysteryBoxes.length"
+            v-if="settings.spoilers && forecast.mysteryBoxes.length"
             :title="t('helpers.mysteryBoxes')"
             :hint="t('helpers.mysteryBoxesHint', { n: forecast.mysteryBoxesOpened })"
             :opened="forecast.mysteryBoxesOpened"

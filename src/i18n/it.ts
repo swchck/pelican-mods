@@ -267,6 +267,9 @@ export default {
   },
   settings: {
     companion: "Collegamento al gioco",
+    spoilers: "Spoiler e previsioni",
+    spoilersHint:
+      "Mostra ciò che il gioco nasconde finché non accade: eventi notturni, contenuto di geodi e scatole misteriose, merce del carretto, dove sono le noci d'oro mancanti.",
     briefing: "Riepilogo del mattino nel gioco",
     briefingHint:
       "A inizio giornata: chi compie gli anni e quali regali preferiti hai già, feste, carretto ambulante, libraio e fortuna. Dal prossimo avvio.",
@@ -717,6 +720,8 @@ export default {
       Wedding: "Matrimonio",
     },
     nights: "Eventi notturni",
+    spoilersHidden:
+      "Le previsioni sono nascoste. Attiva «Spoiler e previsioni» nelle impostazioni per vedere eventi notturni, geodi, scatole misteriose e la merce del carretto.",
     nightsHint:
       "Eventi casuali alla fattoria nelle prossime quattro settimane. Matrimoni e stanze del Centro Comunitario completate quella notte hanno la precedenza e non sono contati.",
     quietNights: "Quattro settimane di notti tranquille",

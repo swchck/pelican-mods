@@ -261,6 +261,9 @@ export default {
   },
   settings: {
     companion: "Spielverbindung",
+    spoilers: "Spoiler und Vorhersagen",
+    spoilersHint:
+      "Zeigen, was das Spiel bis zum Eintreten verbirgt: nächtliche Ereignisse, Inhalt von Geoden und Mysterienkisten, das Angebot des Reisewagens, wo die fehlenden goldenen Walnüsse liegen.",
     briefing: "Morgenbericht im Spiel",
     briefingHint:
       "Zu Tagesbeginn: wer Geburtstag hat und welche Lieblingsgeschenke du schon hast, Feste, Reisewagen, Buchhändler und Glück. Ab dem nächsten Start.",
@@ -707,6 +710,8 @@ export default {
       Wedding: "Hochzeit",
     },
     nights: "Nächtliche Ereignisse",
+    spoilersHidden:
+      "Vorhersagen sind ausgeblendet. Schalte „Spoiler und Vorhersagen“ in den Einstellungen ein, um nächtliche Ereignisse, Geoden, Mysterienkisten und den Reisewagen zu sehen.",
     nightsHint:
       "Zufällige Farm-Ereignisse in den nächsten vier Wochen. Hochzeiten und in dieser Nacht fertiggestellte Räume im Gemeinschaftszentrum haben Vorrang und werden nicht mitgezählt.",
     quietNights: "Vier Wochen ruhige Nächte",

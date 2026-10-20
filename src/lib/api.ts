@@ -17,6 +17,8 @@ export interface Settings {
   locale: string | null;
   /** The companion mod is linked into the game unless this is set. */
   companionDisabled: boolean;
+  /** Whether helpers show what the game keeps hidden until it happens. */
+  spoilers?: boolean;
   briefingDisabled?: boolean;
   /** "official", "fandom" or "off"; null is the official wiki. */
   wiki: string | null;
@@ -68,6 +70,7 @@ export const api = {
   crash: () => invoke<Crash | null>("game_crash"),
   gameCatalog: () => invoke<GameCatalog>("game_catalog"),
   setWiki: (wiki: string) => invoke<Settings>("settings_set_wiki", { wiki }),
+  setSpoilers: (enabled: boolean) => invoke<Settings>("settings_set_spoilers", { enabled }),
   setBackupFolder: (folder: string | null) => invoke<Settings>("settings_set_backup_folder", { folder }),
   storage: () => invoke<StorageUsage[]>("storage_usage"),
   compatForNexus: (ids: number[]) => invoke<Record<number, CompatVerdict>>("compat_for_nexus", { ids }),

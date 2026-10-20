@@ -183,6 +183,7 @@ const games = [
   },
 ];
 let currentGame = games[0].path;
+let spoilers = false;
 
 mockWindows("main");
 mockIPC(
@@ -197,7 +198,11 @@ mockIPC(
           // the WebKit screen tests pick the language here
           locale: localStorage.getItem("mockLocale"),
           companionDisabled: false,
+          spoilers,
         };
+      case "settings_set_spoilers":
+        spoilers = (a as { enabled: boolean }).enabled;
+        return { gamePath: null, locale: null, companionDisabled: false, wiki: null, backupFolder: null, spoilers };
       case "settings_set_companion":
         return {
           gamePath: "/Applications/Stardew Valley.app/Contents/MacOS",

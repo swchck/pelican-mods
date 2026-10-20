@@ -261,6 +261,9 @@ export default {
   },
   settings: {
     companion: "Kapcsolat a játékkal",
+    spoilers: "Spoilerek és előrejelzések",
+    spoilersHint:
+      "Mutasd, amit a játék a maga idejéig elrejt: éjszakai események, geódák és rejtélyes dobozok tartalma, a vándorkocsi kínálata, a hiányzó aranydiók helye.",
     briefing: "Reggeli összefoglaló a játékban",
     briefingHint:
       "Minden nap elején: kinek van születésnapja és mely kedvenc ajándékai vannak már meg, ünnep, vándorkocsi, könyvárus és szerencse. A következő indítástól.",
@@ -709,6 +712,8 @@ export default {
       Wedding: "Esküvő",
     },
     nights: "Éjszakai események",
+    spoilersHidden:
+      "Az előrejelzések rejtve vannak. Kapcsold be a „Spoilerek és előrejelzések” beállítást, hogy lásd az éjszakai eseményeket, geódákat, rejtélyes dobozokat és a vándorkocsi kínálatát.",
     nightsHint:
       "Véletlen események a farmon a következő négy hétben. Az esküvők és az aznap éjjel elkészülő Közösségi Ház-szobák előbb jönnek, és nem számítanak bele.",
     quietNights: "Négy hét csendes éjszaka",
