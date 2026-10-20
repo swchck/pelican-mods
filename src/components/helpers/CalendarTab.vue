@@ -121,11 +121,25 @@ function shift(by: number) {
         @click="picked = d.day"
       >
         <span class="font-mono text-xs font-bold">{{ d.day }}</span>
-        <span v-for="f in d.festivals" :key="f.name" class="text-gold-shade flex items-center gap-1 font-bold">
-          <PartyPopperIcon class="size-3 shrink-0" /><span class="truncate">{{ f.name }}</span>
+        <!-- festival names run long in most languages ("Пустынный фестиваль"), so they wrap -->
+        <span
+          v-for="f in d.festivals"
+          :key="f.name"
+          class="text-gold-shade flex w-full min-w-0 items-start gap-1 font-bold"
+          :title="f.name"
+        >
+          <PartyPopperIcon class="mt-px size-3 shrink-0" /><span
+            class="line-clamp-3 min-w-0 leading-tight break-words hyphens-auto"
+            >{{ f.name }}</span
+          >
         </span>
-        <span v-for="v in d.birthdays" :key="v.key" class="flex items-center gap-1 font-semibold">
-          <CakeIcon class="size-3 shrink-0 text-[#d9534f]" /><span class="truncate">{{ v.name }}</span>
+        <span
+          v-for="v in d.birthdays"
+          :key="v.key"
+          class="flex w-full min-w-0 items-center gap-1 font-semibold"
+          :title="v.name"
+        >
+          <CakeIcon class="size-3 shrink-0 text-[#d9534f]" /><span class="min-w-0 truncate">{{ v.name }}</span>
         </span>
       </button>
     </div>

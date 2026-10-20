@@ -1,5 +1,11 @@
 # What's new
 
+## 0.4.1
+
+### Helpers
+
+- Long festival names wrap in the calendar instead of being cut off.
+
 ## 0.4.0 — 2026-10-20
 
 ### Progress
