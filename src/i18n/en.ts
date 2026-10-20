@@ -221,6 +221,8 @@ export default {
     assets: "{n} assets",
     updateRoots: "Update incompatible ({n})",
     notInLibrary: "not in the library: it sits in the game's Mods folder",
+    turnOff: "Turn off",
+    turnOffHint: "No update exists — turn the mod off so SMAPI stops skipping it on every launch",
     toastLost: "The game couldn't find {n} locations from the save: the mods that add them didn't load.",
     toastSkipped: "SMAPI skipped {n} mods.",
     open: "Report",

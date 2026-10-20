@@ -13,6 +13,8 @@ use crate::error::AppResult;
 
 /// Entries kept per mod; a mod failing every tick would otherwise fill the screen.
 const MAX_ENTRIES: usize = 20;
+/// Where a notice's explanation starts: past the "]", deeper than its header's three spaces.
+const NOTICE_DETAIL: &str = "       ";
 
 /// What the last session's log says went wrong.
 #[derive(Debug, Clone, Default, Serialize, PartialEq)]
@@ -112,10 +114,18 @@ pub fn parse(text: &str) -> LogReport {
     // the mod SMAPI is loading and when it started; the next line ends its turn
     let mut loading: Option<(String, u32)> = None;
     let mut assets: BTreeMap<String, u32> = BTreeMap::new();
+    // SMAPI's startup notices are a header and deeper-indented lines that explain it;
+    // the explanation joins the header's entry instead of counting as warnings of its own
+    let mut notice: Option<usize> = None;
     for line in text.lines() {
         let Some((level, source, msg)) = stamp(line) else {
             continue;
         };
+        let framing =
+            source == "SMAPI" && (msg.starts_with(NOTICE_DETAIL) || msg.trim().starts_with("---"));
+        if !framing {
+            notice = None;
+        }
         let now = clock(line);
         if first.is_none() {
             first = now;
@@ -156,11 +166,16 @@ pub fn parse(text: &str) -> LogReport {
             }
             let m = msg.trim();
             // the frame around the skipped list, not problems of their own
-            if m.is_empty()
-                || m == "Skipped mods"
-                || m.starts_with("---")
-                || m.starts_with("These mods")
-            {
+            if m.is_empty() || m == "Skipped mods" || m.starts_with("---") {
+                continue;
+            }
+            if msg.starts_with(NOTICE_DETAIL) {
+                let entry =
+                    notice.and_then(|i| by_mod.get_mut("SMAPI").and_then(|p| p.entries.get_mut(i)));
+                if let Some(e) = entry {
+                    e.text.push(if e.text.ends_with(':') { ' ' } else { '\n' });
+                    e.text.push_str(m);
+                }
                 continue;
             }
         }
@@ -192,6 +207,9 @@ pub fn parse(text: &str) -> LogReport {
         if let Some(e) = problems.entries.iter_mut().find(|e| e.text == text) {
             e.count += 1;
         } else if problems.entries.len() < MAX_ENTRIES {
+            if source == "SMAPI" {
+                notice = Some(problems.entries.len());
+            }
             problems.entries.push(Entry {
                 level,
                 text,
@@ -366,6 +384,11 @@ mod tests {
 
 [12:21:28 ERROR SMAPI]       - SpaceCore 1.25.2 because it's no longer compatible. Please check for a new version at https://smapi.io/mods
 [12:21:28 ERROR SMAPI]       - Json Assets 1.11.8 because it needs the 'SpaceCore' mod, which couldn't be loaded.
+[12:21:28 WARN  SMAPI]    Changed save serializer
+[12:21:28 WARN  SMAPI]    --------------------------------------------------
+[12:21:28 WARN  SMAPI]       These mods change the save serializer. They may corrupt your save files, or make them unusable if
+[12:21:28 WARN  SMAPI]       you uninstall these mods.
+[12:21:28 WARN  SMAPI]       - SpaceCore
 [12:21:30 ERROR game] Galaxy auth failure: FAILURE_REASON_GALAXY_SERVICE_NOT_AVAILABLE
 [12:21:31 ERROR Content Patcher] Two content packs want to load the 'Animals/horse' asset.
 [12:21:31 ERROR Content Patcher] Two content packs want to load the 'Animals/horse' asset.
@@ -453,7 +476,14 @@ mod tests {
             ]
         );
         assert_eq!(r.lost_npcs, ["Andy", "Olivia", "Victor"]);
-        assert_eq!(r.mods.len(), 2);
+        assert_eq!(r.mods.len(), 3);
+        let smapi = r.mods.iter().find(|m| m.source == "SMAPI").unwrap();
+        assert_eq!(smapi.warnings, 1);
+        assert_eq!(
+            smapi.entries[0].text,
+            "Changed save serializer\nThese mods change the save serializer. They may corrupt your save \
+             files, or make them unusable if\nyou uninstall these mods.\n- SpaceCore"
+        );
         assert_eq!(r.mods[0].source, "Content Patcher");
         assert_eq!(r.mods[0].errors, 2);
         assert_eq!(r.mods[0].entries.len(), 1);

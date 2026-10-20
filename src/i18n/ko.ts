@@ -222,6 +222,8 @@ export default {
     assets: "에셋 {n}개",
     updateRoots: "호환되지 않는 모드 업데이트 ({n})",
     notInLibrary: "라이브러리에 없음: 게임의 Mods 폴더에 있어요",
+    turnOff: "끄기",
+    turnOffHint: "업데이트가 없습니다. 실행할 때마다 SMAPI가 건너뛰지 않도록 모드를 끄세요",
     toastLost: "게임이 저장 파일의 장소 {n}곳을 찾지 못했어요. 이 장소를 추가하는 모드를 불러오지 못했어요.",
     toastSkipped: "SMAPI가 모드 {n}개를 건너뛰었어요.",
     open: "보고서",

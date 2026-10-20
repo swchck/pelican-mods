@@ -222,6 +222,8 @@ export default {
     assets: "{n} varlık",
     updateRoots: "Uyumsuzları güncelle ({n})",
     notInLibrary: "kitaplıkta değil: oyunun Mods klasöründe duruyor",
+    turnOff: "Kapat",
+    turnOffHint: "Güncelleme yok — SMAPI her açılışta atlamasın diye modu kapatın",
     toastLost: "Oyun kayıttaki {n} bölgeyi bulamadı: onları ekleyen modlar yüklenmedi.",
     toastSkipped: "SMAPI {n} modu atladı.",
     open: "Rapor",

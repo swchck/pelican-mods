@@ -11,7 +11,9 @@ import {
 } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import type { Crash, LogReport, PackageView, SkippedMod } from "@/lib/api";
-import { packageUpdate } from "@/lib/packages";
+import { packageCompat, packageUpdate } from "@/lib/packages";
+import { splitLinks } from "@/lib/md-links";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { relativeTime } from "@/lib/time";
 import { useLibrary } from "@/stores/library";
 
@@ -26,6 +28,16 @@ const packageOf = (s: SkippedMod): PackageView | undefined =>
 const updateOf = (s: SkippedMod) => {
   const p = packageOf(s);
   return p ? packageUpdate(p, lib.report) : null;
+};
+// no update to wait for: SMAPI skips these every launch until they're turned off
+const stuck = (s: SkippedMod) => {
+  const p = packageOf(s);
+  return s.kind === "incompatible" && p?.enabled && !updateOf(s) ? p : null;
+};
+const advice = (s: SkippedMod) => {
+  const p = packageOf(s);
+  const summary = p ? packageCompat(p, lib.report)?.summary : null;
+  return summary ? splitLinks(summary) : [];
 };
 // only the roots: mods skipped for a missing dependency load once it does
 const fixable = computed(() =>
@@ -112,6 +124,29 @@ async function updateAll() {
             >
               {{ t("logReport.notInLibrary") }}
             </span>
+            <span v-if="advice(s).length" class="text-xs font-semibold">
+              <template v-for="(seg, i) in advice(s)" :key="i">
+                <a
+                  v-if="seg.url"
+                  :href="seg.url"
+                  class="underline decoration-dotted underline-offset-2"
+                  @click.prevent="openUrl(seg.url)"
+                  >{{ seg.text }}</a
+                >
+                <template v-else>{{ seg.text }}</template>
+              </template>
+            </span>
+            <Button
+              v-if="stuck(s)"
+              variant="outline"
+              size="xs"
+              class="ml-auto"
+              :disabled="lib.working"
+              :title="t('logReport.turnOffHint')"
+              @click="lib.toggle(stuck(s)!.id, false)"
+            >
+              {{ t("logReport.turnOff") }}
+            </Button>
           </li>
         </ul>
       </section>
@@ -155,7 +190,7 @@ async function updateAll() {
           <li
             v-for="(e, i) in m.entries"
             :key="i"
-            class="break-words"
+            class="break-words whitespace-pre-line"
             :class="e.level === 'error' ? 'text-destructive' : 'text-muted-foreground'"
           >
             <span v-if="e.count > 1" class="font-bold">×{{ e.count }} </span>{{ e.text }}

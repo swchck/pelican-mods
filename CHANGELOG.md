@@ -1,5 +1,27 @@
 # What's new
 
+## 0.4.0
+
+### Console
+
+- When the game crashes, the app names the error it died on and the mod whose code is in its stack, with the stack in the report.
+- The log report folds SMAPI's multi-line notices into one entry, shows the compatibility list's advice next to a skipped mod, and offers to turn off an incompatible mod that has no update, so SMAPI stops skipping it on every launch.
+
+### Updates
+
+- The Nexus catalog marks mods SMAPI's compatibility list calls broken, abandoned, obsolete or needing a workaround or unofficial version, with its note in the mod's page, before you install them.
+- While the app is open it rechecks for mod updates every few hours and sends a macOS notification when new ones appear.
+
+### Library and saves
+
+- Each save remembers the profile it was played with; when the last played save's profile isn't the active one, launching offers to switch to it first. The Saves screen shows each save's profile.
+- The library keeps a history of installs, updates and removals, and any of them can be undone: a removed mod is set aside instead of deleted and comes back as it was, an update rolls back to its backup.
+- A disk space card shows what the app keeps (earlier mod versions, removed mods, save copies, downloads) and cleans each up: the latest mod version and five copies per save stay.
+
+### Settings
+
+- The app speaks every language the game ships: German, Spanish, French, Portuguese, Italian, Japanese, Korean, Chinese, Turkish and Hungarian join Russian and English, and it follows the game's language out of the box. The new translations haven't been reviewed by native speakers yet.
+
 ## 0.3.0 — 2026-10-20
 
 ### Progress
@@ -26,15 +48,10 @@
 
 ### Console
 
-- When the game crashes, the app names the error it died on and the mod whose code is in its stack, with the stack in the report.
-
 - The report also times the game's startup, names the mods it paused on, and lists the mods loading and editing the most game assets.
 - A Report tab sums up the last session's SMAPI log: mods SMAPI skipped and why, save locations and villagers the game dropped because their mod didn't load, and each mod's errors and warnings with repeats folded. Skipped incompatible mods show the update that fixes them, and one button updates them all; the mods waiting on them then load by themselves. After a session that skipped mods or lost save data, the app points to it.
 
 ### Updates
-
-- The Nexus catalog marks mods SMAPI's compatibility list calls broken, abandoned, obsolete or needing a workaround or unofficial version, with its note in the mod's page, before you install them.
-- While the app is open it rechecks for mod updates every few hours and sends a macOS notification when new ones appear.
 
 - Profiles export to a mod list file and import back: the import shows which mods you have, installs the missing ones the way dependencies install, and makes a profile with the list's mods. Lists hold names and sources only, no files.
 - A co-op partner's mod list compares against yours: what you lack, versions that differ either way, and mods only you have.
@@ -50,9 +67,7 @@
 
 ### Library and saves
 
-- Each save remembers the profile it was played with; when the last played save's profile isn't the active one, launching offers to switch to it first. The Saves screen shows each save's profile.
 - Before the game starts, the last played save is checked against the mods that will load: if it uses mods that are off in the profile or that SMAPI skipped last time, the app says what the save would lose and offers to turn them on first.
-- The library keeps a history of installs, updates and removals, and any of them can be undone: a removed mod is set aside instead of deleted and comes back as it was, an update rolls back to its backup.
 - Before a mod is removed, the app checks which saves still use it, by its items and data or by the locations it adds, warns what the game would drop, and backs those saves up first unless told not to.
 - The library warns about content packs that replace the same asset exclusively, which makes Content Patcher load neither, before the game finds out.
 - Turning a mod off asks first when saves still use it, the same way removing it does.
@@ -64,9 +79,6 @@
 
 ### Settings
 
-- A disk space card shows what the app keeps (earlier mod versions, removed mods, save copies, downloads) and cleans each up: the latest mod version and five copies per save stay.
-
-- The app speaks every language the game ships: German, Spanish, French, Portuguese, Italian, Japanese, Korean, Chinese, Turkish and Hungarian join Russian and English, and it follows the game's language out of the box. The new translations haven't been reviewed by native speakers yet.
 - The app's language follows the game's (Russian or English) unless you pick one; other game languages fall back to the system's.
 
 ## 0.2.0 — 2026-10-19

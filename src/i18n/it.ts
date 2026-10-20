@@ -223,6 +223,8 @@ export default {
     assets: "{n} risorse",
     updateRoots: "Aggiorna incompatibili ({n})",
     notInLibrary: "non è nella libreria: si trova nella cartella Mods del gioco",
+    turnOff: "Disattiva",
+    turnOffHint: "Nessun aggiornamento: disattiva la mod perché SMAPI smetta di saltarla a ogni avvio",
     toastLost: "Il gioco non ha trovato {n} aree del salvataggio: le mod che le aggiungono non sono state caricate.",
     toastSkipped: "SMAPI ha saltato {n} mod.",
     open: "Rapporto",

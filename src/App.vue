@@ -11,6 +11,7 @@ import NexusKeyDialog from "@/components/NexusKeyDialog.vue";
 import NxmConfirmDialog from "@/components/NxmConfirmDialog.vue";
 import AppUpdateDialogs from "@/components/AppUpdateDialogs.vue";
 import ShortcutsDialog from "@/components/ShortcutsDialog.vue";
+import DisableWarning from "@/components/library/DisableWarning.vue";
 import { useShortcut, useShortcuts } from "@/stores/shortcuts";
 import { useAppUpdate } from "@/stores/appUpdate";
 import { useCompanion } from "@/stores/companion";
@@ -65,5 +66,6 @@ onMounted(() => {
   <NxmConfirmDialog />
   <AppUpdateDialogs />
   <ShortcutsDialog />
+  <DisableWarning />
   <Toaster position="bottom-right" rich-colors />
 </template>

@@ -220,6 +220,8 @@ export default {
     assets: "{n} 个资源",
     updateRoots: "更新不兼容的模组（{n}）",
     notInLibrary: "不在模组库中：它位于游戏的 Mods 文件夹",
+    turnOff: "关闭",
+    turnOffHint: "没有可用更新——关闭此模组，SMAPI 就不会在每次启动时跳过它",
     toastLost: "游戏找不到存档中的 {n} 个地点：添加它们的模组没有加载。",
     toastSkipped: "SMAPI 跳过了 {n} 个模组。",
     open: "报告",

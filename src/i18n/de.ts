@@ -223,6 +223,8 @@ export default {
     assets: "{n} Assets",
     updateRoots: "Inkompatible aktualisieren ({n})",
     notInLibrary: "nicht in der Bibliothek: liegt im Mods-Ordner des Spiels",
+    turnOff: "Deaktivieren",
+    turnOffHint: "Es gibt kein Update – deaktiviere die Mod, damit SMAPI sie nicht bei jedem Start überspringt",
     toastLost:
       "Das Spiel konnte {n} Orte aus dem Spielstand nicht finden: Die Mods, die sie hinzufügen, wurden nicht geladen.",
     toastSkipped: "SMAPI hat {n} Mods übersprungen.",

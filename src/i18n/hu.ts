@@ -223,6 +223,8 @@ export default {
     assets: "{n} elem",
     updateRoots: "Nem kompatibilisek frissítése ({n})",
     notInLibrary: "nincs a könyvtárban: a játék Mods mappájában van",
+    turnOff: "Kikapcsolás",
+    turnOffHint: "Nincs frissítés – kapcsold ki a modot, hogy az SMAPI ne hagyja ki minden indításkor",
     toastLost: "A játék nem találja a mentés {n} helyszínét: az ezeket hozzáadó modok nem töltődtek be.",
     toastSkipped: "A SMAPI {n} modot kihagyott.",
     open: "Jelentés",

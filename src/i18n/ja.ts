@@ -221,6 +221,8 @@ export default {
     assets: "アセット {n} 個",
     updateRoots: "非対応のものを更新（{n}）",
     notInLibrary: "ライブラリにありません。ゲームのModsフォルダにあります",
+    turnOff: "オフにする",
+    turnOffHint: "更新はありません。起動のたびに SMAPI がスキップしないよう、MOD をオフにしてください",
     toastLost: "ゲームがセーブ内の場所を {n} か所見つけられませんでした。それらを追加するMODが読み込まれていません。",
     toastSkipped: "SMAPIがMODを {n} 個スキップしました。",
     open: "レポート",

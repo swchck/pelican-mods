@@ -15,6 +15,14 @@ describe("splitLinks", () => {
     ]);
   });
 
+  it("points smapi.io's own links at its mod list", () => {
+    expect(splitLinks("use [Carry Chests](#) instead.")).toEqual([
+      { text: "use " },
+      { text: "Carry Chests", url: "https://smapi.io/mods#CarryChests" },
+      { text: " instead." },
+    ]);
+  });
+
   it("leaves other schemes as text", () => {
     expect(splitLinks("[x](javascript:alert(1))")).toEqual([{ text: "[x](javascript:alert(1))" }]);
     expect(splitLinks("plain")).toEqual([{ text: "plain" }]);

@@ -14,7 +14,6 @@ import PackageTable from "@/components/library/PackageTable.vue";
 import PackageDetail from "@/components/library/PackageDetail.vue";
 import ProfileSwitcher from "@/components/library/ProfileSwitcher.vue";
 import ConflictBanner from "@/components/library/ConflictBanner.vue";
-import DisableWarning from "@/components/library/DisableWarning.vue";
 import HistoryDialog from "@/components/library/HistoryDialog.vue";
 import { useLibrary } from "@/stores/library";
 import { hint, useShortcut } from "@/stores/shortcuts";
@@ -186,6 +185,5 @@ onUnmounted(() => {
       <span class="font-pixel text-wood-dark text-3xl font-bold">{{ t("library.dropHint") }}</span>
     </div>
     <HistoryDialog v-model:open="historyOpen" />
-    <DisableWarning />
   </div>
 </template>
