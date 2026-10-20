@@ -13,6 +13,8 @@ export default {
   },
   play: {
     play: "Játék",
+    check: "Profil ellenőrzése",
+    checking: "Profil ellenőrzése: a játék elindul, betölti a modokat, majd magától bezárul.",
     playVanilla: "Modok nélkül",
     stop: "Leállítás",
     running: "A játék fut",

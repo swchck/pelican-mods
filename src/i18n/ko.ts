@@ -13,6 +13,8 @@ export default {
   },
   play: {
     play: "플레이",
+    check: "프로필 확인",
+    checking: "프로필 확인 중: 게임이 실행되어 모드를 불러온 뒤 저절로 닫힙니다.",
     playVanilla: "모드 없이",
     stop: "중지",
     running: "게임 실행 중",

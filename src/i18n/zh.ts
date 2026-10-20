@@ -13,6 +13,8 @@ export default {
   },
   play: {
     play: "开始游戏",
+    check: "检查配置",
+    checking: "正在检查配置：游戏会启动、加载模组，然后自动关闭。",
     playVanilla: "不加载模组",
     stop: "停止",
     running: "游戏运行中",

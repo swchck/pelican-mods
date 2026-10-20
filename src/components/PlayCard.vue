@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import { useRouter } from "vue-router";
+import { toast } from "vue-sonner";
 import { ChevronUpIcon, PlayIcon, SquareIcon } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +30,12 @@ const { t } = useI18n();
 const game = useGame();
 const companion = useCompanion();
 const lib = useLibrary();
+const router = useRouter();
+
+async function checkProfile() {
+  toast.info(t("play.checking"));
+  if (await game.check()) await router.push({ path: "/console", query: { tab: "report" } });
+}
 
 const switchName = computed(() => {
   const id = game.preflight?.switchTo;
@@ -128,6 +136,9 @@ const status = computed(() => {
         </DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="end">
           <DropdownMenuItem @select="game.launch(false)">{{ t("play.playVanilla") }}</DropdownMenuItem>
+          <DropdownMenuItem :disabled="!game.install?.smapiVersion" @select="checkProfile">{{
+            t("play.check")
+          }}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

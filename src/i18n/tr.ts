@@ -13,6 +13,8 @@ export default {
   },
   play: {
     play: "Oyna",
+    check: "Profili denetle",
+    checking: "Profil denetleniyor: oyun açılır, modları yükler ve kendiliğinden kapanır.",
     playVanilla: "Modsuz",
     stop: "Durdur",
     running: "Oyun çalışıyor",

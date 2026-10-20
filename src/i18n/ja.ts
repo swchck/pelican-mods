@@ -13,6 +13,8 @@ export default {
   },
   play: {
     play: "プレイ",
+    check: "プロファイルを確認",
+    checking: "プロファイルを確認中：ゲームが起動して MOD を読み込み、自動で終了します。",
     playVanilla: "MODなし",
     stop: "停止",
     running: "ゲーム実行中",

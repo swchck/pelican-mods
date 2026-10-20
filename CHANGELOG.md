@@ -16,6 +16,10 @@
 
 - The Chests tab reads the running game live, and from saves it now finds Junimo chests and gives auto-grabbers their tile.
 
+### Console
+
+- "Check the profile" in the play menu starts the game, waits until SMAPI has loaded every mod, closes it and opens the log report: skipped mods, lost save data and errors before you sit down to play.
+
 ## 0.4.1 — 2026-10-20
 
 ### Helpers

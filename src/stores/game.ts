@@ -1,4 +1,4 @@
-import { computed, ref, shallowRef } from "vue";
+import { computed, ref, shallowRef, watch } from "vue";
 import { defineStore } from "pinia";
 import { toast } from "vue-sonner";
 import {
@@ -213,6 +213,48 @@ export const useGame = defineStore("game", () => {
     }
   }
 
+  /** True while the game runs only to be checked: launched, read, and closed again. */
+  const checking = ref(false);
+  /** SMAPI writes this once every mod has loaded; the check has seen enough then. */
+  const READY = "Type 'help' for help";
+  const CHECK_LIMIT_MS = 180_000;
+
+  /**
+   * Starts the game with the active profile, waits until SMAPI has loaded every mod (or
+   * the game exits), and closes it; the SMAPI log then tells what the profile does.
+   * Returns whether the game got far enough to be judged.
+   */
+  async function check(): Promise<boolean> {
+    checking.value = true;
+    try {
+      await launch(true, true);
+      if (run.value?.state !== "running") return false;
+      const ready = await new Promise<boolean>((resolve) => {
+        let stopWatching: (() => void) | null = null;
+        const timer = setTimeout(() => finish(false), CHECK_LIMIT_MS);
+        function finish(ok: boolean) {
+          clearTimeout(timer);
+          stopWatching?.();
+          resolve(ok);
+        }
+        stopWatching = watch(
+          [log, run],
+          () => {
+            if (log.value.some((l) => l.text.includes(READY))) finish(true);
+            else if (run.value?.state === "exited") finish(false);
+          },
+          { immediate: true },
+        );
+      });
+      // read afresh: the awaits above let the game's state move on
+      const state = (): string | undefined => run.value?.state;
+      if (state() === "running") await stop();
+      return ready || state() === "exited";
+    } finally {
+      checking.value = false;
+    }
+  }
+
   async function stop() {
     stopping = true;
     try {
@@ -233,6 +275,8 @@ export const useGame = defineStore("game", () => {
     run,
     log,
     running,
+    checking,
+    check,
     busy,
     smapiUpdate,
     smapiPrompt,

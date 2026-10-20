@@ -13,6 +13,8 @@ export default {
   },
   play: {
     play: "Jouer",
+    check: "Vérifier le profil",
+    checking: "Vérification du profil : le jeu démarre, charge les mods et se ferme tout seul.",
     playVanilla: "Sans mods",
     stop: "Arrêter",
     running: "Le jeu est lancé",
