@@ -355,8 +355,8 @@ pub async fn thumbnails(
     const QUERY: &str = "query($ids: [CompositeDomainWithIdInput!]!) { \
         legacyModsByDomain(ids: $ids) { nodes { modId thumbnailUrl } } }";
     let mut out = std::collections::HashMap::new();
-    // the API pages at 100 a request
-    for chunk in ids.chunks(100) {
+    // the API answers 20 mods per request whatever the query asks, silently dropping the rest
+    for chunk in ids.chunks(20) {
         let ids: Vec<serde_json::Value> = chunk
             .iter()
             .map(|id| json!({ "gameDomain": "stardewvalley", "modId": id }))
