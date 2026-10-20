@@ -16,7 +16,8 @@ const title = (id: string) => {
   const p = lib.packages.find((x) => x.id === id);
   return p ? packageTitle(p) : id;
 };
-const found = computed(() => (lib.bisectResult?.kind === "found" ? lib.bisectResult.package : null));
+const result = computed(() => (lib.bisectResult?.kind === "found" ? lib.bisectResult : null));
+const found = computed(() => result.value?.package ?? null);
 const foundOn = computed(() => (found.value ? lib.packages.find((p) => p.id === found.value)?.enabled : false));
 
 async function turnOff() {
@@ -37,7 +38,9 @@ async function turnOff() {
         <XIcon />{{ t("bisect.cancel") }}
       </Button>
     </div>
-    <p class="font-semibold">
+    <p v-if="search.alone" class="font-semibold">{{ t("bisect.alone", { name: title(search.pinned[0]) }) }}</p>
+    <p v-else class="font-semibold">
+      <template v-if="search.pinned.length">{{ t("bisect.pinned", { name: title(search.pinned[0]) }) }} </template>
       {{ t("bisect.status", { on: search.testing.length, suspects: search.suspects.length }) }}
       <template v-if="search.cleared.length">{{ t("bisect.cleared", { n: search.cleared.length }) }}</template>
     </p>
@@ -59,8 +62,19 @@ async function turnOff() {
   >
     <SearchCheckIcon class="text-wood size-5 shrink-0" />
     <span class="flex-1 font-bold">
-      {{ found ? t("bisect.found", { name: title(found) }) : t("bisect.clean") }}
+      <template v-if="result?.with">{{
+        t("bisect.pair", { name: title(result.package), with: title(result.with) })
+      }}</template>
+      <template v-else>{{ found ? t("bisect.found", { name: title(found) }) : t("bisect.clean") }}</template>
     </span>
+    <Button
+      v-if="result && !result.with && result.cleared.length"
+      size="sm"
+      variant="outline"
+      :disabled="lib.working || game.running"
+      @click="lib.bisectPartner(t('bisect.profileName'), result.package, result.cleared)"
+      >{{ t("bisect.partner") }}</Button
+    >
     <Button v-if="found && foundOn" size="sm" :disabled="lib.working" @click="turnOff">{{
       t("bisect.turnOff")
     }}</Button>

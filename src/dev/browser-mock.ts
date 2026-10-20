@@ -78,6 +78,8 @@ const library = {
     cleared: string[];
     testing: string[];
     round: number;
+    pinned: string[];
+    alone: boolean;
   },
   importable: [],
 };
@@ -353,18 +355,54 @@ mockIPC(
           cleared: [],
           testing: all.slice(0, Math.ceil(all.length / 2)),
           round: 1,
+          pinned: [],
+          alone: false,
+        };
+        return structuredClone(library);
+      }
+      case "bisect_partner": {
+        const { package: pkg, candidates } = a as { package: string; candidates: string[] };
+        library.bisect = {
+          original: "default",
+          profile: "p9",
+          // a real invoke sends JSON; here the store's reactive array arrives as is
+          suspects: [...candidates],
+          cleared: [],
+          testing: [],
+          round: 1,
+          pinned: [pkg],
+          alone: true,
         };
         return structuredClone(library);
       }
       case "bisect_answer": {
         const b = library.bisect!;
-        b.suspects = (a as { problem: boolean }).problem ? b.testing : b.suspects.filter((s) => !b.testing.includes(s));
+        const problem = (a as { problem: boolean }).problem;
+        if (b.alone) {
+          b.alone = false;
+          if (problem) {
+            library.bisect = null;
+            return {
+              step: { kind: "found", package: b.pinned[0], with: null, cleared: [] },
+              view: structuredClone(library),
+            };
+          }
+        } else if (problem) {
+          b.suspects = b.testing;
+        } else {
+          b.cleared.push(...b.testing);
+          b.suspects = b.suspects.filter((x) => !b.testing.includes(x));
+        }
         if (b.suspects.length > 1) {
           b.testing = b.suspects.slice(0, Math.ceil(b.suspects.length / 2));
           b.round++;
           return { step: { kind: "next", enabled: b.testing }, view: structuredClone(library) };
         }
-        const step = b.suspects.length ? { kind: "found", package: b.suspects[0] } : { kind: "clean" };
+        const step = !b.suspects.length
+          ? { kind: "clean" }
+          : b.pinned.length
+            ? { kind: "found", package: b.pinned[0], with: b.suspects[0], cleared: [] }
+            : { kind: "found", package: b.suspects[0], with: null, cleared: b.cleared };
         library.bisect = null;
         return { step, view: structuredClone(library) };
       }

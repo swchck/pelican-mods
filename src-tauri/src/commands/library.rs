@@ -473,6 +473,42 @@ pub async fn bisect_start(app: AppHandle, name: String) -> AppResult<LibraryView
     .await
 }
 
+/// Starts looking for the mod that `package` only breaks together with, among
+/// `candidates` (the mods the finished search cleared), in a profile named `name`.
+#[tauri::command]
+pub async fn bisect_partner(
+    app: AppHandle,
+    name: String,
+    package: String,
+    candidates: Vec<String>,
+) -> AppResult<LibraryView> {
+    blocking(app, move |s| {
+        ensure_stopped(s)?;
+        let _guard = lock_library(s);
+        if s.bisect.get().is_some() {
+            return Err(AppError::Bisecting);
+        }
+        let original = s.profiles.get().active.clone();
+        let mut search = None;
+        s.profiles.update(|p| {
+            let id = p.create(&name, None)?;
+            let b = crate::bisect::Bisect::partner(
+                original.clone(),
+                id.clone(),
+                package.clone(),
+                &candidates,
+            );
+            p.set_profile_enabled(&id, b.enabled())?;
+            p.activate(&id)?;
+            search = Some(b);
+            Ok(())
+        })?;
+        s.bisect.set(search.as_ref())?;
+        Ok(build_view(s))
+    })
+    .await
+}
+
 /// Where a search stands after an answer, with the library as it now is.
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

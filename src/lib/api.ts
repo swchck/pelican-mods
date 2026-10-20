@@ -204,9 +204,16 @@ export interface Bisect {
   cleared: string[];
   testing: string[];
   round: number;
+  /** Always on: the mod a partner search looks for a partner of. */
+  pinned: string[];
+  /** This round runs the pinned mod alone. */
+  alone: boolean;
 }
 
-export type BisectStep = { kind: "next"; enabled: string[] } | { kind: "found"; package: string } | { kind: "clean" };
+export type BisectStep =
+  | { kind: "next"; enabled: string[] }
+  | { kind: "found"; package: string; with: string | null; cleared: string[] }
+  | { kind: "clean" };
 
 export const library = {
   get: () => invoke<LibraryView>("library_get"),
@@ -230,6 +237,8 @@ export const library = {
   bisectStart: (name: string) => invoke<LibraryView>("bisect_start", { name }),
   bisectAnswer: (problem: boolean) => invoke<{ step: BisectStep; view: LibraryView }>("bisect_answer", { problem }),
   bisectCancel: () => invoke<LibraryView>("bisect_cancel"),
+  bisectPartner: (name: string, pkg: string, candidates: string[]) =>
+    invoke<LibraryView>("bisect_partner", { name, package: pkg, candidates }),
   installDependency: (uniqueId: string, updateKeys?: string[], github?: string | null) =>
     invoke<UpdateOutcome>("mod_install_dependency", { uniqueId, updateKeys, github }),
   exportList: (dest: string) => invoke<void>("modlist_export", { dest }),

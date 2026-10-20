@@ -260,6 +260,9 @@ export const useLibrary = defineStore("library", () => {
       run(() => translationsApi.save(pkg, relPath, language, texts)),
     bisectStart: (name: string) => run(() => api.bisectStart(name)),
     bisectCancel: () => run(() => api.bisectCancel()),
+    async bisectPartner(name: string, pkg: string, candidates: string[]) {
+      if (await run(() => api.bisectPartner(name, pkg, candidates))) bisectResult.value = null;
+    },
     /** The last finished search's answer, until the player acts on it. */
     bisectResult,
     async bisectAnswer(problem: boolean) {

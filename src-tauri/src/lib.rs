@@ -116,6 +116,7 @@ pub fn run() {
             commands::library::library_set_tags,
             commands::library::bisect_start,
             commands::library::bisect_answer,
+            commands::library::bisect_partner,
             commands::library::bisect_cancel,
             commands::library::profile_create,
             commands::library::profile_rename,

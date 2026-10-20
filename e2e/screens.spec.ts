@@ -109,6 +109,11 @@ test("library halves its way to a problem's mod", async ({ page }) => {
   await expect(page.getByText("Поиск виновника · раунд 1")).toBeVisible();
   await page.getByRole("button", { name: "Проблемы нет" }).click();
   await expect(page.getByText(/Похоже, всё дело в/)).toBeVisible();
+  // the culprit may only break with a mod the search cleared
+  await page.getByRole("button", { name: "Проверить, с кем вместе" }).click();
+  await expect(page.getByText(/В этом раунде включён только/)).toBeVisible();
+  await page.getByRole("button", { name: "Проблемы нет" }).click();
+  await expect(page.getByText(/ломается только вместе с/)).toBeVisible();
 });
 
 test("saves compare two states of a farm", async ({ page }) => {

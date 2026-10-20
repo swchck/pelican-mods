@@ -3,8 +3,9 @@
 //!
 //! A round runs in a profile of its own, so the player's profiles never change; the
 //! search ends by switching back. A half always takes the required dependencies of its
-//! mods along, or a mod would just be skipped by SMAPI and look innocent. Two mods that
-//! only break together can't be told apart this way; the search then ends on one of them.
+//! mods along, or a mod would just be skipped by SMAPI and look innocent. Cleared mods stay
+//! on, so two mods that only break together end the search on the second of them; a
+//! partner search then pins it on and halves the cleared ones to find the first.
 
 use std::collections::{BTreeSet, HashMap};
 use std::path::PathBuf;
@@ -29,6 +30,12 @@ pub struct Bisect {
     /// The suspects on in this round.
     pub testing: Vec<String>,
     pub round: u32,
+    /// Always on: the mod a partner search looks for a partner of.
+    #[serde(default)]
+    pub pinned: Vec<String>,
+    /// This round runs the pinned mod alone, to see whether it needs a partner at all.
+    #[serde(default)]
+    pub alone: bool,
 }
 
 /// What the search knows after an answer.
@@ -37,8 +44,13 @@ pub struct Bisect {
 pub enum Step {
     /// Another round: these packages are on.
     Next { enabled: Vec<String> },
-    /// One suspect is left.
-    Found { package: String },
+    /// One suspect is left; `with` is the mod it breaks together with, for a partner
+    /// search, and `cleared` the mods a partner search would look among.
+    Found {
+        package: String,
+        with: Option<String>,
+        cleared: Vec<String>,
+    },
     /// No suspect is left: the problem isn't in any mod that was on.
     Clean,
 }
@@ -58,18 +70,63 @@ impl Bisect {
             cleared: Vec::new(),
             testing: Vec::new(),
             round: 0,
+            pinned: Vec::new(),
+            alone: false,
         };
         b.split(packages);
         b
     }
 
+    /// Looks for the mod `found` only breaks together with, among `candidates`: the first
+    /// round runs `found` alone.
+    pub fn partner(
+        original: String,
+        profile: String,
+        found: String,
+        candidates: &[String],
+    ) -> Self {
+        Self {
+            original,
+            profile,
+            suspects: candidates
+                .iter()
+                .filter(|c| **c != found)
+                .cloned()
+                .collect(),
+            cleared: Vec::new(),
+            testing: Vec::new(),
+            round: 1,
+            pinned: vec![found],
+            alone: true,
+        }
+    }
+
     /// The packages on in this round.
     pub fn enabled(&self) -> Vec<String> {
-        self.cleared.iter().chain(&self.testing).cloned().collect()
+        self.pinned
+            .iter()
+            .chain(&self.cleared)
+            .chain(&self.testing)
+            .cloned()
+            .collect()
     }
 
     /// Narrows the suspects by whether the problem showed with this round's packages.
     pub fn answer(&mut self, problem: bool, packages: &[Package]) -> Step {
+        if std::mem::take(&mut self.alone) {
+            if problem || self.suspects.is_empty() {
+                return Step::Found {
+                    package: self.pinned[0].clone(),
+                    with: None,
+                    cleared: Vec::new(),
+                };
+            }
+            self.round = 0;
+            self.split(packages);
+            return Step::Next {
+                enabled: self.enabled(),
+            };
+        }
         if problem {
             let testing: BTreeSet<&String> = self.testing.iter().collect();
             self.suspects.retain(|s| testing.contains(s));
@@ -81,8 +138,17 @@ impl Bisect {
         }
         match self.suspects.len() {
             0 => Step::Clean,
-            1 => Step::Found {
-                package: self.suspects[0].clone(),
+            1 => match self.pinned.first() {
+                Some(pinned) => Step::Found {
+                    package: pinned.clone(),
+                    with: Some(self.suspects[0].clone()),
+                    cleared: Vec::new(),
+                },
+                None => Step::Found {
+                    package: self.suspects[0].clone(),
+                    with: None,
+                    cleared: self.cleared.clone(),
+                },
             },
             _ => {
                 self.split(packages);
@@ -262,7 +328,7 @@ mod tests {
                 let runs =
                     on.contains(culprit) && (culprit != "B" || on.iter().any(|p| p == "Core"));
                 match b.answer(runs, &packages) {
-                    Step::Found { package } => {
+                    Step::Found { package, .. } => {
                         found = Some(package);
                         break;
                     }
@@ -286,9 +352,47 @@ mod tests {
         assert_eq!(
             b.answer(false, &packages),
             Step::Found {
-                package: "C".into()
+                package: "C".into(),
+                with: None,
+                cleared: vec!["A".into(), "B".into()],
             }
         );
         assert_eq!(b.cleared, ["A", "B"]);
+    }
+
+    #[test]
+    fn finds_the_partner_of_a_mod_that_only_breaks_with_another() {
+        let dir = tempfile::tempdir().unwrap();
+        let packages = store(
+            dir.path(),
+            &[("A", &[]), ("B", &[]), ("C", &[]), ("D", &[]), ("E", &[])],
+        );
+        let all: Vec<String> = packages.iter().map(|p| p.id.clone()).collect();
+        let broken = |on: &[String]| on.iter().any(|p| p == "B") && on.iter().any(|p| p == "D");
+        let mut b = Bisect::start("default".into(), "bisect".into(), &all, &packages);
+        let (found, cleared) = loop {
+            if let Step::Found {
+                package, cleared, ..
+            } = b.answer(broken(&b.enabled()), &packages)
+            {
+                break (package, cleared);
+            }
+        };
+        let mut p = Bisect::partner("default".into(), "bisect".into(), found.clone(), &cleared);
+        assert_eq!(
+            p.enabled(),
+            std::slice::from_ref(&found),
+            "the first round runs it alone"
+        );
+        let partner = loop {
+            match p.answer(broken(&p.enabled()), &packages) {
+                Step::Found { with, .. } => break with,
+                Step::Clean => break None,
+                Step::Next { .. } => {}
+            }
+        };
+        let mut pair = [found, partner.unwrap()];
+        pair.sort();
+        assert_eq!(pair, ["B", "D"]);
     }
 }
