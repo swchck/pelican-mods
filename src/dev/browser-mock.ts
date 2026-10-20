@@ -1,7 +1,8 @@
 // Lets `vite dev` run in a plain browser for UI work: Tauri IPC is answered from the
 // fixtures below. Imported only in DEV outside Tauri, never shipped.
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
-import baseCatalog from "../../src-tauri/resources/catalogs/ru.json";
+import ruCatalog from "../../src-tauri/resources/catalogs/ru.json";
+import enCatalog from "../../src-tauri/resources/catalogs/en.json";
 
 type Args = Record<string, unknown>;
 
@@ -488,7 +489,7 @@ mockIPC(
       case "game_preflight":
         return null;
       case "game_catalog":
-        return baseCatalog;
+        return localStorage.getItem("mockLocale") === "ru" ? ruCatalog : enCatalog;
       case "smapi_log_report":
         return {
           written: Math.floor(Date.now() / 1000) - 600,
