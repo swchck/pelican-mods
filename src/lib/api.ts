@@ -189,7 +189,21 @@ export interface LibraryView {
   packages: PackageView[];
   profiles: Profiles;
   importable: string[];
+  /** The search for a problem's mod, while one runs. */
+  bisect: Bisect | null;
 }
+
+/** A search for the mod behind a problem: each round turns on half the suspects. */
+export interface Bisect {
+  original: string;
+  profile: string;
+  suspects: string[];
+  cleared: string[];
+  testing: string[];
+  round: number;
+}
+
+export type BisectStep = { kind: "next"; enabled: string[] } | { kind: "found"; package: string } | { kind: "clean" };
 
 export const library = {
   get: () => invoke<LibraryView>("library_get"),
@@ -210,6 +224,9 @@ export const library = {
   history: () => invoke<HistoryEntry[]>("history_list"),
   undo: (at: number) => invoke<LibraryView>("history_undo", { at }),
   setTags: (id: string, tags: string[]) => invoke<LibraryView>("library_set_tags", { id, tags }),
+  bisectStart: (name: string) => invoke<LibraryView>("bisect_start", { name }),
+  bisectAnswer: (problem: boolean) => invoke<{ step: BisectStep; view: LibraryView }>("bisect_answer", { problem }),
+  bisectCancel: () => invoke<LibraryView>("bisect_cancel"),
   installDependency: (uniqueId: string, updateKeys?: string[], github?: string | null) =>
     invoke<UpdateOutcome>("mod_install_dependency", { uniqueId, updateKeys, github }),
   exportList: (dest: string) => invoke<void>("modlist_export", { dest }),

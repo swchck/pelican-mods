@@ -4,6 +4,7 @@ import { toast } from "vue-sonner";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   library as api,
+  type BisectStep,
   type LibraryView,
   type PackageView,
   type SaveUsage,
@@ -195,6 +196,8 @@ export const useLibrary = defineStore("library", () => {
     }
   }
 
+  const bisectResult = ref<BisectStep | null>(null);
+
   /** A mod about to be turned off that saves still use; the library asks before it goes. */
   const pendingDisable = ref<{ id: string; usage: SaveUsage[] } | null>(null);
 
@@ -233,6 +236,19 @@ export const useLibrary = defineStore("library", () => {
     profileFromList: (name: string, uniqueIds: string[]) => run(() => api.profileFromList(name, uniqueIds)),
     rollback: (uniqueId: string) => run(() => api.rollback(uniqueId)),
     undo: (at: number) => run(() => api.undo(at)),
+    bisectStart: (name: string) => run(() => api.bisectStart(name)),
+    bisectCancel: () => run(() => api.bisectCancel()),
+    /** The last finished search's answer, until the player acts on it. */
+    bisectResult,
+    async bisectAnswer(problem: boolean) {
+      let step: BisectStep | null = null;
+      await run(async () => {
+        const out = await api.bisectAnswer(problem);
+        step = out.step;
+        return out.view;
+      });
+      if (step && (step as BisectStep).kind !== "next") bisectResult.value = step;
+    },
     /** Attaches or (with null) detaches a GitHub repo, then asks smapi.io again with it. */
     async setGithub(uniqueId: string, repo: string | null) {
       if (await run(() => api.setGithub(uniqueId, repo))) await checkUpdates(true);

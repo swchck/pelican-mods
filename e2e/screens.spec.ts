@@ -61,6 +61,15 @@ test("library filters by status and tag", async ({ page }) => {
   await expect(rows).toHaveCount(4);
 });
 
+test("library halves its way to a problem's mod", async ({ page }) => {
+  await open(page, "/", "ru");
+  await page.getByRole("button", { name: "Профиль" }).last().click();
+  await page.getByRole("menuitem", { name: "Найти мод, из-за которого проблема" }).click();
+  await expect(page.getByText("Поиск виновника · раунд 1")).toBeVisible();
+  await page.getByRole("button", { name: "Проблемы нет" }).click();
+  await expect(page.getByText(/Похоже, всё дело в/)).toBeVisible();
+});
+
 test("saves compare two states of a farm", async ({ page }) => {
   await open(page, "/saves", "ru");
   await page.getByRole("button", { name: "Что изменилось" }).click();

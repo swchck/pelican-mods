@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { EllipsisIcon, FileDownIcon, FileUpIcon, PencilIcon, PlusIcon, Trash2Icon, UsersIcon } from "@lucide/vue";
+import {
+  EllipsisIcon,
+  FileDownIcon,
+  FileUpIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+  SearchCheckIcon,
+  UsersIcon,
+} from "@lucide/vue";
 import { open as openFile, save } from "@tauri-apps/plugin-dialog";
 import { toast } from "vue-sonner";
 import ModListDialog from "@/components/library/ModListDialog.vue";
@@ -120,6 +129,9 @@ async function submit() {
         <DropdownMenuItem @select="exportList"><FileUpIcon />{{ t("modList.export") }}</DropdownMenuItem>
         <DropdownMenuItem @select="importList()"><FileDownIcon />{{ t("modList.import") }}</DropdownMenuItem>
         <DropdownMenuItem @select="importList('compare')"><UsersIcon />{{ t("modList.compare") }}</DropdownMenuItem>
+        <DropdownMenuItem :disabled="!!lib.view?.bisect" @select="lib.bisectStart(t('bisect.profileName'))"
+          ><SearchCheckIcon />{{ t("bisect.start") }}</DropdownMenuItem
+        >
         <DropdownMenuSeparator />
         <DropdownMenuItem :disabled="!canDelete" class="text-destructive" @select="open('delete')">
           <Trash2Icon />{{ t("profiles.delete") }}

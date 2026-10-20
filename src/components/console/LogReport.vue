@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { useRouter } from "vue-router";
 import {
   ArrowUpCircleIcon,
   ChevronDownIcon,
   CircleAlertIcon,
   Loader2Icon,
   RefreshCwIcon,
+  SearchCheckIcon,
   TriangleAlertIcon,
 } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,10 @@ const fixable = computed(() =>
   props.report.skipped.filter((s) => s.kind !== "dependency" && updateOf(s)).map((s) => packageOf(s)!),
 );
 const busy = ref(false);
+const router = useRouter();
+async function findCulprit() {
+  if (await lib.bisectStart(t("bisect.profileName"))) await router.push("/");
+}
 async function updateAll() {
   busy.value = true;
   try {
@@ -79,6 +85,15 @@ async function updateAll() {
           class="overflow-auto text-[11px] leading-snug whitespace-pre-wrap select-text"
           >{{ crash.details.join("\n") }}</pre>
         <span class="text-xs font-semibold">{{ t("crash.hint") }}</span>
+        <Button
+          v-if="!lib.view?.bisect"
+          size="sm"
+          variant="outline"
+          class="self-start"
+          :disabled="lib.working"
+          @click="findCulprit"
+          ><SearchCheckIcon />{{ t("bisect.start") }}</Button
+        >
       </section>
 
       <section

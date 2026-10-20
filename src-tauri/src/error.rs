@@ -17,6 +17,8 @@ pub enum AppError {
     NotRunning,
     #[error("an operation is already in progress")]
     Busy,
+    #[error("a search for a problem's mod is running")]
+    Bisecting,
     #[error("network error: {0}")]
     Network(String),
     #[error("unexpected archive layout: {0}")]
@@ -78,6 +80,7 @@ impl AppError {
             Self::AlreadyRunning => "already_running",
             Self::NotRunning => "not_running",
             Self::Busy => "busy",
+            Self::Bisecting => "bisecting",
             Self::Network(_) => "network",
             Self::BadArchive(_) => "bad_archive",
             Self::InstallerFailed(_) => "installer_failed",

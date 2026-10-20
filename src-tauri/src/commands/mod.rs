@@ -54,6 +54,8 @@ pub struct AppState {
     pub(crate) nxm_expected: Mutex<std::collections::HashMap<(u64, u64), std::time::Instant>>,
     /// Installs, updates and removals, for the library's history and undo.
     pub(crate) history: crate::history::History,
+    /// A search for the mod behind a problem, while one runs.
+    pub(crate) bisect: crate::bisect::BisectStore,
     /// Removed packages, kept so a removal can be undone.
     pub(crate) removed_root: PathBuf,
     /// Unconfirmed nxm links the UI hasn't collected yet.
@@ -110,6 +112,7 @@ impl AppState {
             companion_dir: std::sync::OnceLock::new(),
             nxm_expected: Mutex::new(Default::default()),
             history: crate::history::History::load(data_dir.join("history.json")),
+            bisect: crate::bisect::BisectStore::new(data_dir.join("bisect.json")),
             removed_root: data_dir.join("removed"),
             nxm_pending: Mutex::new(Vec::new()),
         }

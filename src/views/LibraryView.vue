@@ -15,6 +15,7 @@ import PackageDetail from "@/components/library/PackageDetail.vue";
 import ProfileSwitcher from "@/components/library/ProfileSwitcher.vue";
 import ConflictBanner from "@/components/library/ConflictBanner.vue";
 import LibraryFilters from "@/components/library/LibraryFilters.vue";
+import BisectBanner from "@/components/library/BisectBanner.vue";
 import HistoryDialog from "@/components/library/HistoryDialog.vue";
 import { useLibrary } from "@/stores/library";
 import { hint, useShortcut } from "@/stores/shortcuts";
@@ -151,6 +152,7 @@ onUnmounted(() => {
       </Button>
     </header>
 
+    <BisectBanner />
     <LibraryFilters v-if="lib.packages.length" />
 
     <ConflictBanner />

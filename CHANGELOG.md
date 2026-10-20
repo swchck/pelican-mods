@@ -14,6 +14,7 @@
 
 ### Library and saves
 
+- Finding the mod behind a problem by halving: each round runs half the suspects, with the mods they need, in a profile of its own; you launch, say whether the problem showed, and the suspects halve until one is left. A crash in a round suggests the answer, and the search ends back in your profile. It starts from the profile menu or a crash report.
 - "What changed" on the Saves screen compares two states of a farm, the day before, any copy or now: money, playtime and perfection, skill levels, hearts, firsts shipped, caught, cooked, crafted and donated, new achievements, and what came into or left the chests.
 
 ### Game link

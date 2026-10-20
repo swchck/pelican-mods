@@ -155,6 +155,12 @@ impl Profiles {
         Ok(())
     }
 
+    /// Replaces the packages enabled in profile `id`.
+    pub fn set_profile_enabled(&mut self, id: &str, enabled: Vec<String>) -> AppResult<()> {
+        self.get_mut(id)?.enabled = enabled;
+        Ok(())
+    }
+
     /// Turns `package` on or off in the active profile.
     pub fn set_enabled(&mut self, package: &str, on: bool) {
         let active = self.active.clone();

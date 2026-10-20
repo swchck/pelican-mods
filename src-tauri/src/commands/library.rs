@@ -28,6 +28,8 @@ pub struct LibraryView {
     pub profiles: Profiles,
     /// Folders in the game's own `Mods` that are not in the store yet.
     pub importable: Vec<String>,
+    /// The search for a problem's mod, while one runs.
+    pub bisect: Option<crate::bisect::Bisect>,
 }
 
 #[derive(Debug, Serialize)]
@@ -172,6 +174,7 @@ pub(crate) fn build_view(state: &AppState) -> LibraryView {
         packages,
         profiles,
         importable,
+        bisect: state.bisect.get(),
     }
 }
 
@@ -433,12 +436,106 @@ pub async fn library_set_tags(
     .await
 }
 
+/// Starts looking for the mod behind a problem among the active profile's mods: the
+/// first round's half goes into a profile of its own named `name`, which becomes active.
+#[tauri::command]
+pub async fn bisect_start(app: AppHandle, name: String) -> AppResult<LibraryView> {
+    blocking(app, move |s| {
+        ensure_stopped(s)?;
+        let _guard = lock_library(s);
+        if s.bisect.get().is_some() {
+            return Err(AppError::Bisecting);
+        }
+        let packages = library::scan(&s.store_root);
+        let profiles = s.profiles.get();
+        let original = profiles.active.clone();
+        let enabled = profiles.active().enabled.clone();
+        let mut search = None;
+        s.profiles.update(|p| {
+            let id = p.create(&name, None)?;
+            let b = crate::bisect::Bisect::start(original.clone(), id.clone(), &enabled, &packages);
+            p.set_profile_enabled(&id, b.enabled())?;
+            p.activate(&id)?;
+            search = Some(b);
+            Ok(())
+        })?;
+        s.bisect.set(search.as_ref())?;
+        Ok(build_view(s))
+    })
+    .await
+}
+
+/// Where a search stands after an answer, with the library as it now is.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BisectOutcome {
+    pub step: crate::bisect::Step,
+    pub view: LibraryView,
+}
+
+/// Answers whether the problem showed in this round; a finished search goes back to the
+/// profile it started from.
+#[tauri::command]
+pub async fn bisect_answer(app: AppHandle, problem: bool) -> AppResult<BisectOutcome> {
+    blocking(app, move |s| {
+        ensure_stopped(s)?;
+        let _guard = lock_library(s);
+        let mut b = s
+            .bisect
+            .get()
+            .ok_or_else(|| AppError::NotFound("bisect".into()))?;
+        let step = b.answer(problem, &library::scan(&s.store_root));
+        match &step {
+            crate::bisect::Step::Next { enabled } => {
+                s.profiles
+                    .update(|p| p.set_profile_enabled(&b.profile, enabled.clone()))?;
+                s.bisect.set(Some(&b))?;
+            }
+            _ => end_bisect(s, &b)?,
+        }
+        Ok(BisectOutcome {
+            step,
+            view: build_view(s),
+        })
+    })
+    .await
+}
+
+/// Stops a search and goes back to the profile it started from.
+#[tauri::command]
+pub async fn bisect_cancel(app: AppHandle) -> AppResult<LibraryView> {
+    blocking(app, move |s| {
+        ensure_stopped(s)?;
+        let _guard = lock_library(s);
+        if let Some(b) = s.bisect.get() {
+            end_bisect(s, &b)?;
+        }
+        Ok(build_view(s))
+    })
+    .await
+}
+
+fn end_bisect(s: &AppState, b: &crate::bisect::Bisect) -> AppResult<()> {
+    s.profiles.update(|p| {
+        // the original may be gone if the player deleted it mid-search
+        let _ = p.activate(&b.original);
+        let _ = p.delete(&b.profile);
+        Ok(())
+    })?;
+    let _ = std::fs::remove_dir_all(s.deploy_root.join(&b.profile));
+    s.bisect.set(None)
+}
+
 /// Makes profile `id` the active one; refused while the game runs, since the session's
 /// saves are remembered with the active profile when it ends.
 #[tauri::command]
 pub async fn profile_activate(app: AppHandle, id: String) -> AppResult<LibraryView> {
     blocking(app, move |s| {
         ensure_stopped(s)?;
+        // a search's rounds live in its own profile; switching away would lose track
+        if s.bisect.get().is_some() {
+            return Err(AppError::Bisecting);
+        }
         s.profiles.update(|p| p.activate(&id))?;
         Ok(build_view(s))
     })

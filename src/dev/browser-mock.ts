@@ -70,6 +70,14 @@ const library = {
     }),
   ],
   profiles: { active: "default", profiles: [{ id: "default", name: null, enabled: [] }] },
+  bisect: null as null | {
+    original: string;
+    profile: string;
+    suspects: string[];
+    cleared: string[];
+    testing: string[];
+    round: number;
+  },
   importable: [],
 };
 
@@ -330,6 +338,33 @@ mockIPC(
         return { version: "4.5.2", url: "", size: 0, notesUrl: "https://github.com/Pathoschild/SMAPI/releases" };
       case "library_get":
         return library;
+      case "bisect_start": {
+        const all = library.packages.filter((p) => !p.system && p.enabled).map((p) => p.id);
+        library.bisect = {
+          original: "default",
+          profile: "p9",
+          suspects: all,
+          cleared: [],
+          testing: all.slice(0, Math.ceil(all.length / 2)),
+          round: 1,
+        };
+        return structuredClone(library);
+      }
+      case "bisect_answer": {
+        const b = library.bisect!;
+        b.suspects = (a as { problem: boolean }).problem ? b.testing : b.suspects.filter((s) => !b.testing.includes(s));
+        if (b.suspects.length > 1) {
+          b.testing = b.suspects.slice(0, Math.ceil(b.suspects.length / 2));
+          b.round++;
+          return { step: { kind: "next", enabled: b.testing }, view: structuredClone(library) };
+        }
+        const step = b.suspects.length ? { kind: "found", package: b.suspects[0] } : { kind: "clean" };
+        library.bisect = null;
+        return { step, view: structuredClone(library) };
+      }
+      case "bisect_cancel":
+        library.bisect = null;
+        return structuredClone(library);
       case "library_set_tags": {
         const { id, tags } = a as { id: string; tags: string[] };
         const p = library.packages.find((x) => x.id === id);

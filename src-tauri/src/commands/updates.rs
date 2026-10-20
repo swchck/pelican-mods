@@ -70,7 +70,7 @@ pub async fn updates_check(app: AppHandle, force: bool) -> AppResult<UpdateRepor
 #[derive(Debug, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum UpdateOutcome {
-    Installed { view: LibraryView },
+    Installed { view: Box<LibraryView> },
     Queued,
     OpenPage { url: String },
 }
@@ -181,7 +181,9 @@ async fn fetch_and_install(app: AppHandle, w: Wanted) -> AppResult<UpdateOutcome
             Ok(build_view(s))
         })
         .await?;
-        return Ok(UpdateOutcome::Installed { view });
+        return Ok(UpdateOutcome::Installed {
+            view: Box::new(view),
+        });
     }
     let Some(mod_id) =
         nexus::mod_page_id(&url).or(nexus_id.filter(|_| url.contains("nexusmods.com")))
