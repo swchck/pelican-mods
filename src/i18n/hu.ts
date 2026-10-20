@@ -163,6 +163,13 @@ export default {
     sunny: "Csak napos időben",
     rainy: "Csak esőben",
   },
+  chestsTab: {
+    search: "Tárgy keresése…",
+    asOfSave: "Az utolsó mentés szerint: a játék lefekvéskor jegyzi fel a ládák tartalmát.",
+    nothing: "Nincs találat.",
+    more: "és még {n} – szűkítsd a keresést",
+    places: { Farm: "Farm", FarmHouse: "Farmház", FarmCave: "Farmbarlang", Cellar: "Pince", Greenhouse: "Üvegház" },
+  },
   museumTab: {
     noSave: "Még nincsenek mentések.",
     summary: "{missing} darab hiányzik; ebből {ready} már most mehet Guntherhez.",
@@ -601,7 +608,14 @@ export default {
     needGameHint:
       "Az előrejelzés és a vásári javaslatok magából a játékból jönnek. Indítsd el a launcherből, és tölts be egy farmot.",
     needFarm: "A játék csatlakozott, de nincs betöltött farm. Tölts be egy mentést.",
-    tabs: { forecast: "Előrejelzés", fair: "Vásár", calendar: "Naptár", fish: "Halak", museum: "Múzeum" },
+    tabs: {
+      forecast: "Előrejelzés",
+      fair: "Vásár",
+      calendar: "Naptár",
+      fish: "Halak",
+      museum: "Múzeum",
+      chests: "Ládák",
+    },
     luck: "Mai szerencse",
     luckLevels: {
       great: "A szellemek nagyon boldogok",

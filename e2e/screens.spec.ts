@@ -61,6 +61,17 @@ test("library filters by status and tag", async ({ page }) => {
   await expect(rows).toHaveCount(4);
 });
 
+test("helpers find items across chests", async ({ page }) => {
+  await open(page, "/helpers", "ru");
+  await page.getByRole("tab", { name: "Сундуки" }).click();
+  await page.getByLabel("Найти предмет…").fill("iridium");
+  await expect(page.getByText("×134")).toBeVisible();
+  await expect(page.getByText("Big Shed (10, 9)")).toBeVisible();
+  await page.getByLabel("Найти предмет…").fill("salad");
+  // the farmhouse has no name in the game's lists, so the app names it
+  await expect(page.getByText("Дом на ферме")).toBeVisible();
+});
+
 test("console measures mods and lists shared patches", async ({ page }) => {
   await page.clock.install();
   await open(page, "/console?tab=load", "ru");

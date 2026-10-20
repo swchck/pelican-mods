@@ -162,6 +162,13 @@ export default {
     sunny: "晴れの日のみ",
     rainy: "雨の日のみ",
   },
+  chestsTab: {
+    search: "アイテムを探す…",
+    asOfSave: "最後のセーブ時点の内容です。チェストの中身は寝たときに記録されます。",
+    nothing: "見つかりませんでした。",
+    more: "ほか {n} 件。検索を絞り込んでください",
+    places: { Farm: "牧場", FarmHouse: "自宅", FarmCave: "牧場の洞窟", Cellar: "地下室", Greenhouse: "温室" },
+  },
   museumTab: {
     noSave: "セーブデータがまだありません。",
     summary: "{missing} 個が未寄贈で、そのうち {ready} 個は今すぐガンターに渡せます。",
@@ -593,7 +600,14 @@ export default {
     needGameHint:
       "天気予報とフェアのおすすめはゲーム本体から取得します。ランチャーからゲームを起動し、牧場を読み込んでください。",
     needFarm: "ゲームと接続していますが、牧場が読み込まれていません。セーブデータを読み込んでください。",
-    tabs: { forecast: "予報", fair: "フェア", calendar: "カレンダー", fish: "魚", museum: "博物館" },
+    tabs: {
+      forecast: "予報",
+      fair: "フェア",
+      calendar: "カレンダー",
+      fish: "魚",
+      museum: "博物館",
+      chests: "チェスト",
+    },
     luck: "今日の運勢",
     luckLevels: {
       great: "精霊たちはとても上機嫌です",

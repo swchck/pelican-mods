@@ -126,7 +126,7 @@ internal static class Catalog
 
     /// <summary>
     /// Names the launcher would otherwise translate itself, keyed "room.Pantry",
-    /// "skill.farming", "building.Gold Clock".
+    /// "skill.farming", "building.Gold Clock", "location.Town".
     /// </summary>
     private static Dictionary<string, string> Terms(Type game1)
     {
@@ -163,6 +163,8 @@ internal static class Catalog
         }
         foreach (DictionaryEntry entry in (IDictionary)game1.GetField("buildingData", Static)!.GetValue(null)!)
             Add("building." + entry.Key, () => Parse((string?)((dynamic)entry.Value!).Name));
+        foreach (DictionaryEntry entry in (IDictionary)DataLoader("Locations"))
+            Add("location." + entry.Key, () => Parse((string?)((dynamic)entry.Value!).DisplayName));
         return terms;
     }
 

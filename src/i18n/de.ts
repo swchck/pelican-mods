@@ -163,6 +163,13 @@ export default {
     sunny: "Nur bei Sonne",
     rainy: "Nur bei Regen",
   },
+  chestsTab: {
+    search: "Gegenstand suchen…",
+    asOfSave: "Stand des letzten Speicherns: Das Spiel schreibt Truhen auf, wenn du schlafen gehst.",
+    nothing: "Nichts gefunden.",
+    more: "und {n} weitere – grenze die Suche ein",
+    places: { Farm: "Hof", FarmHouse: "Bauernhaus", FarmCave: "Hofhöhle", Cellar: "Keller", Greenhouse: "Gewächshaus" },
+  },
   museumTab: {
     noSave: "Noch keine Spielstände.",
     summary: "Es fehlen {missing} Stücke; {ready} davon können sofort zu Gunther.",
@@ -599,7 +606,14 @@ export default {
     needGameHint:
       "Die Vorhersage und die Auswahl für den Jahrmarkt kommen direkt aus dem Spiel. Starte es über den Launcher und lade eine Farm.",
     needFarm: "Das Spiel ist verbunden, aber keine Farm ist geladen. Lade einen Spielstand.",
-    tabs: { forecast: "Vorhersage", fair: "Jahrmarkt", calendar: "Kalender", fish: "Fische", museum: "Museum" },
+    tabs: {
+      forecast: "Vorhersage",
+      fair: "Jahrmarkt",
+      calendar: "Kalender",
+      fish: "Fische",
+      museum: "Museum",
+      chests: "Truhen",
+    },
     luck: "Glück heute",
     luckLevels: {
       great: "Die Geister sind sehr glücklich",

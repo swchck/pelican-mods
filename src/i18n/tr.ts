@@ -163,6 +163,19 @@ export default {
     sunny: "Sadece güneşli havada",
     rainy: "Sadece yağmurda",
   },
+  chestsTab: {
+    search: "Eşya bul…",
+    asOfSave: "Son kayda göre: oyun sandıkları siz uyurken kaydeder.",
+    nothing: "Hiçbir şey bulunamadı.",
+    more: "ve {n} tane daha — aramayı daraltın",
+    places: {
+      Farm: "Çiftlik",
+      FarmHouse: "Çiftlik evi",
+      FarmCave: "Çiftlik mağarası",
+      Cellar: "Kiler",
+      Greenhouse: "Sera",
+    },
+  },
   museumTab: {
     noSave: "Henüz kayıt yok.",
     summary: "{missing} parça eksik; bunlardan {ready} tanesi şimdi Gunther'e verilebilir.",
@@ -596,7 +609,7 @@ export default {
     needGame: "Oyunun çalışıyor olması gerekiyor",
     needGameHint: "Hava tahmini ve fuar seçimleri doğrudan oyundan gelir. Oyunu başlatıcıdan aç ve bir çiftlik yükle.",
     needFarm: "Oyun bağlı ama yüklü çiftlik yok. Bir kayıt yükle.",
-    tabs: { forecast: "Tahmin", fair: "Fuar", calendar: "Takvim", fish: "Balık", museum: "Müze" },
+    tabs: { forecast: "Tahmin", fair: "Fuar", calendar: "Takvim", fish: "Balık", museum: "Müze", chests: "Sandıklar" },
     luck: "Bugünkü şans",
     luckLevels: {
       great: "Ruhlar çok mutlu",

@@ -163,6 +163,19 @@ export default {
     sunny: "Solo con il sole",
     rainy: "Solo con la pioggia",
   },
+  chestsTab: {
+    search: "Cerca un oggetto…",
+    asOfSave: "All'ultimo salvataggio: il gioco registra i bauli quando vai a dormire.",
+    nothing: "Nessun risultato.",
+    more: "e altri {n}: restringi la ricerca",
+    places: {
+      Farm: "Fattoria",
+      FarmHouse: "Casa della fattoria",
+      FarmCave: "Caverna della fattoria",
+      Cellar: "Cantina",
+      Greenhouse: "Serra",
+    },
+  },
   museumTab: {
     noSave: "Ancora nessun salvataggio.",
     summary: "Mancano {missing} pezzi; {ready} si possono portare a Gunther subito.",
@@ -603,7 +616,14 @@ export default {
     needGameHint:
       "Le previsioni e le scelte per la fiera arrivano dal gioco stesso. Avvialo dal launcher e carica una fattoria.",
     needFarm: "Il gioco è collegato, ma nessuna fattoria è caricata. Carica un salvataggio.",
-    tabs: { forecast: "Previsioni", fair: "Fiera", calendar: "Calendario", fish: "Pesci", museum: "Museo" },
+    tabs: {
+      forecast: "Previsioni",
+      fair: "Fiera",
+      calendar: "Calendario",
+      fish: "Pesci",
+      museum: "Museo",
+      chests: "Bauli",
+    },
     luck: "Fortuna di oggi",
     luckLevels: {
       great: "Gli spiriti sono molto felici",

@@ -7,6 +7,7 @@ import {
   CloudSunIcon,
   FishIcon,
   GemIcon,
+  BoxIcon,
   LandmarkIcon,
   Loader2Icon,
   RefreshCwIcon,
@@ -17,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TreasureTable from "@/components/helpers/TreasureTable.vue";
 import CalendarTab from "@/components/helpers/CalendarTab.vue";
 import FishTab from "@/components/helpers/FishTab.vue";
+import ChestsTab from "@/components/helpers/ChestsTab.vue";
 import MuseumTab from "@/components/helpers/MuseumTab.vue";
 import WikiName from "@/components/WikiName.vue";
 import { api as appApi, companion as api, isAppError, type Forecast } from "@/lib/api";
@@ -28,7 +30,7 @@ import { useShortcut } from "@/stores/shortcuts";
 const { t, n, te } = useI18n();
 const companion = useCompanion();
 
-const tab = ref<"forecast" | "fair" | "calendar" | "fish" | "museum">("forecast");
+const tab = ref<"forecast" | "fair" | "calendar" | "fish" | "museum" | "chests">("forecast");
 /** Forecast and fair come from the running game; calendar and fish work from the lists. */
 const needsGame = computed(() => tab.value === "forecast" || tab.value === "fair");
 const forecast = ref<Forecast | null>(null);
@@ -132,6 +134,7 @@ watch([tab, ready], load, { immediate: true });
         <TabsTrigger value="calendar"><CalendarDaysIcon />{{ t("helpers.tabs.calendar") }}</TabsTrigger>
         <TabsTrigger value="fish"><FishIcon />{{ t("helpers.tabs.fish") }}</TabsTrigger>
         <TabsTrigger value="museum"><LandmarkIcon />{{ t("helpers.tabs.museum") }}</TabsTrigger>
+        <TabsTrigger value="chests"><BoxIcon />{{ t("helpers.tabs.chests") }}</TabsTrigger>
       </TabsList>
 
       <div
@@ -289,6 +292,7 @@ watch([tab, ready], load, { immediate: true });
       <TabsContent value="calendar" class="min-h-0 flex-1 overflow-auto"><CalendarTab /></TabsContent>
       <TabsContent value="fish" class="min-h-0 flex-1 overflow-auto"><FishTab /></TabsContent>
       <TabsContent value="museum" class="min-h-0 flex-1 overflow-auto"><MuseumTab /></TabsContent>
+      <TabsContent value="chests" class="min-h-0 flex-1 overflow-auto"><ChestsTab /></TabsContent>
     </Tabs>
   </div>
 </template>

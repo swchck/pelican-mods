@@ -992,6 +992,7 @@ mod tests {
                 assert!(c.museum.len() == 95 && c.items.len() > 800);
                 assert!(c.festivals.len() > 8 && c.fish_info.len() > 60);
                 assert!(c.term("room.BulletinBoard").is_some() && c.term("skill.combat").is_some());
+                assert!(c.term("location.Town").is_some());
                 std::fs::write(
                     out.join(format!("{code}.json")),
                     serde_json::to_vec(&c).unwrap(),

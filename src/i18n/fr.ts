@@ -162,6 +162,19 @@ export default {
     sunny: "Temps ensoleillé uniquement",
     rainy: "Pluie uniquement",
   },
+  chestsTab: {
+    search: "Chercher un objet…",
+    asOfSave: "D'après la dernière sauvegarde : le jeu note les coffres quand vous allez dormir.",
+    nothing: "Rien trouvé.",
+    more: "et {n} de plus — affinez la recherche",
+    places: {
+      Farm: "Ferme",
+      FarmHouse: "Maison de la ferme",
+      FarmCave: "Grotte de la ferme",
+      Cellar: "Cave",
+      Greenhouse: "Serre",
+    },
+  },
   museumTab: {
     noSave: "Pas encore de sauvegardes.",
     summary: "{missing} pièces manquantes ; {ready} peuvent aller à Gunther dès maintenant.",
@@ -605,7 +618,14 @@ export default {
     needGameHint:
       "Les prévisions et les choix pour la foire viennent du jeu lui-même. Lance-le via le lanceur et charge une ferme.",
     needFarm: "Le jeu est connecté, mais aucune ferme n'est chargée. Charge une sauvegarde.",
-    tabs: { forecast: "Prévisions", fair: "Foire", calendar: "Calendrier", fish: "Poissons", museum: "Musée" },
+    tabs: {
+      forecast: "Prévisions",
+      fair: "Foire",
+      calendar: "Calendrier",
+      fish: "Poissons",
+      museum: "Musée",
+      chests: "Coffres",
+    },
     luck: "Chance du jour",
     luckLevels: {
       great: "Les esprits sont très contents",

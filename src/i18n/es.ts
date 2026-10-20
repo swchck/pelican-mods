@@ -162,6 +162,19 @@ export default {
     sunny: "Solo con sol",
     rainy: "Solo con lluvia",
   },
+  chestsTab: {
+    search: "Buscar un objeto…",
+    asOfSave: "Según la última partida guardada: el juego anota los cofres cuando te vas a dormir.",
+    nothing: "No se encontró nada.",
+    more: "y {n} más: afina la búsqueda",
+    places: {
+      Farm: "Granja",
+      FarmHouse: "Casa de la granja",
+      FarmCave: "Cueva de la granja",
+      Cellar: "Bodega",
+      Greenhouse: "Invernadero",
+    },
+  },
   museumTab: {
     noSave: "Aún no hay partidas.",
     summary: "Faltan {missing} piezas; {ready} de ellas pueden ir ya a Gunther.",
@@ -597,7 +610,14 @@ export default {
     needGameHint:
       "El pronóstico y la selección para la feria vienen del propio juego. Inícialo desde el lanzador y carga una granja.",
     needFarm: "El juego está conectado, pero no hay ninguna granja cargada. Carga una partida.",
-    tabs: { forecast: "Pronóstico", fair: "Feria", calendar: "Calendario", fish: "Peces", museum: "Museo" },
+    tabs: {
+      forecast: "Pronóstico",
+      fair: "Feria",
+      calendar: "Calendario",
+      fish: "Peces",
+      museum: "Museo",
+      chests: "Cofres",
+    },
     luck: "Suerte de hoy",
     luckLevels: {
       great: "Los espíritus están muy contentos",

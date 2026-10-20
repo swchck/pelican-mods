@@ -1,6 +1,7 @@
 mod archive;
 mod backups;
 mod checkup;
+mod chests;
 mod commands;
 mod companion;
 mod compat;
@@ -143,6 +144,7 @@ pub fn run() {
             commands::saves::saves_progress,
             commands::saves::saves_perfection,
             commands::saves::saves_checkup,
+            commands::saves::saves_items,
             commands::saves::saves_snapshots,
             commands::saves::saves_backup,
             commands::saves::saves_restore,

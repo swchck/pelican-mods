@@ -160,6 +160,13 @@ export default {
     sunny: "仅限晴天",
     rainy: "仅限雨天",
   },
+  chestsTab: {
+    search: "查找物品…",
+    asOfSave: "以最近一次存档为准：游戏在你睡觉时记录箱子内容。",
+    nothing: "没有找到。",
+    more: "还有 {n} 项，请缩小搜索范围",
+    places: { Farm: "农场", FarmHouse: "农舍", FarmCave: "农场洞穴", Cellar: "地窖", Greenhouse: "温室" },
+  },
   museumTab: {
     noSave: "还没有存档。",
     summary: "缺少 {missing} 件；其中 {ready} 件现在就能交给冈瑟。",
@@ -571,7 +578,7 @@ export default {
     needGame: "需要游戏正在运行",
     needGameHint: "天气预报和展览会推荐来自游戏本身。请通过启动器启动游戏并加载农场。",
     needFarm: "游戏已连接，但没有加载农场。请加载一个存档。",
-    tabs: { forecast: "预报", fair: "展览会", calendar: "日历", fish: "鱼类", museum: "博物馆" },
+    tabs: { forecast: "预报", fair: "展览会", calendar: "日历", fish: "鱼类", museum: "博物馆", chests: "箱子" },
     luck: "今日运势",
     luckLevels: {
       great: "精灵们今天非常高兴",

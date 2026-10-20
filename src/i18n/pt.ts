@@ -162,6 +162,19 @@ export default {
     sunny: "Só com sol",
     rainy: "Só com chuva",
   },
+  chestsTab: {
+    search: "Procurar um item…",
+    asOfSave: "Pelo último save: o jogo registra os baús quando você vai dormir.",
+    nothing: "Nada encontrado.",
+    more: "e mais {n} — refine a busca",
+    places: {
+      Farm: "Fazenda",
+      FarmHouse: "Casa da fazenda",
+      FarmCave: "Caverna da fazenda",
+      Cellar: "Adega",
+      Greenhouse: "Estufa",
+    },
+  },
   museumTab: {
     noSave: "Ainda não há saves.",
     summary: "Faltam {missing} peças; {ready} delas podem ir para o Gunther agora mesmo.",
@@ -596,7 +609,14 @@ export default {
     needGameHint:
       "A previsão e as escolhas para a feira vêm do próprio jogo. Inicie-o pelo launcher e carregue uma fazenda.",
     needFarm: "O jogo está conectado, mas nenhuma fazenda foi carregada. Carregue um save.",
-    tabs: { forecast: "Previsão", fair: "Feira", calendar: "Calendário", fish: "Peixes", museum: "Museu" },
+    tabs: {
+      forecast: "Previsão",
+      fair: "Feira",
+      calendar: "Calendário",
+      fish: "Peixes",
+      museum: "Museu",
+      chests: "Baús",
+    },
     luck: "Sorte de hoje",
     luckLevels: {
       great: "Os espíritos estão muito felizes",

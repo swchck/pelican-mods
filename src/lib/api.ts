@@ -461,6 +461,7 @@ export interface CatalogInfo {
 export const saves = {
   list: () => invoke<SaveSummary[]>("saves_list"),
   checkup: (id: string) => invoke<Checkup>("saves_checkup", { id }),
+  items: (id: string) => invoke<StoredItem[]>("saves_items", { id }),
   perfection: (id: string) => invoke<Perfection>("saves_perfection", { id }),
   progress: (id: string) => invoke<SaveProgress>("saves_progress", { id }),
   snapshots: (id: string) => invoke<Snapshot[]>("saves_snapshots", { id }),
@@ -783,4 +784,19 @@ export interface StorageUsage {
 export interface CompatVerdict {
   status: "Broken" | "Abandoned" | "Obsolete" | "Workaround" | "Unofficial";
   summary: string | null;
+}
+
+/** One stack a save keeps somewhere, as of its last save. */
+export interface StoredItem {
+  /** Qualified id, such as "(O)337". */
+  id: string;
+  /** Internal English name. */
+  name: string;
+  /** The name in the game's language where its lists have one. */
+  display: string;
+  stack: number;
+  quality: number;
+  place: { location: string; kind: "chest" | "fridge" | "grabber" | "inventory"; tile: [number, number] | null };
+  /** The location as the game names it. */
+  locationName: string | null;
 }

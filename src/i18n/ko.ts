@@ -161,6 +161,13 @@ export default {
     sunny: "맑은 날만",
     rainy: "비 오는 날만",
   },
+  chestsTab: {
+    search: "아이템 찾기…",
+    asOfSave: "마지막 저장 기준입니다. 상자 내용은 잠자리에 들 때 기록됩니다.",
+    nothing: "찾지 못했습니다.",
+    more: "외 {n}개 — 검색어를 좁혀 보세요",
+    places: { Farm: "농장", FarmHouse: "농가", FarmCave: "농장 동굴", Cellar: "지하 저장고", Greenhouse: "온실" },
+  },
   museumTab: {
     noSave: "아직 저장 파일이 없어요.",
     summary: "{missing}개가 빠져 있고, 그중 {ready}개는 지금 바로 군터에게 줄 수 있어요.",
@@ -583,7 +590,7 @@ export default {
     needGame: "게임이 실행 중이어야 해요",
     needGameHint: "일기 예보와 박람회 추천은 게임에서 직접 가져와요. 런처로 게임을 실행하고 농장을 불러와 주세요.",
     needFarm: "게임이 연결됐지만 불러온 농장이 없어요. 저장 파일을 불러와 주세요.",
-    tabs: { forecast: "예보", fair: "박람회", calendar: "달력", fish: "물고기", museum: "박물관" },
+    tabs: { forecast: "예보", fair: "박람회", calendar: "달력", fish: "물고기", museum: "박물관", chests: "상자" },
     luck: "오늘의 운",
     luckLevels: {
       great: "정령들이 아주 기뻐하고 있어요",

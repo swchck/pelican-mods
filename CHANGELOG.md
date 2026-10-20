@@ -4,6 +4,7 @@
 
 ### Helpers
 
+- A Chests tab finds anything the save keeps: every chest, fridge, auto-grabber and the backpack, with how many of each and the chest's tile, read from the save file so the game needn't run. Places carry the game's own names.
 - Long festival names wrap in the calendar instead of being cut off.
 
 ### Console

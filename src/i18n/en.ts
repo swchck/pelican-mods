@@ -162,6 +162,13 @@ export default {
     sunny: "Sunny weather only",
     rainy: "Rain only",
   },
+  chestsTab: {
+    search: "Find an item…",
+    asOfSave: "As of the last save: the game writes chests down when you go to sleep.",
+    nothing: "Nothing found.",
+    more: "and {n} more — narrow the search",
+    places: { Farm: "Farm", FarmHouse: "Farmhouse", FarmCave: "Farm cave", Cellar: "Cellar", Greenhouse: "Greenhouse" },
+  },
   museumTab: {
     noSave: "No saves yet.",
     summary: "{missing} pieces missing; {ready} of them can go to Gunther right now.",
@@ -585,7 +592,14 @@ export default {
     needGameHint:
       "The forecast and the fair picks come from the game itself. Launch it through the launcher and load a farm.",
     needFarm: "The game is connected, but no farm is loaded. Load a save.",
-    tabs: { forecast: "Forecast", fair: "Fair", calendar: "Calendar", fish: "Fish", museum: "Museum" },
+    tabs: {
+      forecast: "Forecast",
+      fair: "Fair",
+      calendar: "Calendar",
+      fish: "Fish",
+      museum: "Museum",
+      chests: "Chests",
+    },
     luck: "Luck today",
     luckLevels: {
       great: "The spirits are very happy",

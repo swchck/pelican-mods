@@ -237,8 +237,8 @@ mockIPC(
           connected: true,
           hello: { protocol: 1, smapi: "4.5.2", game: "1.6.15", mods: ["Pathoschild.LookupAnything"] },
           state: {
-            farmer: "Ася",
-            farm: "Пеликан",
+            farmer: "Аня",
+            farm: "Ромашка",
             season: "fall",
             day: 12,
             year: 2,
@@ -568,6 +568,45 @@ mockIPC(
         return "ru";
       case "nxm_take_pending":
         return [];
+      case "saves_items":
+        return [
+          {
+            id: "(O)337",
+            name: "Iridium Bar",
+            display: "Iridium Bar",
+            stack: 130,
+            quality: 0,
+            place: { location: "Big Shed", kind: "chest", tile: [10, 9] },
+            locationName: "Big Shed",
+          },
+          {
+            id: "(O)337",
+            name: "Iridium Bar",
+            display: "Iridium Bar",
+            stack: 4,
+            quality: 0,
+            place: { location: "inventory", kind: "inventory", tile: null },
+            locationName: null,
+          },
+          {
+            id: "(O)184",
+            name: "Milk",
+            display: "Milk",
+            stack: 12,
+            quality: 2,
+            place: { location: "Deluxe Barn", kind: "grabber", tile: null },
+            locationName: "Deluxe Barn",
+          },
+          {
+            id: "(O)196",
+            name: "Salad",
+            display: "Salad",
+            stack: 3,
+            quality: 0,
+            place: { location: "FarmHouse", kind: "fridge", tile: null },
+            locationName: null,
+          },
+        ];
       case "saves_checkup": {
         const it = (id: string, name: string | null, done: boolean, extra = {}) => ({
           id,

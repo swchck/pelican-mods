@@ -95,6 +95,57 @@ pub async fn saves_checkup(app: AppHandle, id: String) -> AppResult<crate::check
     .await
 }
 
+/// Everything save `id` keeps in its inventory, chests, fridges and auto-grabbers, as of
+/// its last save; names come in the game's language where the game's lists have them.
+#[tauri::command]
+pub async fn saves_items(app: AppHandle, id: String) -> AppResult<Vec<NamedItem>> {
+    let path = save_path(&app, &id)?;
+    let language = game_language(&app);
+    blocking(app, move |s| {
+        let live = s.companion.catalog();
+        let catalog = live
+            .as_ref()
+            .unwrap_or(perfection::Catalog::builtin(&language));
+        let names: HashMap<&str, &str> = catalog
+            .items
+            .iter()
+            .map(|i| (i.id.as_str(), i.name.as_str()))
+            .collect();
+        Ok(crate::chests::in_save(&path)?
+            .into_iter()
+            .map(|item| {
+                let name = item
+                    .id
+                    .strip_prefix("(O)")
+                    .and_then(|id| names.get(id))
+                    .map_or_else(|| item.name.clone(), |n| (*n).to_owned());
+                let loc = &item.place.location;
+                let location = catalog
+                    .term(&format!("location.{loc}"))
+                    .or_else(|| catalog.term(&format!("building.{loc}")))
+                    .map(str::to_owned);
+                NamedItem {
+                    display: name,
+                    location_name: location,
+                    item,
+                }
+            })
+            .collect())
+    })
+    .await
+}
+
+/// A stored stack with the names the UI shows.
+#[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NamedItem {
+    #[serde(flatten)]
+    pub item: crate::chests::StoredItem,
+    pub display: String,
+    /// The location as the game names it, when its lists know it.
+    pub location_name: Option<String>,
+}
+
 /// The game's own language, so built-in names match the bundle names the save carries.
 fn game_language(app: &AppHandle) -> String {
     game_data_dir(app)

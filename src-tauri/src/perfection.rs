@@ -72,7 +72,7 @@ pub struct Catalog {
     #[serde(default)]
     pub fish_info: Vec<CatalogFish>,
     /// The game's own names for things the UI would otherwise translate itself, keyed
-    /// "room.Pantry", "skill.farming", "building.Gold Clock".
+    /// "room.Pantry", "skill.farming", "building.Gold Clock", "location.Town".
     #[serde(default)]
     pub terms: std::collections::BTreeMap<String, String>,
 }
