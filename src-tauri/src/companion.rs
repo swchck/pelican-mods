@@ -520,6 +520,12 @@ mod tests {
 
     impl Drop for PlayerFiles {
         fn drop(&mut self) {
+            // PELICAN_TEST_KEEP_LOG=<file> keeps the test run's SMAPI log for a look after
+            if let (Ok(keep), Some((log, _))) =
+                (std::env::var("PELICAN_TEST_KEEP_LOG"), self.0.get(1))
+            {
+                let _ = std::fs::copy(log, keep);
+            }
             for (path, bytes) in &self.0 {
                 let _ = match bytes {
                     Some(b) => std::fs::write(path, b),
@@ -820,95 +826,75 @@ mod tests {
         std::os::unix::fs::symlink(built, mods.join("PelicanCompanion")).unwrap();
         let home = PathBuf::from(std::env::var("HOME").unwrap());
         let _player_files = PlayerFiles::keep(&home);
-        let own = crate::perfection::game_language(&home.join(".config/StardewValley"))
-            .unwrap_or_else(|| "en".to_owned());
+        let prefs = home.join(".config/StardewValley/startup_preferences");
+        let original = std::fs::read_to_string(&prefs).unwrap();
         let companion = Arc::new(Companion::new(dir.path()));
         tauri::async_runtime::block_on(async {
             tauri::async_runtime::spawn(companion.clone().serve(Arc::new(Recorder::default())));
             while companion.url().is_none() {
                 tokio::time::sleep(Duration::from_millis(5)).await;
             }
-            let launcher = Launcher::default();
-            launcher
-                .launch(
-                    &game,
-                    Some(SmapiRun {
-                        log: home.join(".config/StardewValley/ErrorLogs/SMAPI-latest.txt"),
-                        mods_path: Some(mods.clone()),
-                        env: vec![
-                            (URL_VAR.into(), companion.url().unwrap().into()),
-                            ("PELICAN_COMPANION_TEST".into(), "1".into()),
-                        ],
-                    }),
-                    Quiet,
+            // one launch per language: switching it in a running game works only while the
+            // window is on screen, since macOS stops presenting frames to a covered one and
+            // the game then blocks in SDL's buffer swap
+            // th is left out: the game has no Thai item names and shows English ones
+            for code in [
+                "en", "ja", "ru", "zh", "pt", "es", "de", "fr", "ko", "it", "tr", "hu",
+            ] {
+                let start = original.find("<languageCode>").unwrap();
+                let end = original.find("</languageCode>").unwrap();
+                let mut text = original.clone();
+                text.replace_range(start + "<languageCode>".len()..end, code);
+                std::fs::write(&prefs, text).unwrap();
+                let launcher = Launcher::default();
+                launcher
+                    .launch(
+                        &game,
+                        Some(SmapiRun {
+                            log: home.join(".config/StardewValley/ErrorLogs/SMAPI-latest.txt"),
+                            mods_path: Some(mods.clone()),
+                            env: vec![
+                                (URL_VAR.into(), companion.url().unwrap().into()),
+                                ("PELICAN_COMPANION_TEST".into(), "1".into()),
+                            ],
+                        }),
+                        Quiet,
+                    )
+                    .unwrap();
+                let mut got = None;
+                for _ in 0..300 {
+                    got = companion.catalog().filter(|c| c.language == code);
+                    if got.is_some() {
+                        break;
+                    }
+                    tokio::time::sleep(Duration::from_millis(200)).await;
+                }
+                // the game must close even when an assert below fails
+                launcher.stop().unwrap();
+                for _ in 0..300 {
+                    if matches!(launcher.state(), RunState::Exited { .. }) {
+                        break;
+                    }
+                    tokio::time::sleep(Duration::from_millis(100)).await;
+                }
+                let c = got.unwrap_or_else(|| panic!("a {code} catalog arrives"));
+                eprintln!(
+                    "{code}: {} items, {} museum, {} achievements, {} terms, e.g. {:?} {:?}",
+                    c.items.len(),
+                    c.museum.len(),
+                    c.achievements.len(),
+                    c.terms.len(),
+                    c.items.iter().find(|i| i.id == "24").map(|i| &i.name),
+                    c.term("room.Pantry")
+                );
+                assert!(c.museum.len() == 95 && c.items.len() > 800);
+                assert!(c.festivals.len() > 8 && c.fish_info.len() > 60);
+                assert!(c.term("room.BulletinBoard").is_some() && c.term("skill.combat").is_some());
+                std::fs::write(
+                    out.join(format!("{code}.json")),
+                    serde_json::to_vec(&c).unwrap(),
                 )
                 .unwrap();
-            let result =
-                futures_util::FutureExt::catch_unwind(std::panic::AssertUnwindSafe(async {
-                    for _ in 0..300 {
-                        if companion.catalog().is_some() {
-                            break;
-                        }
-                        tokio::time::sleep(Duration::from_millis(200)).await;
-                    }
-                    assert!(companion.catalog().is_some(), "a catalog arrives");
-                    // th is left out: the game has no Thai item names and shows English ones
-                    let mut codes: Vec<String> = [
-                        "en", "ja", "ru", "zh", "pt", "es", "de", "fr", "ko", "it", "tr", "hu",
-                    ]
-                    .map(String::from)
-                    .to_vec();
-                    codes.retain(|c| *c != own);
-                    codes.push(own.clone());
-                    for code in &codes {
-                        companion
-                            .send_raw(serde_json::json!({ "type": "testLocale", "text": code }));
-                        let mut got = None;
-                        for _ in 0..150 {
-                            got = companion.catalog().filter(|c| c.language == *code);
-                            if got.is_some() {
-                                break;
-                            }
-                            tokio::time::sleep(Duration::from_millis(200)).await;
-                        }
-                        let c = got.unwrap_or_else(|| panic!("a {code} catalog arrives"));
-                        eprintln!(
-                            "{code}: {} items, {} museum, {} achievements, e.g. {:?}",
-                            c.items.len(),
-                            c.museum.len(),
-                            c.achievements.len(),
-                            c.items.iter().find(|i| i.id == "24").map(|i| &i.name)
-                        );
-                        assert!(c.museum.len() == 95 && c.items.len() > 800);
-                        let abigail = c.villagers.iter().find(|v| v.key == "Abigail").unwrap();
-                        eprintln!(
-                            "    {} festivals, {} fish, Abigail {:?} {} loves {:?}, first fish {:?}",
-                            c.festivals.len(),
-                            c.fish_info.len(),
-                            abigail.birth_season,
-                            abigail.birth_day,
-                            abigail.loves,
-                            c.fish_info.first()
-                        );
-                        assert!(c.festivals.len() > 8 && c.fish_info.len() > 60);
-                        std::fs::write(
-                            out.join(format!("{code}.json")),
-                            serde_json::to_vec(&c).unwrap(),
-                        )
-                        .unwrap();
-                    }
-                }))
-                .await;
-            // the game must close even when an assert above failed
-            launcher.stop().unwrap();
-            for _ in 0..100 {
-                if matches!(launcher.state(), RunState::Exited { .. }) {
-                    break;
-                }
-                tokio::time::sleep(Duration::from_millis(100)).await;
-            }
-            if let Err(panic) = result {
-                std::panic::resume_unwind(panic);
             }
         });
     }

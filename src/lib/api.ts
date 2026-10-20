@@ -427,6 +427,8 @@ export interface CheckupGroup {
   title: string | null;
   /** Heading above the group, such as a Community Center room. */
   category: string | null;
+  /** That heading as the game names it, when the launcher has the game's lists. */
+  categoryName: string | null;
   done: number;
   total: number;
   items: CheckupItem[];

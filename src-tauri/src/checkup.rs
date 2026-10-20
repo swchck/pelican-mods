@@ -39,6 +39,8 @@ pub struct Group {
     pub title: Option<String>,
     /// Translation key of a heading above the group, such as a Community Center room.
     pub category: Option<String>,
+    /// The heading as the game names it, when the catalog knows.
+    pub category_name: Option<String>,
     pub done: u32,
     pub total: u32,
     pub items: Vec<Item>,
@@ -125,6 +127,7 @@ fn group(id: impl Into<String>, items: Vec<Item>) -> Group {
         id: id.into(),
         title: None,
         category: None,
+        category_name: None,
         done: items.iter().filter(|i| i.done).count() as u32,
         total: items.len() as u32,
         items,
@@ -157,8 +160,8 @@ pub fn build(facts: &Facts, catalog: Option<&Catalog>, season: Option<&str>) -> 
     }
     sections.extend([
         achievements(facts, c),
-        skills(facts),
-        community_center(facts, &names),
+        skills(facts, c),
+        community_center(facts, c, &names),
         museum(facts, c),
         friends(facts, c),
         collections(facts, c),
@@ -328,7 +331,7 @@ const SKILL_XP: [u32; 10] = [100, 380, 770, 1300, 2150, 3300, 4800, 6900, 10000,
 const MASTERY_XP: [u64; 5] = [10_000, 25_000, 45_000, 70_000, 100_000];
 const SKILLS: [&str; 5] = ["farming", "fishing", "foraging", "mining", "combat"];
 
-fn skills(f: &Facts) -> Section {
+fn skills(f: &Facts, c: &Catalog) -> Section {
     let mut levels = Vec::new();
     for (i, skill) in SKILLS.iter().enumerate() {
         let xp = f.xp.get(i).copied().unwrap_or(0);
@@ -339,6 +342,7 @@ fn skills(f: &Facts) -> Section {
             .unwrap_or(SKILL_XP[9]);
         levels.push(Item {
             id: (*skill).to_owned(),
+            name: c.term(&format!("skill.{skill}")).map(str::to_owned),
             ..Item::label(skill_label(skill), f.levels[i] >= 10).counted(xp as u64, next as u64)
         });
     }
@@ -409,7 +413,7 @@ const ROOMS: [(&str, &str, &str); 7] = [
     ("Abandoned Joja Mart", "ccMovieTheater", "ccMovieTheater"),
 ];
 
-fn community_center(f: &Facts, names: &HashMap<&str, &str>) -> Section {
+fn community_center(f: &Facts, c: &Catalog, names: &HashMap<&str, &str>) -> Section {
     let mut groups = Vec::new();
     for (room, cc_flag, joja_flag) in ROOMS {
         let room_done = f.mail.contains(cc_flag) || f.mail.contains(joja_flag);
@@ -424,7 +428,9 @@ fn community_center(f: &Facts, names: &HashMap<&str, &str>) -> Section {
         bundles.sort_by_key(|(id, _)| *id);
         for (id, def) in bundles {
             let mut g = bundle(id, def, f.bundles.get(&id), room_done, names);
-            g.category = Some(room.replace(' ', ""));
+            let key = room.replace(' ', "");
+            g.category_name = c.term(&format!("room.{key}")).map(str::to_owned);
+            g.category = Some(key);
             groups.push(g);
         }
     }
@@ -1101,6 +1107,28 @@ mod tests {
             secrets.groups[0].items[0].name.as_deref(),
             Some("The Alleyway Buffet")
         );
+    }
+
+    #[test]
+    fn names_rooms_and_skills_as_the_game_does() {
+        let mut f = Facts {
+            xp: vec![0; 6],
+            ..Facts::default()
+        };
+        f.bundle_data
+            .push(("Pantry/0".into(), "Spring Crops/O 465 20/24 1 0/0".into()));
+        let c = build(&f, Some(Catalog::builtin("ru")), None);
+        let get = |id: &str| c.sections.iter().find(|s| s.id == id).unwrap();
+        let cc = get("cc");
+        assert_eq!(cc.groups[0].category.as_deref(), Some("Pantry"));
+        assert_eq!(cc.groups[0].category_name.as_deref(), Some("Кладовая"));
+        assert_eq!(
+            get("skills").groups[0].items[0].name.as_deref(),
+            Some("Фермерство")
+        );
+        let none = build(&f, None, None);
+        let cc = none.sections.iter().find(|s| s.id == "cc").unwrap();
+        assert_eq!(cc.groups[0].category_name, None);
     }
 
     // PELICAN_TEST_SAVE=<save folder> PELICAN_TEST_CATALOG=<catalog.json> \

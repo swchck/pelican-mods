@@ -67,7 +67,8 @@ internal static class Catalog
             SpecialOrders: SpecialOrders(game1),
             Crops: Crops(game1),
             Festivals: Festivals(),
-            FishInfo: FishInfo(fish)
+            FishInfo: FishInfo(fish),
+            Terms: Terms(game1)
         );
     }
 
@@ -121,6 +122,48 @@ internal static class Catalog
             ));
         }
         return list;
+    }
+
+    /// <summary>
+    /// Names the launcher would otherwise translate itself, keyed "room.Pantry",
+    /// "skill.farming", "building.Gold Clock".
+    /// </summary>
+    private static Dictionary<string, string> Terms(Type game1)
+    {
+        var terms = new Dictionary<string, string>();
+        // a missing term only costs the launcher's own translation, never the whole catalog
+        void Add(string key, Func<string?> name)
+        {
+            try
+            {
+                if (name() is { Length: > 0 } value)
+                    terms[key] = value;
+            }
+            catch (Exception)
+            {
+            }
+        }
+        Type cc = Find("StardewValley.Locations.CommunityCenter")!;
+        MethodInfo areaKey = cc.GetMethod("getAreaNameFromNumber", Static)!;
+        MethodInfo areaName = cc.GetMethod("getAreaDisplayNameFromNumber", Static)!;
+        // 0..5 are the rooms, 6 the Joja warehouse
+        for (int area = 0; area <= 6; area++)
+        {
+            object[] arg = { area };
+            string key = ((string?)areaKey.Invoke(null, arg) ?? "").Replace(" ", "");
+            if (key != "")
+                Add("room." + key, () => (string?)areaName.Invoke(null, arg));
+        }
+        MethodInfo skill = Find("StardewValley.Farmer")!.GetMethod("getSkillDisplayNameFromIndex", Static)!;
+        string[] skills = { "farming", "fishing", "foraging", "mining", "combat" };
+        for (int i = 0; i < skills.Length; i++)
+        {
+            object[] arg = { i };
+            Add("skill." + skills[i], () => (string?)skill.Invoke(null, arg));
+        }
+        foreach (DictionaryEntry entry in (IDictionary)game1.GetField("buildingData", Static)!.GetValue(null)!)
+            Add("building." + entry.Key, () => Parse((string?)((dynamic)entry.Value!).Name));
+        return terms;
     }
 
     private static List<CatalogGoal> Monsters(Type game1)

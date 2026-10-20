@@ -2,6 +2,10 @@
 
 ## 0.4.0
 
+### Progress
+
+- Community Center rooms, skills and farm buildings in the report carry the names the game itself uses in its language, read from the game; the built-in lists carry them too.
+
 ### Console
 
 - When the game crashes, the app names the error it died on and the mod whose code is in its stack, with the stack in the report.

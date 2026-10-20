@@ -80,7 +80,7 @@ const categoryOf = (g: CheckupGroup, i: number) =>
         v-if="categoryOf(entry.group, i)"
         class="font-pixel text-wood-dark border-border-soft mt-2 border-b-2 border-dashed pb-1 text-xl font-bold"
       >
-        {{ t(`checkup.rooms.${entry.group.category}`) }}
+        {{ entry.group.categoryName ?? t(`checkup.rooms.${entry.group.category}`) }}
       </h3>
       <section class="wood-panel flex flex-col gap-2 p-3.5">
         <div class="flex items-center gap-2">

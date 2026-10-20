@@ -88,7 +88,8 @@ internal record CatalogMessage(
     List<CatalogOrder> SpecialOrders,
     List<CatalogCrop> Crops,
     List<CatalogFestival> Festivals,
-    List<CatalogFish> FishInfo
+    List<CatalogFish> FishInfo,
+    Dictionary<string, string> Terms
 )
 {
     public string Type => "catalog";

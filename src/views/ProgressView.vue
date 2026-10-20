@@ -82,6 +82,8 @@ const gap = (p: PerfectionPart) => (p.score === null ? p.weight / 2 : p.weight -
 const ratio = (p: PerfectionPart) => (p.total ? p.done / p.total : 0);
 
 function missingName(p: PerfectionPart, m: PerfectionMissing): string {
+  // the backend names a thing in the game's language when the game told it how
+  if (m.name !== m.key) return m.name;
   const key = `progress.items.${p.id}.${m.key}`;
   return te(key) ? t(key) : m.name;
 }

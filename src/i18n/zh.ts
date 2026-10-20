@@ -693,7 +693,7 @@ export default {
       BoilerRoom: "锅炉房",
       Vault: "金库",
       BulletinBoard: "布告栏",
-      AbandonedJojaMart: "废弃的 Joja 超市",
+      AbandonedJojaMart: "废弃 Joja 超市",
     },
     notes: {
       silver: "银星",

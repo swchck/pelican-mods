@@ -71,9 +71,18 @@ pub struct Catalog {
     pub festivals: Vec<CatalogFestival>,
     #[serde(default)]
     pub fish_info: Vec<CatalogFish>,
+    /// The game's own names for things the UI would otherwise translate itself, keyed
+    /// "room.Pantry", "skill.farming", "building.Gold Clock".
+    #[serde(default)]
+    pub terms: std::collections::BTreeMap<String, String>,
 }
 
 impl Catalog {
+    /// The game's name for `key`, when the catalog came with one.
+    pub fn term(&self, key: &str) -> Option<&str> {
+        self.terms.get(key).map(String::as_str)
+    }
+
     /// The base game's lists in `language` (a game language code such as "ru"), or in
     /// English for one the game doesn't ship; for a launcher that hasn't heard from the game yet.
     pub fn builtin(language: &str) -> &'static Catalog {
@@ -383,7 +392,7 @@ pub fn evaluate(facts: &Facts, catalog: Option<&Catalog>) -> Perfection {
     let obelisks: Vec<Missing> = OBELISKS
         .iter()
         .filter(|o| !facts.buildings.contains(**o))
-        .map(|o| Missing::named(o, o))
+        .map(|o| Missing::named(o, building(catalog, o)))
         .collect();
     let built = (OBELISKS.len() - obelisks.len()) as u32;
     parts.push(Part {
@@ -396,7 +405,13 @@ pub fn evaluate(facts: &Facts, catalog: Option<&Catalog>) -> Perfection {
     });
 
     let clock = facts.buildings.contains(GOLD_CLOCK);
-    parts.push(flag("clock", 10.0, clock, GOLD_CLOCK));
+    parts.push(flag(
+        "clock",
+        10.0,
+        clock,
+        GOLD_CLOCK,
+        building(catalog, GOLD_CLOCK),
+    ));
 
     parts.push(slayer(facts, catalog));
 
@@ -552,7 +567,14 @@ fn unknown(id: &'static str, weight: f32, done: usize) -> Part {
     }
 }
 
-fn flag(id: &'static str, weight: f32, done: bool, what: &str) -> Part {
+// a building's name in the game's language, or its data key for the UI to translate
+fn building<'a>(catalog: Option<&'a Catalog>, key: &'a str) -> &'a str {
+    catalog
+        .and_then(|c| c.term(&format!("building.{key}")))
+        .unwrap_or(key)
+}
+
+fn flag(id: &'static str, weight: f32, done: bool, what: &str, name: &str) -> Part {
     Part {
         id,
         weight,
@@ -562,7 +584,7 @@ fn flag(id: &'static str, weight: f32, done: bool, what: &str) -> Part {
         missing: if done {
             Vec::new()
         } else {
-            vec![Missing::named(what, what)]
+            vec![Missing::named(what, name)]
         },
     }
 }

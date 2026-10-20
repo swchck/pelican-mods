@@ -716,13 +716,13 @@ export default {
       earned: "Ganho no total",
     },
     rooms: {
-      Pantry: "Despensa",
+      Pantry: "Copa",
       CraftsRoom: "Sala de Artesanato",
       FishTank: "Aquário",
       BoilerRoom: "Sala da Caldeira",
       Vault: "Cofre",
-      BulletinBoard: "Quadro de Avisos",
-      AbandonedJojaMart: "JojaMart Abandonado",
+      BulletinBoard: "Mural de Recados",
+      AbandonedJojaMart: "Mercado Joja Abandonado",
     },
     notes: {
       silver: "prata",

@@ -701,7 +701,7 @@ export default {
     rooms: {
       Pantry: "식료품 저장실",
       CraftsRoom: "공예실",
-      FishTank: "수조",
+      FishTank: "어항",
       BoilerRoom: "보일러실",
       Vault: "금고",
       BulletinBoard: "게시판",
