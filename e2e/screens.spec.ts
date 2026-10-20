@@ -82,20 +82,6 @@ test("crop calculator ranks this season's crops", async ({ page }) => {
   await expect(rows.filter({ hasText: "Пастернак" })).toHaveCount(1);
 });
 
-test("map shows the farm and what's ready", async ({ page }) => {
-  await open(page, "/helpers", "ru");
-  await page.getByRole("tab", { name: "Карта" }).click();
-  await expect(page.getByRole("img", { name: "Ферма" })).toBeVisible();
-  await expect(page.getByText("Готово: 5 · Не полито: 6 · Машины готовы: 1")).toBeVisible();
-  const map = page.getByRole("img", { name: "Ферма" });
-  const box = (await map.boundingBox())!;
-  // the mock's pumpkin patch starts at tile (20, 20) of a 40-tile-wide farm
-  await page.mouse.move(box.x + (20.5 / 40) * box.width, box.y + (20.5 / 32) * box.height);
-  await expect(page.getByText("Тыква · (20, 20) · готово")).toBeVisible();
-  await page.getByRole("button", { name: "Остров" }).click();
-  await expect(page.getByText("Этого места в сохранении пока нет.")).toBeVisible();
-});
-
 test("co-op finds a host on the network and compares lists", async ({ page }) => {
   await open(page, "/", "ru");
   await page.getByRole("button", { name: "Профиль" }).last().click();

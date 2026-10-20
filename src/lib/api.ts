@@ -519,8 +519,6 @@ export const saves = {
   items: (id: string) => invoke<StoredItem[]>("saves_items", { id }),
   walnuts: (id: string) => invoke<Walnuts>("saves_walnuts", { id }),
   /** Money and progress by in-game day, oldest first. */
-  /** A top-down map of "Farm", "Greenhouse" or "IslandWest" as of the last save. */
-  map: (id: string, location: string) => invoke<FarmMap>("saves_map", { id, location }),
   history: (id: string) => invoke<FarmPoint[]>("saves_history", { id }),
   /** Each side is "current", "previous" or a snapshot's file. */
   compare: (id: string, from: string, to: string) => invoke<SaveDiff>("saves_compare", { id, from, to }),
@@ -900,46 +898,6 @@ export interface Walnuts {
   found: number;
   total: number;
   sources: WalnutSource[];
-}
-
-/** Something that takes up tiles on a save's map. */
-export interface MapFeature {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  kind:
-    | "building"
-    | "crop"
-    | "deadCrop"
-    | "dirt"
-    | "tree"
-    | "fruitTree"
-    | "bush"
-    | "grass"
-    | "flooring"
-    | "clump"
-    | "debris"
-    | "chest"
-    | "sprinkler"
-    | "scarecrow"
-    | "machine"
-    | "fence"
-    | "object";
-  id: string;
-  name: string;
-  /** Days until a crop can be picked; 0 when ready. */
-  days: number | null;
-  watered: boolean;
-  /** A machine with something to collect. */
-  ready: boolean;
-}
-
-export interface FarmMap {
-  location: string;
-  width: number;
-  height: number;
-  features: MapFeature[];
 }
 
 /** A farm on one in-game day. */

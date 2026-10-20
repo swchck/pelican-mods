@@ -12,7 +12,6 @@ mod deps;
 mod downloads;
 mod error;
 mod farm_history;
-mod farm_map;
 mod game;
 mod history;
 mod jsonc;
@@ -170,7 +169,6 @@ pub fn run() {
             commands::saves::saves_items,
             commands::saves::saves_walnuts,
             commands::saves::saves_history,
-            commands::saves::saves_map,
             commands::saves::saves_compare,
             commands::saves::saves_snapshots,
             commands::saves::saves_backup,

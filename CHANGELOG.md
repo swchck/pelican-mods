@@ -21,7 +21,6 @@
 
 - The Chests tab reads the running game live, and from saves it now finds Junimo chests and gives auto-grabbers their tile.
 - A Crops tab ranks what to plant today by profit per tile until the season ends, with growth times and prices from the game, Speed-Gro, Agriculturist, Tiller and a greenhouse switch.
-- A Map tab draws the farm, the greenhouse and the island farm from the save: buildings, crops with the days they still need and whether they were watered, machines with something to collect, chests, sprinklers and debris.
 - With spoilers on, a Walnuts tab lists every golden walnut source on Ginger Island by area — each bush and buried spot with its tile, puzzles, Field Office donations and the capped drops with how many are left — and marks what the save has already found.
 
 ### Console

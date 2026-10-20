@@ -753,46 +753,6 @@ mockIPC(
             extra: [],
           },
         };
-      case "saves_map": {
-        if (a.location === "IslandWest") throw { kind: "not_found", detail: "IslandWest", message: "IslandWest" };
-        const f = (x: number, y: number, kind: string, extra: object = {}) => ({
-          x,
-          y,
-          w: 1,
-          h: 1,
-          kind,
-          id: "",
-          name: "",
-          days: null,
-          watered: false,
-          ready: false,
-          ...extra,
-        });
-        const crops = Array.from({ length: 24 }, (_, i) =>
-          f(20 + (i % 6), 20 + Math.floor(i / 6), "crop", {
-            id: "276",
-            name: "Тыква",
-            days: i % 5,
-            watered: i % 3 !== 0,
-          }),
-        );
-        return {
-          location: a.location,
-          width: 40,
-          height: 32,
-          features: [
-            { ...f(4, 4, "building", { name: "Большой амбар" }), w: 7, h: 4 },
-            { ...f(30, 3, "building", { name: "Дом" }), w: 9, h: 5 },
-            ...crops,
-            f(23, 18, "sprinkler"),
-            f(12, 12, "chest", { name: "Сундук" }),
-            f(13, 12, "machine", { name: "Бочонок", ready: true }),
-            f(14, 12, "machine", { name: "Бочонок" }),
-            f(2, 28, "tree"),
-            f(6, 26, "debris", { name: "Камень" }),
-          ],
-        };
-      }
       case "saves_history":
         return Array.from({ length: 12 }, (_, i) => ({
           year: 2,

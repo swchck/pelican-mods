@@ -182,47 +182,6 @@ pub async fn saves_history(app: AppHandle, id: String) -> AppResult<Vec<Point>> 
     .await
 }
 
-/// The places the map can show: the farm, the greenhouse and the island farm.
-const MAP_LOCATIONS: [&str; 3] = ["Farm", "Greenhouse", "IslandWest"];
-
-/// A top-down map of `location` in save `id` as of its last save, with crops and
-/// buildings named in the game's language where its lists have them.
-#[tauri::command]
-pub async fn saves_map(
-    app: AppHandle,
-    id: String,
-    location: String,
-) -> AppResult<crate::farm_map::FarmMap> {
-    let path = save_path(&app, &id)?;
-    if !MAP_LOCATIONS.contains(&location.as_str()) {
-        return Err(AppError::NotFound(location));
-    }
-    let language = game_language(&app);
-    blocking(app, move |s| {
-        let mut map = crate::farm_map::in_save(&path, &location)?;
-        let live = s.companion.catalog();
-        let catalog = live
-            .as_ref()
-            .unwrap_or(perfection::Catalog::builtin(&language));
-        let names: HashMap<&str, &str> = catalog
-            .items
-            .iter()
-            .map(|i| (i.id.as_str(), i.name.as_str()))
-            .collect();
-        for f in &mut map.features {
-            let named = match f.kind {
-                "building" => catalog.term(&format!("building.{}", f.id)),
-                _ => names.get(f.id.as_str()).copied(),
-            };
-            if let Some(n) = named {
-                f.name = n.to_owned();
-            }
-        }
-        Ok(map)
-    })
-    .await
-}
-
 /// Compares two states of save `id`: each side is "current", "previous" (the day before
 /// the last save, which the game keeps as `_old` files) or the path of one of its snapshots.
 #[tauri::command]
