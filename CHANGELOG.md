@@ -4,6 +4,7 @@
 
 ### Library and saves
 
+- Undoing an install is itself a removal in the history, so it can be taken back too, and removing a mod sets it aside before its copy in the game's Mods folder goes to the Trash.
 - The library shows each Nexus mod's picture: a thumbnail in its row and a larger one atop its details, fetched in one batch and cached for a week.
 
 ### Settings

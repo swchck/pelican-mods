@@ -305,51 +305,57 @@ pub async fn library_remove(app: AppHandle, id: String) -> AppResult<LibraryView
     blocking(app, move |s| {
         ensure_stopped(s)?;
         let _guard = lock_library(s);
-        let path = library::package_path(&s.store_root, &id)?;
-        let pkg = library::read_package(id.clone(), path.clone());
-        let ids: std::collections::HashSet<String> = pkg
-            .as_ref()
-            .map(|p| p.unique_ids().map(str::to_lowercase).collect())
-            .unwrap_or_default();
-        // an import copies from the game's Mods folder; the original would come back as
-        // importable and still load when the game starts without the launcher
-        let (_, others) = game_mods(s);
-        for p in others.iter().filter(|p| {
-            !p.mods.is_empty() && p.unique_ids().all(|u| ids.contains(&u.to_lowercase()))
-        }) {
-            trash::delete(&p.path).map_err(|e| AppError::Io(std::io::Error::other(e)))?;
-        }
-        // kept aside rather than deleted, so the history can put it back
-        let at = crate::history::now_ms();
-        let was_enabled = s.profiles.get().active().enabled.contains(&id);
-        let stash = crate::history::stash(&path, &s.removed_root, at)?;
-        s.profiles.update(|p| {
-            p.forget_package(&id);
-            Ok(())
-        })?;
-        let first = pkg.as_ref().and_then(|p| p.mods.first());
-        s.history.push(crate::history::Entry {
-            at,
-            kind: crate::history::Kind::Removed,
-            package: id.clone(),
-            name: first
-                .map(|m| m.manifest.name.clone())
-                .unwrap_or_else(|| id.clone()),
-            unique_id: first
-                .map(|m| m.manifest.unique_id.clone())
-                .unwrap_or_default(),
-            version: first
-                .map(|m| m.manifest.version.clone())
-                .unwrap_or_default(),
-            previous: None,
-            stash: Some(stash),
-            was_enabled,
-            undone: false,
-        })?;
+        remove_package(s, &id)?;
         drop(_guard);
         Ok(build_view(s))
     })
     .await
+}
+
+// sets package `id` aside with a history entry that can bring it back; hold the library lock
+fn remove_package(s: &AppState, id: &str) -> AppResult<()> {
+    let path = library::package_path(&s.store_root, id)?;
+    let pkg = library::read_package(id.to_owned(), path.clone());
+    let at = crate::history::now_ms();
+    let was_enabled = s.profiles.get().active().enabled.iter().any(|e| e == id);
+    // kept aside rather than deleted, so the history can put it back
+    let stash = crate::history::stash(&path, &s.removed_root, at)?;
+    s.profiles.update(|p| {
+        p.forget_package(id);
+        Ok(())
+    })?;
+    let first = pkg.as_ref().and_then(|p| p.mods.first());
+    s.history.push(crate::history::Entry {
+        at,
+        kind: crate::history::Kind::Removed,
+        package: id.to_owned(),
+        name: first.map_or_else(|| id.to_owned(), |m| m.manifest.name.clone()),
+        unique_id: first
+            .map(|m| m.manifest.unique_id.clone())
+            .unwrap_or_default(),
+        version: first
+            .map(|m| m.manifest.version.clone())
+            .unwrap_or_default(),
+        previous: None,
+        stash: Some(stash),
+        was_enabled,
+        undone: false,
+    })?;
+    // an import copies from the game's Mods folder; the original would come back as
+    // importable and still load without the launcher. Only once the package is safely
+    // aside: a failed Trash then just leaves it importable again
+    let ids: std::collections::HashSet<String> = pkg
+        .as_ref()
+        .map(|p| p.unique_ids().map(str::to_lowercase).collect())
+        .unwrap_or_default();
+    let (_, others) = game_mods(s);
+    for p in others
+        .iter()
+        .filter(|p| !p.mods.is_empty() && p.unique_ids().all(|u| ids.contains(&u.to_lowercase())))
+    {
+        let _ = trash::delete(&p.path);
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -596,14 +602,8 @@ pub async fn history_undo(app: AppHandle, at: u64) -> AppResult<LibraryView> {
             .filter(|e| !e.undone)
             .ok_or_else(|| AppError::NotFound(at.to_string()))?;
         match e.kind {
-            crate::history::Kind::Installed => {
-                let path = library::package_path(&s.store_root, &e.package)?;
-                crate::history::stash(&path, &s.removed_root, crate::history::now_ms())?;
-                s.profiles.update(|p| {
-                    p.forget_package(&e.package);
-                    Ok(())
-                })?;
-            }
+            // a removal of its own, so undoing the install can be undone too
+            crate::history::Kind::Installed => remove_package(s, &e.package)?,
             crate::history::Kind::Updated => {
                 let backup = previous_backup(s, &e).ok_or_else(|| {
                     AppError::NotFound(format!(
