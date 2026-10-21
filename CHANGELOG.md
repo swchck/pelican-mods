@@ -1,5 +1,11 @@
 # What's new
 
+## 0.4.3
+
+### App
+
+- The installer window has a background that shows where to drag the app.
+
 ## 0.4.2 — 2026-10-21
 
 ### Library and saves

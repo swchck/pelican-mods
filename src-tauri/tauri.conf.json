@@ -62,7 +62,13 @@
     "copyright": "© swchck",
     "macOS": {
       "signingIdentity": "-",
-      "minimumSystemVersion": "11.0"
+      "minimumSystemVersion": "11.0",
+      "dmg": {
+        "background": "dmg/background.tiff",
+        "windowSize": { "width": 640, "height": 400 },
+        "appPosition": { "x": 180, "y": 200 },
+        "applicationFolderPosition": { "x": 460, "y": 200 }
+      }
     },
     "createUpdaterArtifacts": true
   },

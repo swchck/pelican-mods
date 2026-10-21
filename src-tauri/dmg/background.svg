@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400">
+  <defs>
+    <pattern id="planks" width="640" height="40" patternUnits="userSpaceOnUse">
+      <rect width="640" height="40" fill="#f2e3c2"/>
+      <rect y="38" width="640" height="2" fill="#e6d2a8"/>
+    </pattern>
+  </defs>
+  <rect width="640" height="400" fill="url(#planks)"/>
+  <rect x="6" y="6" width="628" height="388" rx="14" fill="none" stroke="#a0703f" stroke-width="4"/>
+  <rect x="0" y="352" width="640" height="48" fill="#7da14a"/>
+  <rect x="0" y="352" width="640" height="6" fill="#5b8c32"/>
+  <path d="M262 200 H362" stroke="#4e2c14" stroke-width="8" stroke-linecap="round" stroke-dasharray="2 18"/>
+  <path d="M356 178 L384 200 L356 222" fill="none" stroke="#4e2c14" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="320" y="70" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#4e2c14">Drag Pelican Mods to Applications</text>
+  <text x="320" y="98" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#7a5230">Перетащите Pelican Mods в «Программы»</text>
+</svg>
