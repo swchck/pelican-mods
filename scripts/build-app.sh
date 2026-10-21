@@ -17,4 +17,6 @@ fi
 "$(dirname "$0")/build-companion.sh"
 # the companion ships as a resource only in real builds: tauri dev and cargo test would
 # otherwise need a .NET toolchain just to compile
-exec npx tauri build --config src-tauri/tauri.bundle.conf.json "$@"
+npx tauri build --config src-tauri/tauri.bundle.conf.json "$@"
+find src-tauri/target -path '*/bundle/dmg/*.dmg' -print0 |
+  while IFS= read -r -d '' dmg; do "$(dirname "$0")/unsign-dmg.sh" "$dmg"; done

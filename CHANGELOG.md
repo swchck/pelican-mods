@@ -5,6 +5,7 @@
 ### App
 
 - The installer window has a background that shows where to drag the app.
+- macOS no longer warns about an unverified source when the installer opens: the disk image itself goes out unsigned, as other free apps' do, while the app inside keeps its signature.
 
 ## 0.4.2 — 2026-10-21
 
