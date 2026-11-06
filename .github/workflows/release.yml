@@ -131,3 +131,17 @@ jobs:
         run: |
           gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/${{ needs.create-release.outputs.id }}" \
             -F draft=false -f make_latest=true
+
+      # last, because the tap downloads the images to checksum them; silent
+      # without the secret, since a repository's own token cannot reach the tap
+      - name: Point the Homebrew cask at this version
+        env:
+          GH_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          [ -n "$GH_TOKEN" ] || { echo "no TAP_TOKEN set, leaving the tap alone"; exit 0; }
+          # a v1.0.0-rc1 is not what `brew install` should hand people
+          case "$GITHUB_REF_NAME" in *-*) echo "prerelease, leaving the tap alone"; exit 0 ;; esac
+          gh api repos/swchck/homebrew-tap/dispatches \
+            -f event_type=cask \
+            -f 'client_payload[casks]=pelican-mods' \
+            -f "client_payload[version]=${GITHUB_REF_NAME#v}"
